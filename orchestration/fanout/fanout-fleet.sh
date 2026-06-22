@@ -29,7 +29,10 @@ strip_args(){
   for v in $(compgen -v 2>/dev/null | grep '^CLAUDE_CODE' | sort -u); do printf -- '-u %s ' "$v"; done
 }
 
-is_ready(){ (cd "$1" 2>/dev/null && "$CCB" ping ccbd 2>/dev/null | grep -qE 'health|alive|running'); }
+# 就绪 ⟺ mount_state: mounted (实际挂载)。ccbd 活着但 unmounted 时派活会失败 "ccbd is unmounted"。
+# 不能 grep health/alive/running: 'health: unmounted' 会假命中; 且 ccb ping 即使停了也回
+# 'desired_state: running'(配置意图≠实际态) → 都会假就绪、派活卡进空队列(doctoreel 坑)。
+is_ready(){ (cd "$1" 2>/dev/null && "$CCB" ping ccbd 2>/dev/null | grep -qE '^mount_state:[[:space:]]*mounted'); }
 
 cmd_status(){
   local projs=("$@"); [ "$#" -eq 0 ] && projs=("$WORK" "$CLAUDE_PROJ")
@@ -39,7 +42,6 @@ cmd_status(){
     if is_ready "$p"; then printf '  ✓ ready   %s\n' "$p"; ready=$((ready+1))
     else printf '  ✗ down    %s  → fanout fleet up\n' "$p"; fi
   done
-  command -v tmux >/dev/null 2>&1 && tmux ls >/dev/null 2>&1 || echo "  ⚠ 无 tmux server (pane 无处放 → 必须先 up)"
   [ "$ready" -gt 0 ]
 }
 

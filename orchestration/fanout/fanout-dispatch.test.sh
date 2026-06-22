@@ -15,6 +15,7 @@ cat >> "$TMP/called"
 EOF
 chmod +x "$TMP/ccb"
 export FANOUT_CCB="$TMP/ccb"
+export FANOUT_ALLOCATION_LEDGER="$TMP/ledger.tsv"
 
 echo "fanout-dispatch tests"
 
@@ -46,6 +47,13 @@ printf '#!/usr/bin/env bash\necho "ARGV: $*" > "%s"\n' "$TMP/oc.called" > "$TMP/
 chmod +x "$TMP/opencode"; export FANOUT_OPENCODE="$TMP/opencode"
 bash "$D" doubao/doubao-code --harness opencode --prompt-file "$TMP/p.md" >/dev/null 2>&1
 ok "opencode harness → opencode run -m <provider/model>" 'grep -q "ARGV: run -m doubao/doubao-code" "$TMP/oc.called"'
+
+# --task-type 写 alloc ledger (数据飞轮捕获)
+rm -f "$FANOUT_ALLOCATION_LEDGER"
+bash "$D" cc-doubao --prompt-file "$TMP/p.md" --task-type code >/dev/null 2>&1
+ok "--task-type 追加 (type,agent) 进 ledger" 'grep -qF "$(printf "code\tcc-doubao")" "$FANOUT_ALLOCATION_LEDGER"'
+bash "$D" cc-glm --prompt-file "$TMP/p.md" >/dev/null 2>&1
+ok "无 --task-type 不写 ledger (行数不增)" '[ "$(grep -c . "$FANOUT_ALLOCATION_LEDGER")" -eq 1 ]'
 
 # 未知 harness
 bash "$D" x --harness bogus --prompt-file "$TMP/p.md" >/dev/null 2>&1; ok "未知 harness → 非0" '[ "$?" -ne 0 ]'

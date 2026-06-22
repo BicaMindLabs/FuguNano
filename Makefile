@@ -1,7 +1,7 @@
 .DEFAULT_GOAL := help
 SHELL := /usr/bin/env bash
 
-.PHONY: help install install-cc install-skill verify doctor test scan lint ci
+.PHONY: help install install-cc install-skill verify doctor test scan lint check-docs ci
 
 help: ## 列出可用目标
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | \
@@ -31,4 +31,7 @@ scan: ## 密钥泄漏扫描 (本地闸门)
 lint: ## 脚本语法 (bash -n) + shellcheck
 	bash scripts/check-shell.sh
 
-ci: scan lint test ## 本地完整 CI (scan + lint + test)
+check-docs: ## 文档漂移闸门 (README 子命令/数量 == 实际代码)
+	bash scripts/check-docs.sh
+
+ci: scan lint check-docs test ## 本地完整 CI (scan + lint + check-docs + test)

@@ -3,7 +3,7 @@
 [![CI](https://github.com/LeoLin990405/cn-cc-workflow/actions/workflows/ci.yml/badge.svg)](https://github.com/LeoLin990405/cn-cc-workflow/actions/workflows/ci.yml)
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![Node](https://img.shields.io/badge/node-%E2%89%A518.18-339933.svg)](package.json)
-[![Tests](https://img.shields.io/badge/tests-119%20passing-success.svg)](orchestration/fanout)
+[![Tests](https://img.shields.io/badge/tests-249%20passing-success.svg)](orchestration/fanout)
 
 **English | [简体中文](README_ZH.md)**
 
@@ -86,7 +86,7 @@ Small / cheap models fail when an agent shows them *every* tool, memory, rule an
 |---|---|
 | `backends/bin/` | The Chinese-model backends: `cc_model_launch` shared core + 9 thin `*-code` launchers + `cc-model-registry.tsv` + `cc-models` dispatcher + **`cc-sync`** (auto-follow Claude Code + model updates) |
 | `backends/{install,verify}.sh`, `backends/prompts/` | Install / self-check / per-provider prompt add-ons |
-| `orchestration/fanout/` | The `fanout` CLI (14 subcommands) + `SKILL.md` (5-phase workflow + Phase 5 loop) + `workspaces/` + `templates/` + 13 test suites |
+| `orchestration/fanout/` | The `fanout` CLI (17 subcommands) + `SKILL.md` (5-phase workflow + Phase 5 loop) + `workspaces/` + `templates/` + 17 test suites |
 | `orchestration/ccb/ccb.config.example` | Sanitized ccb multi-window topology template (placeholder keys) |
 | `orchestration/cn-plugin/cn/` | Claude Code plugin: `/cn:*` commands + `cn-dispatch` agent (derived from `openai/codex-plugin-cc`) |
 | `orchestration/agent-team/` | Workflow-tool orchestration example (multi-model planning → implement → review) |
@@ -152,17 +152,20 @@ The installer copies the skill plus all `fanout` tools, workspaces and templates
 | `fanout fleet status\|up\|down` | Bring up / check / stop the ccb fleet — strips `CLAUDE_CODE_*` (avoids OAuth false-401) + starts panes in detached tmux |
 | `fanout preflight [cfg]` | Go/no-go gate: deps · ccbd alive · ccb.config sanity · **no-Gemini guard** · `--probe` endpoint liveness |
 | `fanout task new\|log\|done` | Scaffold / log / close a TASK file |
-| `fanout allocate <type> [--top]` | Bench-recommended model for a task type (`code`→minimax, `logic`→kimi, …) |
+| `fanout allocate <type> [--top] [--sample]` · `record`·`feed`·`stats`·`reset`·`decay` | Recommended model for a task type — **bench prior + battle-tested posterior** (Beta-Bernoulli): cold-start = the static bench order, drifts as you `record`/`feed` verdicts. **`feed --from-ledger`** closes a data flywheel (`dispatch --task-type` logs `(type, agent)`, one `feed` after the round updates routing). **`--sample`** = Thompson Sampling (explores under-sampled agents, won't lock onto an early winner; Agrawal-Goyal 2012); **`decay --gamma G`** discounts stale stats after a model upgrade (Garivier-Moulines 2011) |
 | `fanout workspace list\|show\|model\|context <ws>` | Per-task **context isolation** — assemble `System + Workspace + Tools + Memory + History` |
 | `fanout experience add\|list\|recall\|show <ws>` | **Experience memory** — completed work → reusable method → sanitized → recalled into context |
 | `fanout template <name> [--set K=V]` | Render a prompt template (`impl` / `analysis` / `review`) |
-| `fanout dispatch <target> [--harness ccb\|codex\|opencode] [--workspace ws] [--template n]` | Dispatch to an implementer on **any harness** (ccb=Claude Code fleet / codex / opencode): render → run → log |
+| `fanout dispatch <target> [--harness ccb\|codex\|opencode] [--workspace ws] [--template n] [--task-type T]` | Dispatch to an implementer on **any harness** (ccb=Claude Code fleet / codex / opencode): render → run → log; `--task-type` feeds the allocation flywheel |
 | `fanout cache init\|put\|fail\|barrier\|collect\|resume\|...` | Result cache + **fan-in barrier** (dispatch N ⇒ return N) + timing + resume |
+| `fanout integrate --work <repo> --agents "a b"` | **Phase 3** — cherry-pick each worktree onto `main` with **conflict isolation**: a conflicting agent is `--abort`ed & reported (keeps `main` clean), the rest still land |
 | `fanout summary <round> [--task f]` | Round observability summary (status + elapsed) |
 | `fanout plan "<goal>" [--models a,b,c]` | **Planning panel** — fan a goal decomposition out to several models |
 | `fanout goal template\|show\|check <spec>` | **Goal mode** — declarative target + deterministic acceptance gate |
+| `fanout loop init\|record\|decide\|status` | **Phase 5** review-fix **state machine** — `record` each round (classify Findings via `--ask-user K`) → `decide` returns the exit state (DONE / CONFIRM / CONTINUE / **ASK_USER** / ESCALATE_MAX / ESCALATE_NONCONV); keep-best auto-maintained. `ASK_USER` = auto-patch mechanical Findings but escalate intent-touching ones to the human (borrowed from no-mistakes) |
+| `fanout run set\|round\|status\|next\|clear` | **Run state facade** (axi-inspired) — a lightweight "current run" context aggregating cross-phase state (active TASK / round / cache barrier N-back-of-M / loop decision / best) into **one machine-parsable JSON** object, so a run is queryable/resumable without changing the operator-driven model |
 | `fanout ccb-sync check\|adapt [--apply]` | Adapt after a ccb update (version drift · grafting check · ccbd restart) |
-| `fanout selftest` | Run all 13 test suites (119 assertions) |
+| `fanout selftest` | Run all 17 test suites (249 assertions) |
 
 ---
 
@@ -172,15 +175,16 @@ The core is a **5-phase pipeline** (full detail in [`docs/WORKFLOW.md`](docs/WOR
 
 1. **Plan** — preflight gate + scaffold a TASK file, split by file.
 2. **Dispatch + cache + barrier** — `ccb ask` in parallel; each result caches first; the fan-in barrier requires all N back before advancing.
-3. **Integrate** — cherry-pick each worktree onto `main`; run local sanity.
+3. **Integrate** — `fanout integrate` cherry-picks each worktree onto `main` with **conflict isolation** (a conflicting agent is aborted & reported, the rest still land); run local sanity. *(Prereq: the work repo must `.gitignore` `.ccb/` — worktrees live inside it.)*
 4. **Review** — Codex returns a VERDICT.
-5. **Review-Fix Loop** (bounded) — deterministic gate first → incremental review → keep-best (revert regressions) → operator patch → meta-reflect on non-convergence; capped, then escalate.
+5. **Review-Fix Loop** (bounded, driven by the `fanout loop` state machine) — deterministic gate first → incremental review → keep-best (revert regressions) → operator patch; `fanout loop decide` returns exactly one exit state (DONE / CONFIRM / CONTINUE / ESCALATE_MAX / ESCALATE_NONCONV); capped, then escalate — never loops forever, never hard-marks done.
 
 **Higher-level entry modes** layer on top:
 
 - **Goal mode** — `fanout goal check <spec>` runs a declarative acceptance gate the loop drives toward.
 - **Planning panel** — `fanout plan` fans decomposition out to multiple models; synthesize into Phase 1.
 - **Workspace isolation** — `fanout dispatch --workspace <ws>` gives a model only the context that workspace needs.
+- **Adaptive allocation** — `fanout allocate` blends the static bench table (prior) with `record`ed verdicts (posterior), so routing self-improves as the loop feeds outcomes back — no training required.
 
 See [`docs/AGENT_TEAM.md`](docs/AGENT_TEAM.md) for multi-model planning and hierarchical sub-agents (ccb fleet vs. native Claude Code subagents).
 
@@ -203,17 +207,18 @@ See [`docs/AGENT_TEAM.md`](docs/AGENT_TEAM.md) for multi-model planning and hier
 Three gates (secrets / shell / tests) run identically locally and in CI, reusing `scripts/scan-secrets.sh` + `scripts/check-shell.sh`:
 
 ```bash
-make ci          # = scan + lint + test (CI-equivalent)
+make ci          # = scan + lint + check-docs + test (CI-equivalent)
 make scan        # secret-leak gate (fingerprints + ccb.config placeholder check)
 make lint        # bash -n + shellcheck (.shellcheckrc)
-make test        # cn-plugin + fanout selftest (119 assertions)
+make check-docs  # docs-match-code gate: README subcommands/counts == the fanout CLI
+make test        # cn-plugin + fanout selftest (249 assertions)
 make doctor      # environment recon
 make help        # all targets
 
 pipx install pre-commit && pre-commit install   # scan on every commit
 ```
 
-CI ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) runs three jobs: **secret-scan** (custom gate + gitleaks), **shell** (`bash -n` + shellcheck), **node** (`npm test`). See [`CONTRIBUTING.md`](CONTRIBUTING.md).
+CI ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) runs three jobs: **secret-scan** (custom gate + gitleaks), **shell** (`bash -n` + shellcheck + **docs-match-code**), **node** (`npm test`). See [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
 ---
 

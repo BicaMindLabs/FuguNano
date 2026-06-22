@@ -55,12 +55,13 @@ if [ "$CONFIG_ONLY" -eq 0 ]; then
   # 2) 缓存工具
   [ -x "$HERE/fanout-cache.sh" ] && ok "fanout-cache.sh" || no "缺 fanout-cache.sh (fan-in barrier 依赖)"
 
-  # 3) ccbd 存活 (CCB_WORK 给了才查)
+  # 3) ccbd 已 mounted (CCB_WORK 给了才查) — 必须 mount_state: mounted 才能派活;
+  #    旧版 grep 'health|state' 会被 'mount_state: unmounted' 假命中 → 假 GO → 派活卡空队列(doctoreel 坑)
   if [ -n "${CCB_WORK:-}" ]; then
-    if (cd "$CCB_WORK" 2>/dev/null && ccb ping ccbd 2>/dev/null | grep -qE 'health|state'); then
-      ok "ccbd alive ($CCB_WORK)"
-    else no "ccbd 不可达 ($CCB_WORK) — 先 cd 项目 && ccb 起守护"; fi
-  else wn "未设 CCB_WORK — 跳过 ccbd 存活检查"; fi
+    if (cd "$CCB_WORK" 2>/dev/null && ccb ping ccbd 2>/dev/null | grep -qE '^mount_state:[[:space:]]*mounted'); then
+      ok "ccbd mounted ($CCB_WORK)"
+    else no "ccbd 未 mounted/不可达 ($CCB_WORK) — cd 项目 && ccb 挂载 (或 fanout fleet up)"; fi
+  else wn "未设 CCB_WORK — 跳过 ccbd 检查"; fi
 fi
 
 # 4) ccb.config 健全 + no-Gemini 守卫
@@ -81,6 +82,16 @@ if [ -n "$CFG" ] && [ -f "$CFG" ]; then
   # 5) --probe: 活体探测每个 provider 端点 (需网络, 不打印 key)
   if [ "$PROBE" -eq 1 ]; then echo "  端点活体探测:"; probe_config "$CFG"; fi
 else wn "未定位 ccb.config — 跳过配置检查 (传路径 或 设 CCB_WORK)"; fi
+
+# 6) .ccb/ gitignore 守卫 — worktree 在 $CCB_WORK/.ccb/workspaces/ (主 repo 工作树内);
+#    不忽略则 integrate 时主 repo 的 git 会把 worktree 当嵌入仓库, 污染 status。只依赖 git。
+if [ -n "${CCB_WORK:-}" ] && git -C "$CCB_WORK" rev-parse --git-dir >/dev/null 2>&1; then
+  if git -C "$CCB_WORK" check-ignore -q .ccb/ccb.config 2>/dev/null; then
+    ok ".ccb/ 已 gitignore (integrate 不会被 worktree 污染)"
+  else
+    wn ".ccb/ 未 gitignore — integrate 时主 repo git 可能吸入 worktree(嵌入仓库); 修: echo '.ccb/' >> $CCB_WORK/.gitignore"
+  fi
+fi
 
 echo ""
 if [ "$fail" -eq 0 ]; then echo "✓ preflight GO  (warn=$warn)"; exit 0

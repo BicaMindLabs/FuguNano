@@ -9,11 +9,14 @@
 #   fanout dispatch <agent> --template <n>|--prompt-file <f> [--task <file>]
 #                              包 ccb ask: 渲 prompt → 派活 → 记日志
 #   fanout cache ...           结果缓存 + fan-in barrier (init|put|fail|barrier|collect|resume|...)
-#   fanout allocate <task-type> [--top]   按 bench 推荐模型 (code|logic|sql|chinese|...)
+#   fanout integrate --work <repo> --agents "a b" [--onconflict abort|skip]  Phase3 worktree→main cherry-pick(冲突隔离)
+#   fanout allocate <task-type> [--top]|record|stats|reset   推荐模型 (bench 先验+实战后验混合)
 #   fanout workspace list|show|model|context <name>   工位上下文隔离 (借鉴 Zleap)
 #   fanout experience add|list|recall|show <ws>   经验记忆: 完成→抽方法→脱敏存→复用
 #   fanout plan "<goal>" [--models a,b,c]   多模型规划面板 (各自 Write 方案)
 #   fanout goal template|show|check <spec>  目标模式: 声明式目标 + 确定性验收门
+#   fanout loop init|record|decide|status   Phase 5 review-fix 状态机 (退出态判定+keep-best)
+#   fanout run set|round|status|next|clear   跨阶段 run 状态门面 (聚合 TASK/cache/loop → JSON, axi-inspired)
 #   fanout summary <round> [--task <file>]   round 可观测汇总 (含耗时)
 #   fanout ccb-sync check|adapt [--apply]    ccb 更新后同步适配 (版本/grafting/ccbd 重启)
 #   fanout selftest            跑全部 *.test.sh
@@ -30,11 +33,14 @@ case "$sub" in
   template)  exec bash "$HERE/fanout-template.sh"  "$@";;
   dispatch)  exec bash "$HERE/fanout-dispatch.sh"  "$@";;
   cache)     exec bash "$HERE/fanout-cache.sh"     "$@";;
+  integrate) exec bash "$HERE/fanout-integrate.sh" "$@";;
   allocate)  exec bash "$HERE/fanout-allocate.sh"  "$@";;
   workspace) exec bash "$HERE/fanout-workspace.sh" "$@";;
   experience) exec bash "$HERE/fanout-experience.sh" "$@";;
   plan)      exec bash "$HERE/fanout-plan.sh"      "$@";;
   goal)      exec bash "$HERE/fanout-goal.sh"      "$@";;
+  loop)      exec bash "$HERE/fanout-loop.sh"      "$@";;
+  run)       exec bash "$HERE/fanout-run.sh"       "$@";;
   summary|round-summary) exec bash "$HERE/fanout-summary.sh" "$@";;
   ccb-sync)  exec bash "$HERE/fanout-ccb-sync.sh" "$@";;
   selftest)
@@ -46,6 +52,6 @@ case "$sub" in
     done
     [ "$ec" -eq 0 ] && echo "✓ selftest all passed" || echo "✗ selftest 有失败"
     exit "$ec";;
-  help|-h|--help) sed -n '2,23p' "$0";;
-  *) echo "fanout: 未知子命令 '$sub' (doctor|fleet|preflight|task|template|dispatch|cache|allocate|workspace|experience|plan|goal|summary|ccb-sync|selftest|help)" >&2; exit 2;;
+  help|-h|--help) sed -n '2,26p' "$0";;
+  *) echo "fanout: 未知子命令 '$sub' (doctor|fleet|preflight|task|template|dispatch|cache|integrate|allocate|workspace|experience|plan|goal|loop|run|summary|ccb-sync|selftest|help)" >&2; exit 2;;
 esac

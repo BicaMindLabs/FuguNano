@@ -55,5 +55,16 @@ EOF
 bash "$P" --config-only "$TMP/empty.config" >/dev/null 2>&1
 ok "空 model 值 → NO-GO" '[ "$?" -ne 0 ]'
 
+# .ccb/ gitignore 守卫 (只依赖 git; 用临时 repo + 干净 config 隔离测)
+GW="$TMP/ccbwork"; mkdir -p "$GW"
+git -C "$GW" init -q 2>/dev/null
+out_ign="$(CCB_WORK="$GW" bash "$P" --config-only "$TMP/clean.config" 2>&1)"
+ok ".ccb/ 未 gitignore → warn 提示" 'case "$out_ign" in *"未 gitignore"*) true;; *) false;; esac'
+printf '.ccb/\n' > "$GW/.gitignore"
+out_ok="$(CCB_WORK="$GW" bash "$P" --config-only "$TMP/clean.config" 2>&1)"
+ok ".ccb/ 已 gitignore → ok" 'case "$out_ok" in *"已 gitignore"*) true;; *) false;; esac'
+CCB_WORK="$GW" bash "$P" --config-only "$TMP/clean.config" >/dev/null 2>&1
+ok ".ccb gitignore 检查是 warn 级, 不阻断 GO" '[ "$?" -eq 0 ]'
+
 echo "fanout-preflight: $pass passed, $fail failed"
 [ "$fail" -eq 0 ]

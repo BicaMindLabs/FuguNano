@@ -5,16 +5,19 @@
 #   --harness 选执行器: ccb(默认, Claude Code cc-* 分身) / codex(codex exec) / opencode(opencode run)
 #     <target> 含义随 harness: ccb=ccb agent(cc-deepseek) / codex=model(gpt-5.5) / opencode=provider/model
 #   --workspace 前缀注入该工位分层 context (Zleap 式: 只喂该看的)
+#   --task-type T  把 (T, agent) 追加进 alloc ledger → 后续 `allocate feed --from-ledger` 用 verdict 喂回路由(数据飞轮)
 #   env: FANOUT_CCB / FANOUT_CODEX / FANOUT_OPENCODE (默认 ccb/codex/opencode; 测试可 stub)
+#        FANOUT_ALLOCATION_LEDGER (alloc ledger 路径, 与 allocate 一致)
 set -uo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CCB="${FANOUT_CCB:-ccb}"
+LEDGER="${FANOUT_ALLOCATION_LEDGER:-${FANOUT_STATE:-$HOME/.config/fanout}/alloc-ledger.tsv}"
 die(){ echo "fanout-dispatch: $*" >&2; exit 2; }
 
 agent="${1:-}"; shift || true
 [ -n "$agent" ] || die "用法: <agent> (--template <name> [--set K=V] | --prompt-file <f>) [--task <file>]"
 
-tpl=""; pfile=""; task=""; ws=""; harness="ccb"; sets=()
+tpl=""; pfile=""; task=""; ws=""; harness="ccb"; ttype=""; sets=()
 while [ "$#" -gt 0 ]; do
   case "$1" in
     --template)    tpl="${2:-}"; shift 2;;
@@ -23,6 +26,7 @@ while [ "$#" -gt 0 ]; do
     --workspace)   ws="${2:-}"; shift 2;;
     --harness)     harness="${2:-}"; shift 2;;
     --task)        task="${2:-}"; shift 2;;
+    --task-type)   ttype="${2:-}"; shift 2;;
     *) die "未知参数 '$1'";;
   esac
 done
@@ -53,5 +57,10 @@ esac
 # 记 TASK 日志 (可选)
 if [ -n "$task" ] && [ -f "$task" ]; then
   printf -- '- [%s] dispatch → %s [%s] (rc=%s)\n' "$(TZ=Asia/Shanghai date '+%Y-%m-%d %H:%M')" "$agent" "$harness" "$rc" >> "$task"
+fi
+# alloc ledger (可选): 记 (task-type, agent) 供 `allocate feed --from-ledger` 用 verdict 喂回路由
+if [ -n "$ttype" ]; then
+  mkdir -p "$(dirname "$LEDGER")"
+  printf '%s\t%s\n' "$ttype" "$agent" >> "$LEDGER"
 fi
 exit "$rc"

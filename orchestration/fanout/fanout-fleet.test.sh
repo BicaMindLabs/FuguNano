@@ -10,10 +10,12 @@ export CLAUDE_CODE_TEST_X=1   # 模拟会泄漏给子 cc-* 的 OAuth env
 pass=0; fail=0
 ok(){ if eval "$2"; then echo "  ✓ $1"; pass=$((pass+1)); else echo "  ✗ $1"; fail=$((fail+1)); fi; }
 
-# not-ready stub (ping 无 health)
+# not-ready stub (ping 无输出)
 notready(){ printf '#!/usr/bin/env bash\nexit 0\n' > "$TMP/ccb"; chmod +x "$TMP/ccb"; }
-# ready stub (ping ccbd → health)
-ready(){ printf '#!/usr/bin/env bash\ncase "$1 $2" in "ping ccbd") echo "ccbd health: alive";; esac\nexit 0\n' > "$TMP/ccb"; chmod +x "$TMP/ccb"; }
+# ready stub (ping ccbd → mount_state: mounted)
+ready(){ printf '#!/usr/bin/env bash\ncase "$1 $2" in "ping ccbd") printf "mount_state: mounted\\nhealth: alive\\n";; esac\nexit 0\n' > "$TMP/ccb"; chmod +x "$TMP/ccb"; }
+# unmounted stub (ccbd 活但未 mount → 派活会失败; 旧 grep 会假就绪, 回归测试)
+unmounted(){ printf '#!/usr/bin/env bash\ncase "$1 $2" in "ping ccbd") printf "mount_state: unmounted\\nhealth: unmounted\\n";; esac\nexit 0\n' > "$TMP/ccb"; chmod +x "$TMP/ccb"; }
 export FANOUT_CCB="$TMP/ccb"
 
 echo "fanout-fleet tests"
@@ -44,7 +46,14 @@ fi
 ok "status(not-ready) 报 down" 'o=$(bash "$F" status 2>&1); grep -q down <<<"$o"'
 
 ready
-ok "status(ready stub) 报 ready" 'o=$(bash "$F" status 2>&1); grep -q ready <<<"$o"'
+ok "status(ready stub=mounted) 报 ready" 'o=$(bash "$F" status 2>&1); grep -q ready <<<"$o"'
+
+# 回归: ccbd 活但 unmounted 必须报 down(不是假就绪), 否则会派活卡空队列
+unmounted
+ok "status(unmounted: 活但未挂载) 报 down 而非 ready" 'o=$(bash "$F" status 2>&1); grep -q down <<<"$o" && ! grep -q "✓ ready" <<<"$o"'
+# 回归: ccb ping 即使停了也回 desired_state: running(配置意图≠实际挂载), 不算就绪
+printf '#!/usr/bin/env bash\necho "desired_state: running"\n' > "$TMP/ccb"; chmod +x "$TMP/ccb"
+ok "status(desired_state:running 配置意图≠挂载) 报 down" 'o=$(bash "$F" status 2>&1); grep -q down <<<"$o"'
 
 bash "$F" down >/dev/null 2>&1; ok "down 不报错" '[ "$?" -eq 0 ]'
 bash "$F" bogus >/dev/null 2>&1; ok "未知子命令 → 非0" '[ "$?" -ne 0 ]'

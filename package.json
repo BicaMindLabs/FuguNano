@@ -19,6 +19,7 @@
     "test": "npm run test:plugin && npm run test:fanout",
     "scan": "bash scripts/scan-secrets.sh",
     "lint:shell": "bash scripts/check-shell.sh",
-    "ci": "npm run scan && npm run lint:shell && npm test"
+    "check:docs": "bash scripts/check-docs.sh",
+    "ci": "npm run scan && npm run lint:shell && npm run check:docs && npm test"
   }
 }

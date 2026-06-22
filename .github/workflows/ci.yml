@@ -43,6 +43,8 @@ jobs:
           shellcheck --version
       - name: bash -n + shellcheck
         run: bash scripts/check-shell.sh
+      - name: Docs match code (README ↔ fanout subcommands/counts)
+        run: bash scripts/check-docs.sh
 
   node:
     name: Plugin tests

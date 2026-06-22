@@ -38,12 +38,12 @@ Three roles, five phases. Planner orchestrates, the implementer fleet writes cod
 **Higher-level entry points** (optional, layered on the 5 phases):
 - **Goal mode** — declarative target with a deterministic gate: `"$FO" goal template` → fill `outcome/gate/rubric/rounds` → `"$FO" goal check <spec>` runs the gate (the loop drives to it). 目标达成 = gate 0 + reviewer ACCEPTED.
 - **Planning panel** — multi-model decomposition: `"$FO" plan "<goal>" --models cc-deepseek,cc-kimi,coder` fans the "拆解 goal" out to several models (each Writes its plan); you synthesize them into Phase 1.
-- **Allocation** — `"$FO" allocate <task-type> --top` → bench-recommended model (code→minimax, logic→kimi…); drives who gets which subtask in Phase 1.
+- **Allocation (adaptive)** — `"$FO" allocate <task-type> --top` → recommended model; a **bench-prior + battle-experience blend** (Beta-Bernoulli): the static `allocation.tsv` is the prior, and `"$FO" allocate record <task-type> <agent> ok|fail` (call after each verdict — ACCEPTED→`ok`, NEEDS FIX→`fail`) updates the posterior. **Cold-start == the static bench order**; it drifts only once you've recorded outcomes (KAPPA pseudo-counts gate how much), with Laplace smoothing so no agent is starved by one failure. `"$FO" allocate stats <type>` shows scores; `reset` clears. **Auto-feed (data flywheel)**: dispatch with `"$FO" dispatch <agent> --task-type <T> ...` so it logs `(T, agent)` to a ledger; after the round's verdict, `"$FO" allocate feed --from-ledger --result ok [--fail <agents-that-needed-fixing>]` feeds the whole round at once (the `cc-` prefix is normalized to the bench's bare name, so experience lands on the same key it ranks). Routing self-improves from verdicts without per-agent manual calls — but it plateaus at "best-in-pool per coarse task-type", and old stats decay when you upgrade a provider's model. **Iterations**: `--sample` switches ranking from greedy posterior-mean to **Thompson Sampling** (Gaussian-approx Beta sample → explores under-sampled agents, won't lock onto an early winner; Agrawal-Goyal 2012). `"$FO" allocate decay --gamma G [--type T]` discounts counts (`s,f ×G`) to forget stale stats after a model upgrade (discounted bandit; Garivier-Moulines 2011).
 - **Workspace 隔离**（借鉴 Zleap-Agent）— `"$FO" workspace context <ws>` 按工位组装分层 context（System + Workspace + Tools + Memory + History）；`"$FO" dispatch <agent> --workspace <ws> ...` 前缀注入，让(弱)模型只看该工位该看的，不被全量 context 淹没。工位: main/code/sql/chinese/review/web。
 
 ### Phase 1: Plan
 
-> Tooling: `FO=orchestration/fanout/fanout` — unified driver: `doctor` `preflight` `task` `template` `dispatch` `cache` `allocate` `workspace` `plan` `goal` `summary` `ccb-sync` `selftest`.
+> Tooling: `FO=orchestration/fanout/fanout` — unified driver: `doctor` `preflight` `task` `template` `dispatch` `cache` `integrate` `allocate` `workspace` `plan` `goal` `loop` `run` `summary` `ccb-sync` `selftest`.
 
 0. **Decide the mode** — small/focused task (1–2 files, one fix)? Skip the fleet: implement directly + Codex review (the high-value generation≠review gate). Fan-out-shaped (≥3–4 parallel subtasks / bulk / cost-sensitive)? Bring up the fleet:
    ```bash
@@ -159,26 +159,20 @@ The barrier passes only when **every dispatched task has returned** (`done` or `
 
 ### Phase 3: Integrate (operator = Integrator)
 
-Only after the **fan-in barrier passes** (all N returned). `"$FO" summary "$ROUND" --task "$F"` logs a round summary (per-task status). Read cached artifacts via `"$CACHE" collect "$ROUND"`, then cherry-pick each worktree's changes onto main:
+Only after the **fan-in barrier passes** (all N returned). `"$FO" summary "$ROUND" --task "$F"` logs a round summary (per-task status). Read cached artifacts via `"$CACHE" collect "$ROUND"`, then **`fanout integrate`** cherry-picks each worktree onto `main` — a conflict is isolated to that single agent (`cherry-pick --abort` keeps `main` clean) and the rest still integrate, instead of a bare loop that `break`s on the first conflict:
 
 ```bash
-# cherry-pick each worktree's changes onto the main branch
-for ag in <list-of-active-agents>; do
-  cd "$CCB_WORK/.ccb/workspaces/$ag"          # or $CCB_CLAUDE/.ccb/workspaces/cc-claude
-  git add -A
-  if [ -n "$(git status --porcelain)" ]; then
-    git -c user.email=ccb@local -c user.name=$ag commit -q -m "$ag: <subtask summary>"
-    SHA=$(git rev-parse HEAD)
-    cd "$CCB_WORK"
-    git cherry-pick $SHA || { echo "conflict — resolve manually"; break; }
-  fi
-done
+"$FO" integrate --work "$CCB_WORK" --agents "cc-deepseek cc-glm cc-doubao" --task "$F"
+# cc-claude in a separate ccb project ($CCB_CLAUDE) → one more call for that repo:
+"$FO" integrate --work "$CCB_CLAUDE" --agents "cc-claude" --task "$F"
+# exit 0 = no conflicts; exit 1 = some conflicts (each listed with its SHA for manual cherry-pick/rebase)
 
-# run local sanity tests
-pytest tests/ -q   # or the project's own test command
+pytest tests/ -q   # or the project's own deterministic sanity command
 ```
 
-**Append to the TASK log** after each cherry-pick + sanity result.
+> **Prereq**: the work repo must **gitignore `.ccb/`** — worktrees live under `$CCB_WORK/.ccb/workspaces/`, *inside* the main worktree; without the ignore a `git add -A` swallows them as embedded repos and poisons `status`. `fanout integrate` only `add`s inside each worktree (never `add -A` on `main`) and passes an explicit committer identity to `cherry-pick` (so it works on machines/CI with no global git config), but the project itself must ignore `.ccb/`.
+
+Each agent edits *different* files (Phase 1 split), so conflicts are rare; when one happens the report names the agent + SHA and you resolve it manually, the others already landed. **The integrate summary + sanity result go to the TASK log** (`--task`).
 
 ### Phase 4: Review (coder = independent reviewer)
 
@@ -214,27 +208,33 @@ EOF
 - **At least 2 review passes**: even a first ACCEPTED gets one independent confirmation (verification is probabilistic).
 - **Non-convergence → meta-reflect, then escalate** — don't keep retrying blindly.
 
-```
-MAX_ROUNDS=3                       # cost cap (research ceiling 5-6; rounds 1-2 already do the bulk). Over → escalate
-BEST=$(git rev-parse HEAD); BEST_N=<prev Findings count>     # keep-best baseline
+**Driven by the `fanout loop` state machine** — the exit-state logic is code, not hand-run pseudocode. `init` once, then per round: run the gate → reviewer → `record` the round → `decide` returns the next move. keep-best (best_sha/best_n) is auto-maintained; a round worse than best is flagged for `git reset`.
+
+```bash
+"$FO" loop init --max 3 --best-sha "$(git rev-parse HEAD)" --task "$F"   # research ceiling 5-6; rounds 1-2 do the bulk
+
 round=1
-while round <= MAX_ROUNDS:
-  # 1) deterministic gate (objective, before subjective review) — build + test + lint
-  PREV=$(git rev-parse HEAD)
-  run build/test/lint; red → go straight to (5) fix (don't waste the reviewer this round)
-  # 2) reviewer pass (incremental: from round 2 only send this round's diff)
-  VERDICT, FINDINGS = ccb ask coder(this round's diff)
-  # 3) keep-best — if this round is worse than BEST / introduced new issues → git reset to BEST, log "oscillation"
-  if FINDINGS worse than BEST_N or new class of issue: git reset --hard $BEST
-  else: BEST=$(git rev-parse HEAD); BEST_N=len(FINDINGS)
-  # 4) exit check
-  if VERDICT == ACCEPTED:
-     if first ACCEPTED: run 1 independent confirmation pass; still ACCEPTED → wrap up DONE; else continue
-  # 5) Fix (operator Edit patch, NOT re-dispatch to implementer) + log this round to the TASK file
-  fix each Finding + commit
-  TASK append: "## Loop Round {round} — gate:<pass/fail> fixed:<summary> verdict:<…>"
-  if same class of Findings 2 rounds running (non-convergence): break  # → meta-reflect
-  round++
+while :; do
+  # 1) deterministic gate FIRST (objective, before the subjective reviewer) — build + test + lint
+  GATE=pass; "$FO" goal check <spec> || GATE=fail        # red → fix without wasting the reviewer this round
+  # 2) reviewer pass (incremental: from round 2 send only this round's diff) → VERDICT + Findings count N
+  #    (skip the reviewer when GATE=fail; go straight to fix)
+  # 3) record the round — classify Findings (borrowed from no-mistakes): --ask-user K = how many of the N
+  #    touch intent / need human judgment; the rest are mechanical. keep-best auto-maintained; --same-class if repeats
+  "$FO" loop record $round --gate $GATE --verdict <ACCEPTED|NEEDSFIX> --findings <N> --ask-user <K> \
+        --sha "$(git rev-parse HEAD)" [--same-class] [--note "..."]
+  # 4) ask the state machine (token on stdout; exit 0=DONE / 10=auto / 11=ask-user / 20=escalate)
+  case "$("$FO" loop decide | head -1)" in
+    DONE)                          break ;;   # ≥2 ACCEPTED (2nd independent confirmation) → wrap up
+    CONFIRM)                       : ;;       # 1st ACCEPTED → run ONE more independent confirm pass
+    CONTINUE)                      : ;;       # all Findings mechanical → operator Edit-patch (NOT re-dispatch)
+    ASK_USER)                      : ;;       # some Findings touch intent → escalate THOSE to human (approve/fix/skip), auto-patch the rest
+    ESCALATE_MAX|ESCALATE_NONCONV) break ;;   # stop — escalate (see exit states below)
+  esac
+  "$FO" loop status >> "$F"                                # log the round table to the TASK file
+  # operator fixes Findings (Edit patch), commits; if worse-than-best was flagged → git reset --hard <best_sha>
+  round=$((round+1))
+done
 ```
 
 **Three exit states (must reach exactly one; never hard-mark DONE)**:
