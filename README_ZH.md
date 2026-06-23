@@ -1,6 +1,6 @@
 # open-sakanafugu
 
-[![CI](https://github.com/LeoLin990405/open-sakanafugu/actions/workflows/ci.yml/badge.svg)](https://github.com/LeoLin990405/open-sakanafugu/actions/workflows/ci.yml)
+[![CI](https://github.com/BicaMindLabs/open-sakanafugu/actions/workflows/ci.yml/badge.svg)](https://github.com/BicaMindLabs/open-sakanafugu/actions/workflows/ci.yml)
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![Node](https://img.shields.io/badge/node-%E2%89%A518.18-339933.svg)](package.json)
 [![Tests](https://img.shields.io/badge/tests-312%20passing-success.svg)](orchestration/fanout)
@@ -126,7 +126,7 @@ open-sakanafugu 是这个*想法*的一个**独立、免训练、可自托管的
 **要求：** macOS/Linux · Node ≥ 18.18 · `git`、`tmux` · [ccb](https://github.com/SeemSeam/claude_codex_bridge)（多窗口 fan-out 用）· `codex`（reviewer）· 可选 `agy`（前端）。
 
 ```bash
-git clone https://github.com/LeoLin990405/open-sakanafugu
+git clone https://github.com/BicaMindLabs/open-sakanafugu
 cd open-sakanafugu
 
 # 0) 看这台机器有什么 + 拿一份工作流推荐（绝不读 key 的值）

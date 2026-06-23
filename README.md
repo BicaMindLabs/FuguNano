@@ -1,6 +1,6 @@
 # open-sakanafugu
 
-[![CI](https://github.com/LeoLin990405/open-sakanafugu/actions/workflows/ci.yml/badge.svg)](https://github.com/LeoLin990405/open-sakanafugu/actions/workflows/ci.yml)
+[![CI](https://github.com/BicaMindLabs/open-sakanafugu/actions/workflows/ci.yml/badge.svg)](https://github.com/BicaMindLabs/open-sakanafugu/actions/workflows/ci.yml)
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![Node](https://img.shields.io/badge/node-%E2%89%A518.18-339933.svg)](package.json)
 [![Tests](https://img.shields.io/badge/tests-312%20passing-success.svg)](orchestration/fanout)
@@ -126,7 +126,7 @@ open-sakanafugu is an **independent, training-free, self-hostable analogue** of 
 **Requirements:** macOS/Linux · Node ≥ 18.18 · `git`, `tmux` · [ccb](https://github.com/SeemSeam/claude_codex_bridge) (for multi-window fan-out) · `codex` (reviewer) · optional `agy` (frontend).
 
 ```bash
-git clone https://github.com/LeoLin990405/open-sakanafugu
+git clone https://github.com/BicaMindLabs/open-sakanafugu
 cd open-sakanafugu
 
 # 0) See what THIS machine has + get a workflow recommendation (never reads key values)

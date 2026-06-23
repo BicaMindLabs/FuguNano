@@ -72,5 +72,5 @@ First public release — the Chinese-model multi-agent coding workflow plus its 
 ### Documentation
 - Bilingual GitHub-standard README: English `README.md` + `README_ZH.md` (badges / TOC / architecture / CLI reference / workflow / security / acknowledgements). Acknowledges openai/codex-plugin-cc (Apache-2.0) + Zleap-Agent (concepts).
 
-[Unreleased]: https://github.com/LeoLin990405/open-sakanafugu/compare/v1.0.0...HEAD
-[1.0.0]: https://github.com/LeoLin990405/open-sakanafugu/releases/tag/v1.0.0
+[Unreleased]: https://github.com/BicaMindLabs/open-sakanafugu/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/BicaMindLabs/open-sakanafugu/releases/tag/v1.0.0
