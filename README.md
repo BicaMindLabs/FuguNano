@@ -103,6 +103,8 @@ open-sakanafugu is an **independent, training-free, self-hostable analogue** of 
 
 **What's the same:** the philosophy — *harness objective verification, don't trust a model's self-report*, and let coordination (not model size) do the work. **What's different:** Fugu *trains/evolves* its coordinators (and ships one hosted, proprietary API); open-sakanafugu is training-free and runs today over any model fleet — the "learning" is a Bayesian prior+posterior updated from each review verdict, not a gradient step, and every routing decision is transparent bash. It is inspired by the Fugu *framing*, not derived from Sakana's code or models — a hand-written harness will trail a trained 0.6B coordinator on coordination quality (the papers' ablations show the roles/depth matter), but it costs nothing to run and every decision is inspectable.
 
+> **Want a faithful reimplementation instead?** [trotsky1997/OpenFugu](https://github.com/trotsky1997/OpenFugu) actually *trains* the coordinators — TRINITY via sep-CMA-ES, Conductor via GRPO, with published weights — and serves them as an OpenAI-compatible API; it reconstructs Fugu's architecture. open-sakanafugu deliberately takes the **training-free harness route**: no weights, no GPU, no training pipeline — just orchestration of a model fleet you can read and run today, wired into a coding workflow rather than a served endpoint. Same inspiration, complementary answers.
+
 ---
 
 ## Repository layout
@@ -293,6 +295,7 @@ This workflow handles API keys. Hard rules (full policy in [`SECURITY.md`](SECUR
 - [**merkyor/Lynn**](https://gitee.com/merkyor/Lynn) — the orchestrator-side **ownership / violation-detection** idea behind `integrate --ownership` (enforce on the orchestrator, don't trust the worker's prompt).
 - **Anthropic `skill-creator`** (the official Claude Code meta-skill) — `fanout skills forge` delegates skill *authoring* to it, and the `validate` gate mirrors its `quick_validate.py` checks.
 - [**Sakana AI — Fugu**](https://sakana.ai/fugu/) — the framing this project is named for: many agents behind one interface, a learned coordinator + verifier (TRINITY / Conductor). open-sakanafugu is an independent, training-free, harness-engineered analogue — inspired by the *idea*, not derived from their code (see [Relation to Sakana Fugu](#relation-to-sakana-fugu)).
+- [**trotsky1997/OpenFugu**](https://github.com/trotsky1997/OpenFugu) — a sibling effort and faithful open *reimplementation* of Fugu that actually trains TRINITY/Conductor and serves them as an API. Independent project, same inspiration; open-sakanafugu is the complementary training-free harness take.
 - The **Phase 5 loop** design draws on agentic verification-loop work (Self-Refine, Reflexion, loop-engineering 2026); the **adaptive router** on the multi-armed-bandit literature — Thompson Sampling (Agrawal & Goyal 2012), non-stationary/discounted bandits (Garivier & Moulines 2011).
 
 See [`NOTICE`](NOTICE) for attribution detail.

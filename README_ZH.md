@@ -103,6 +103,8 @@ open-sakanafugu 是这个*想法*的一个**独立、免训练、可自托管的
 
 **相同的是**哲学—— *用 harness 做客观验证，不信模型自报*，并让协调（而非模型大小）来干活。**不同的是**：Fugu **训练/进化**它的协调器（并对外是一个托管的专有 API）；open-sakanafugu 免训练、今天就能跑在任何模型队上——它的"学习"是从每条 review verdict 更新的贝叶斯先验+后验，不是梯度步，而且每个路由决策都是透明的 bash。它受 Fugu 的*框架*启发，**不源自** Sakana 的代码或模型——一个手写 harness 在协调质量上会输给训练出来的 0.6B 协调器（论文的消融证明角色/深度确实有用），但它零成本可跑、每个决策可审。
 
+> **想要忠实复现？** [trotsky1997/OpenFugu](https://github.com/trotsky1997/OpenFugu) 是**真训**协调器的版本——TRINITY 用 sep-CMA-ES、Conductor 用 GRPO，权重已公开——并把它们当 OpenAI 兼容 API 对外服务，重建了 Fugu 的架构。open-sakanafugu 刻意走**免训练的 harness 路线**：没有权重、没有 GPU、没有训练管线——只是编排一池你今天就能读、能跑的模型，接进一条编码工作流而非一个服务端点。同一个灵感，互补的答案。
+
 ---
 
 ## 仓库结构
@@ -294,6 +296,7 @@ CI（[`.github/workflows/ci.yml`](.github/workflows/ci.yml)）跑三个 job：**
 - [**merkyor/Lynn**](https://gitee.com/merkyor/Lynn) —— `integrate --ownership` 背后的**编排器侧 ownership / 越界检测**思想（在编排器侧强制、不信 worker 的 prompt）。
 - **Anthropic `skill-creator`**（官方 Claude Code 元技能）—— `fanout skills forge` 把 skill *撰写*委托给它，`validate` 门镜像其 `quick_validate.py` 的检查。
 - [**Sakana AI — Fugu**](https://sakana.ai/fugu/) —— 本项目命名所致敬的框架：多 agent 藏在单一接口后，一个学习式协调器 + verifier（TRINITY / Conductor）。open-sakanafugu 是一个独立、免训练、harness 工程化的类比——受其*想法*启发，不源自他们的代码（见 [与 Sakana Fugu 的关系](#与-sakana-fugu-的关系)）。
+- [**trotsky1997/OpenFugu**](https://github.com/trotsky1997/OpenFugu) —— 一个 sibling 项目，Fugu 的忠实开源*复现*（真训 TRINITY/Conductor 并当 API 服务）。独立项目、同一个灵感；open-sakanafugu 是互补的免训练 harness 路线。
 - **Phase 5 loop** 设计参考 agentic verification loop 文献（Self-Refine、Reflexion、loop-engineering 2026）；**自适应路由**参考多臂 bandit 文献——Thompson Sampling（Agrawal & Goyal 2012）、非平稳/折扣 bandit（Garivier & Moulines 2011）。
 
 归属细节见 [`NOTICE`](NOTICE)。
