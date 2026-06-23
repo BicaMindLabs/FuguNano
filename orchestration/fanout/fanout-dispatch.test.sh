@@ -48,6 +48,14 @@ chmod +x "$TMP/opencode"; export FANOUT_OPENCODE="$TMP/opencode"
 bash "$D" doubao/doubao-code --harness opencode --prompt-file "$TMP/p.md" >/dev/null 2>&1
 ok "opencode harness → opencode run -m <provider/model>" 'grep -q "ARGV: run -m doubao/doubao-code" "$TMP/oc.called"'
 
+# --skills 注入 skill context 进 prompt
+SK="$TMP/skills"; mkdir -p "$SK/inj-tool"
+printf -- '---\nname: inj-tool\ndescription: INJECTED-SKILL-DESC for testing\n---\nbody\n' > "$SK/inj-tool/SKILL.md"
+export FANOUT_SKILLS_ROOT="$SK" FANOUT_SKILLS_CATALOG="$TMP/skcat.tsv" FANOUT_SKILLS_NO_PLUGINS=1
+bash "$D" cc-x --prompt-file "$TMP/p.md" --skills "inj-tool" >/dev/null 2>&1
+ok "--skills 把 skill 描述注入 prompt(经 stdin)" 'grep -q "INJECTED-SKILL-DESC" "$TMP/called"'
+ok "--skills 注入后正文仍在" 'grep -q "自定义 prompt 内容" "$TMP/called"'
+
 # --task-type 写 alloc ledger (数据飞轮捕获)
 rm -f "$FANOUT_ALLOCATION_LEDGER"
 bash "$D" cc-doubao --prompt-file "$TMP/p.md" --task-type code >/dev/null 2>&1

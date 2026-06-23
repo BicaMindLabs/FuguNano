@@ -6,6 +6,7 @@
 #     <target> 含义随 harness: ccb=ccb agent(cc-deepseek) / codex=model(gpt-5.5) / opencode=provider/model
 #   --workspace 前缀注入该工位分层 context (Zleap 式: 只喂该看的)
 #   --task-type T  把 (T, agent) 追加进 alloc ledger → 后续 `allocate feed --from-ledger` 用 verdict 喂回路由(数据飞轮)
+#   --skills a,b   把选中 skill 注入该 agent context (progressive disclosure; 经 fanout-skills inject)
 #   env: FANOUT_CCB / FANOUT_CODEX / FANOUT_OPENCODE (默认 ccb/codex/opencode; 测试可 stub)
 #        FANOUT_ALLOCATION_LEDGER (alloc ledger 路径, 与 allocate 一致)
 set -uo pipefail
@@ -17,7 +18,7 @@ die(){ echo "fanout-dispatch: $*" >&2; exit 2; }
 agent="${1:-}"; shift || true
 [ -n "$agent" ] || die "用法: <agent> (--template <name> [--set K=V] | --prompt-file <f>) [--task <file>]"
 
-tpl=""; pfile=""; task=""; ws=""; harness="ccb"; ttype=""; sets=()
+tpl=""; pfile=""; task=""; ws=""; harness="ccb"; ttype=""; skills=""; sets=()
 while [ "$#" -gt 0 ]; do
   case "$1" in
     --template)    tpl="${2:-}"; shift 2;;
@@ -27,10 +28,15 @@ while [ "$#" -gt 0 ]; do
     --harness)     harness="${2:-}"; shift 2;;
     --task)        task="${2:-}"; shift 2;;
     --task-type)   ttype="${2:-}"; shift 2;;
+    --skills)      skills="${2:-}"; shift 2;;
     *) die "未知参数 '$1'";;
   esac
 done
 
+# skills 注入前缀 (progressive disclosure: 只把该 agent 该爬的 skill 喂给它)
+skills_ctx=""
+[ -n "$skills" ] && skills_ctx="$(bash "$HERE/fanout-skills.sh" inject "$skills")
+"
 # workspace context 前缀 (借鉴 Zleap: 只喂该工位该看的分层 context)
 ctx=""
 [ -n "$ws" ] && ctx="$(bash "$HERE/fanout-workspace.sh" context "$ws")
@@ -44,7 +50,7 @@ elif [ -n "$tpl" ]; then
 elif [ -n "$ws" ]; then
   body=""   # 仅 workspace context 即作 prompt
 else die "需要 --template <name> / --prompt-file <f> / --workspace <name>"; fi
-prompt="${ctx}${body}"
+prompt="${skills_ctx}${ctx}${body}"
 
 # 派活 (harness 无关)：<target> 含义随 harness 变
 case "$harness" in

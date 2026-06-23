@@ -3,7 +3,7 @@
 [![CI](https://github.com/LeoLin990405/cn-cc-workflow/actions/workflows/ci.yml/badge.svg)](https://github.com/LeoLin990405/cn-cc-workflow/actions/workflows/ci.yml)
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![Node](https://img.shields.io/badge/node-%E2%89%A518.18-339933.svg)](package.json)
-[![Tests](https://img.shields.io/badge/tests-259%20passing-success.svg)](orchestration/fanout)
+[![Tests](https://img.shields.io/badge/tests-312%20passing-success.svg)](orchestration/fanout)
 
 **English | [简体中文](README_ZH.md)**
 
@@ -87,7 +87,7 @@ Small / cheap models fail when an agent shows them *every* tool, memory, rule an
 |---|---|
 | `backends/bin/` | The Chinese-model backends: `cc_model_launch` shared core + 9 thin `*-code` launchers + `cc-model-registry.tsv` + `cc-models` dispatcher + **`cc-sync`** (auto-follow Claude Code + model updates) |
 | `backends/{install,verify}.sh`, `backends/prompts/` | Install / self-check / per-provider prompt add-ons |
-| `orchestration/fanout/` | The `fanout` CLI (17 subcommands) + `SKILL.md` (5-phase workflow + Phase 5 loop) + `workspaces/` + `templates/` + 17 test suites |
+| `orchestration/fanout/` | The `fanout` CLI (18 subcommands) + `SKILL.md` (5-phase workflow + Phase 5 loop) + `workspaces/` + `templates/` + 18 test suites |
 | `orchestration/ccb/ccb.config.example` | Sanitized ccb multi-window topology template (placeholder keys) |
 | `orchestration/cn-plugin/cn/` | Claude Code plugin: `/cn:*` commands + `cn-dispatch` agent (derived from `openai/codex-plugin-cc`) |
 | `orchestration/agent-team/` | Workflow-tool orchestration example (multi-model planning → implement → review) |
@@ -145,7 +145,7 @@ The installer copies the skill plus all `fanout` tools, workspaces and templates
 
 ## The `fanout` CLI
 
-`orchestration/fanout/fanout` is the single entry point — one bash CLI any agent (or you) can drive. Run `fanout help` for the full list; the **17 subcommands** group by where they sit in the pipeline.
+`orchestration/fanout/fanout` is the single entry point — one bash CLI any agent (or you) can drive. Run `fanout help` for the full list; the **18 subcommands** group by where they sit in the pipeline.
 
 **Setup & recon**
 
@@ -163,6 +163,7 @@ The installer copies the skill plus all `fanout` tools, workspaces and templates
 | `fanout plan "<goal>" [--models a,b,c]` | **Planning panel** — fan a goal decomposition out to several models |
 | `fanout allocate <type> [--top] [--sample]` · `record`·`feed`·`stats`·`reset`·`decay` | **Learning router** (Beta-Bernoulli): static bench prior + verdict posterior. `feed --from-ledger` closes a flywheel (`dispatch --task-type` logs `(type, agent)`, one `feed`/round updates it); `--sample` = Thompson Sampling (explores under-sampled agents; Agrawal-Goyal 2012); `decay` discounts stale stats after a model upgrade (Garivier-Moulines 2011) |
 | `fanout workspace list\|show\|model\|context <ws>` | Per-task **context isolation** — assemble `System + Workspace + Tools + Memory + History` |
+| `fanout skills index\|list\|match\|show\|inject\|validate\|forge` | **Skills mother-catalog** — scan **3 sources** (user `~/.claude/skills` + `.system` meta-skills incl. the official `skill-creator` + plugin marketplaces, `plugin:skill` ids) into one compact catalog (source · functional/note · path); `inject` feeds only the chosen skills into an agent (pair with `dispatch --skills` for progressive disclosure). **`forge`** closes the loop: gather a precipitated method (`--from-experience`/`--source`) → candidate gate → dispatch a worker with `skill-creator` to author a new skill → **`validate`** quality gate (mirrors the official `quick_validate.py`; `--official` uses it directly) → `index --refresh` folds it back in (authoring delegated to the official skill-creator) |
 | `fanout template <name> [--set K=V]` | Render a prompt template (`impl` / `analysis` / `review`) |
 | `fanout goal template\|show\|check <spec>` | **Goal mode** — declarative target + deterministic acceptance gate |
 
@@ -170,7 +171,7 @@ The installer copies the skill plus all `fanout` tools, workspaces and templates
 
 | Command | What it does |
 |---|---|
-| `fanout dispatch <target> [--harness ccb\|codex\|opencode] [--workspace ws] [--task-type T]` | Dispatch to an implementer on **any harness** (ccb / codex / opencode): render → run → log; `--task-type` feeds the routing flywheel |
+| `fanout dispatch <target> [--harness ccb\|codex\|opencode] [--workspace ws] [--task-type T] [--skills a,b]` | Dispatch to an implementer on **any harness** (ccb / codex / opencode): render → run → log; `--task-type` feeds the routing flywheel, `--skills` injects only the needed skills |
 | `fanout cache init\|put\|fail\|barrier\|collect\|resume\|...` | Result cache + **fan-in barrier** (dispatch N ⇒ return N) + timing + resume |
 
 **Integrate · review · loop**
@@ -188,7 +189,7 @@ The installer copies the skill plus all `fanout` tools, workspaces and templates
 |---|---|
 | `fanout experience add\|list\|recall\|show <ws>` | **Experience memory** — completed work → reusable method → sanitized → recalled into context |
 | `fanout ccb-sync check\|adapt [--apply]` | Adapt after a ccb update (version drift · grafting check · ccbd restart) |
-| `fanout selftest` | Run all 17 test suites (259 assertions) |
+| `fanout selftest` | Run all 18 test suites (312 assertions) |
 
 ---
 
@@ -236,7 +237,7 @@ make ci          # = scan + lint + check-docs + test (CI-equivalent)
 make scan        # secret-leak gate (fingerprints + ccb.config placeholder check)
 make lint        # bash -n + shellcheck (.shellcheckrc)
 make check-docs  # docs-match-code gate: README subcommands/counts == the fanout CLI
-make test        # cn-plugin + fanout selftest (259 assertions)
+make test        # cn-plugin + fanout selftest (312 assertions)
 make doctor      # environment recon
 make help        # all targets
 

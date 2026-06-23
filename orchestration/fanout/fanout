@@ -11,6 +11,7 @@
 #   fanout cache ...           结果缓存 + fan-in barrier (init|put|fail|barrier|collect|resume|...)
 #   fanout integrate --work <repo> --agents "a b" [--onconflict abort|skip]  Phase3 worktree→main cherry-pick(冲突隔离)
 #   fanout allocate <task-type> [--top]|record|stats|reset   推荐模型 (bench 先验+实战后验混合)
+#   fanout skills index|list|match|show|inject   本机 skills 总目录(母目录)+ 按需注入 agent
 #   fanout workspace list|show|model|context <name>   工位上下文隔离 (借鉴 Zleap)
 #   fanout experience add|list|recall|show <ws>   经验记忆: 完成→抽方法→脱敏存→复用
 #   fanout plan "<goal>" [--models a,b,c]   多模型规划面板 (各自 Write 方案)
@@ -35,6 +36,7 @@ case "$sub" in
   cache)     exec bash "$HERE/fanout-cache.sh"     "$@";;
   integrate) exec bash "$HERE/fanout-integrate.sh" "$@";;
   allocate)  exec bash "$HERE/fanout-allocate.sh"  "$@";;
+  skills)    exec bash "$HERE/fanout-skills.sh"    "$@";;
   workspace) exec bash "$HERE/fanout-workspace.sh" "$@";;
   experience) exec bash "$HERE/fanout-experience.sh" "$@";;
   plan)      exec bash "$HERE/fanout-plan.sh"      "$@";;
@@ -52,6 +54,6 @@ case "$sub" in
     done
     [ "$ec" -eq 0 ] && echo "✓ selftest all passed" || echo "✗ selftest 有失败"
     exit "$ec";;
-  help|-h|--help) sed -n '2,26p' "$0";;
-  *) echo "fanout: 未知子命令 '$sub' (doctor|fleet|preflight|task|template|dispatch|cache|integrate|allocate|workspace|experience|plan|goal|loop|run|summary|ccb-sync|selftest|help)" >&2; exit 2;;
+  help|-h|--help) sed -n '2,27p' "$0";;
+  *) echo "fanout: 未知子命令 '$sub' (doctor|fleet|preflight|task|template|dispatch|cache|integrate|allocate|skills|workspace|experience|plan|goal|loop|run|summary|ccb-sync|selftest|help)" >&2; exit 2;;
 esac
