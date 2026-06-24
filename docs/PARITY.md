@@ -27,5 +27,8 @@ The TS CLI (`fugue`, clipanion) landed in iter13 as a thin shell over the tested
 | 17 | `template` (render) | `ContextAssembler` (template part) | ✓ | ◐ core (iter6) | ☐ |
 | 18 | `ccb-sync` (check/adapt) | CcbSync (drift detect) | ✓ | ◐ core (iter11) | ☐ |
 | — | `(coordinator)` — wires the ports into the pipeline | `Coordinator` + `wire.ts` | n/a (driver) | ◐ core (iter12) | ☐ |
+| — | `(self-harness)` — self-improving harness loop | `SelfHarnessLoop` + `WeaknessMiner`/`HarnessProposer`/`HarnessValidator` | n/a (net-new) | ◐ core (iter14) | ☐ |
 
 Migration order (riskiest-last): pure strategies/state first (`allocate`, `loop`, `cache`, gates), then stores (`workspace`/`experience`/`skills`), then IO-heavy adapters (`harness`/`fleet`/`dispatch`), then the `Coordinator`.
+
+Beyond parity — **net-new capabilities** that abstract a studied reference into the engine ("our own thing", not a bash port). `(self-harness)` (iter14) realizes the Self-Harness paper ([arXiv 2606.09498](https://arxiv.org/abs/2606.09498)): with the model/evaluator/benchmark held fixed, only the harness config evolves — each round mines verifier-grounded weaknesses, proposes bounded single-surface edits, and promotes one only under the non-regression gate `Δin ≥ 0 ∧ Δho ≥ 0 ∧ max > 0`. Core landed (pure gate + 3 ports + `SelfHarnessLoop`, 14 tests); live model-backed miner/proposer + a `Coordinator`-backed validator + a `fugue self-harness` CLI are the next slice. It composes with the bandit `AllocationStrategy` (which picks *who* runs) by learning *how the harness is configured*.

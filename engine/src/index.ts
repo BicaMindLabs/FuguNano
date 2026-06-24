@@ -98,6 +98,25 @@ export type { VersionDrift } from './domain/ccb-sync.js';
 export { detectDrift } from './domain/ccb-sync.js';
 export type { RoleStatus, BackendStatus, DoctorReport } from './domain/doctor.js';
 export { readyBackends, recommend } from './domain/doctor.js';
+export type {
+  EditableSurface,
+  HarnessConfig,
+  FailureSignature,
+  TaggedFailure,
+  WeaknessCluster,
+  HarnessEdit,
+  SplitScores,
+  ValidationVerdict,
+  LineageEntry,
+} from './domain/self-harness.js';
+export { EDITABLE_SURFACES } from './domain/self-harness.js';
+export {
+  acceptEdit,
+  applyEdit,
+  clusterWeaknesses,
+  mergeAccepted,
+  totalDelta,
+} from './domain/self-harness-accept.js';
 export {
   rankAgents,
   applyOutcome,
@@ -120,6 +139,11 @@ export type { VcsPort } from './domain/ports/vcs.js';
 export type { Integrator, IntegrateOptions } from './domain/ports/integrator.js';
 export type { SkillCatalog } from './domain/ports/skill-catalog.js';
 export type { TaskStore } from './domain/ports/task-store.js';
+export type {
+  WeaknessMiner,
+  HarnessProposer,
+  HarnessValidator,
+} from './domain/ports/self-harness.js';
 
 // Infra — injected IO
 export type { Clock } from './infra/clock.js';
@@ -167,3 +191,10 @@ export {
   type RunReport,
 } from './app/coordinator.js';
 export { wireCoordinator, type WireConfig } from './app/wire.js';
+
+// Self-Harness — the engine's self-improving-harness loop (our abstraction of arXiv 2606.09498)
+export {
+  SelfHarnessLoop,
+  type SelfHarnessDeps,
+  type RoundResult,
+} from './app/self-harness-loop.js';

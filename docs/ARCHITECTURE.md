@@ -41,6 +41,7 @@ Rule: `domain` imports nothing outward. `app` imports only `domain`. `adapters`/
 | our **fan-in barrier** | dispatch N ⇒ N terminal, durable, resumable | `ResultStore` + `Barrier`/`RoundManifest` |
 | **skills catalog** | one catalog over all sources; inject only needed | `SkillCatalog` (search) + `SkillInjector` |
 | **codex-plugin-cc** (multi-harness) | one job model over ccb/codex/opencode | `Harness` (submit/status/cancel/collect) |
+| **Self-Harness** ([arXiv 2606.09498](https://arxiv.org/abs/2606.09498); evolve the *harness*, not the model) | mine verifier-grounded weaknesses → propose bounded single-surface edits → promote only under a non-regression gate | `SelfHarnessLoop` (app) + `WeaknessMiner`/`HarnessProposer`/`HarnessValidator` (ports) + pure `acceptEdit` (`Δin≥0 ∧ Δho≥0 ∧ max>0`) |
 
 ## 4. Domain — value objects
 
