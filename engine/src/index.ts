@@ -79,6 +79,15 @@ export type {
   IntegrationReport,
 } from './domain/vcs.js';
 export { allClean } from './domain/vcs.js';
+export type { SkillType, SkillSourceKind, SkillRef, Catalog, SkillSource } from './domain/skill.js';
+export { DEFAULT_NOTE_RE } from './domain/skill.js';
+export {
+  parseDescription,
+  classifyType,
+  matchSkills,
+  renderInjection,
+  type MatchOptions,
+} from './domain/skill-parse.js';
 export {
   rankAgents,
   applyOutcome,
@@ -99,6 +108,7 @@ export type { WorkspaceStore } from './domain/ports/workspace-store.js';
 export type { ExperienceStore } from './domain/ports/experience-store.js';
 export type { VcsPort } from './domain/ports/vcs.js';
 export type { Integrator, IntegrateOptions } from './domain/ports/integrator.js';
+export type { SkillCatalog } from './domain/ports/skill-catalog.js';
 
 // Infra — injected IO
 export type { Clock } from './infra/clock.js';
@@ -128,6 +138,7 @@ export { FsWorkspaceStore } from './adapters/workspace/fs-workspace-store.js';
 export { FsExperienceStore } from './adapters/experience/fs-experience-store.js';
 export { GitVcsPort } from './adapters/integrate/git-vcs.js';
 export { DefaultIntegrator } from './adapters/integrate/default-integrator.js';
+export { FsSkillCatalog } from './adapters/skills/fs-skill-catalog.js';
 
 // App helpers
 export { waitForRound } from './app/wait-for-round.js';

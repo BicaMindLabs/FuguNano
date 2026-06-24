@@ -14,7 +14,7 @@ Legend: `bash ✓` shipped in shell · `ts …` engine status (`◐ core` = port
 | 6 | `integrate` (+ --ownership) | `Integrator` + `VcsPort` + ownership | ✓ | ◐ core (iter8) | ☐ |
 | 7 | `workspace` (list/show/model/context) | `Workspace` / `ContextAssembler` | ✓ | ◐ core (iter6) | ☐ |
 | 8 | `experience` (add/recall/...) | `ExperienceStore` | ✓ | ◐ core (iter7) | ☐ |
-| 9 | `skills` (index/match/inject/forge/validate) | `SkillCatalog` | ✓ | ☐ | ☐ |
+| 9 | `skills` (index/match/inject) | `SkillCatalog` | ✓ | ◐ core (iter9) | ☐ |
 | 10 | `dispatch` (--harness ...) | `Harness` + `Phase` | ✓ | ◐ core (iter5) | ☐ |
 | 11 | `fleet` (status/up/down) | `Harness.health` + launcher | ✓ | ◐ health (iter5) | ☐ |
 | 12 | `doctor` | recon (composition of `Harness.health`/gates) | ✓ | ☐ | ☐ |
