@@ -10,7 +10,7 @@ Legend: `bash ✓` shipped in shell · `ts …` engine status (`◐ core` = port
 | 2 | `cache` (+ barrier/collect/resume) | `ResultStore` / `Barrier` | ✓ | ◐ core (iter1) | ☐ |
 | 3 | `loop` (record/decide/status) | `ReviewLoop` | ✓ | ◐ core (iter2) | ☐ |
 | 4 | `preflight` (+ --probe) | `QualityGate` + `Policy` (no-Gemini/gen≠review) | ✓ | ◐ core (iter4, deterministic) | ☐ |
-| 5 | `goal` (template/show/check) | `QualityGate` (acceptance) | ✓ | ☐ | ☐ |
+| 5 | `goal` (template/show/check) | `GoalSpec` + acceptance gate | ✓ | ◐ core (iter10) | ☐ |
 | 6 | `integrate` (+ --ownership) | `Integrator` + `VcsPort` + ownership | ✓ | ◐ core (iter8) | ☐ |
 | 7 | `workspace` (list/show/model/context) | `Workspace` / `ContextAssembler` | ✓ | ◐ core (iter6) | ☐ |
 | 8 | `experience` (add/recall/...) | `ExperienceStore` | ✓ | ◐ core (iter7) | ☐ |
@@ -20,8 +20,8 @@ Legend: `bash ✓` shipped in shell · `ts …` engine status (`◐ core` = port
 | 12 | `doctor` | recon (composition of `Harness.health`/gates) | ✓ | ☐ | ☐ |
 | 13 | `plan` (multi-model panel) | `Phase` (planning) | ✓ | ☐ | ☐ |
 | 14 | `run` (set/round/status/next) | `RunState` facade (`RunStore`) | ✓ | ◐ core (iter1) | ☐ |
-| 15 | `summary` | observability over `RunState`/`ResultCache` | ✓ | ☐ | ☐ |
-| 16 | `task` (new/log/done) | `Task` audit trail | ✓ | ☐ | ☐ |
+| 15 | `summary` | observability over `RunState`/`ResultCache` | ✓ | ◐ core (iter10) | ☐ |
+| 16 | `task` (new/log/done) | `TaskStore` audit trail | ✓ | ◐ core (iter10) | ☐ |
 | 17 | `template` (render) | `ContextAssembler` (template part) | ✓ | ◐ core (iter6) | ☐ |
 | 18 | `ccb-sync` (check/adapt) | `Harness` (ccb) maintenance | ✓ | ☐ | ☐ |
 | — | `(coordinator)` — wires the 5-phase pipeline | `Coordinator` | n/a (driver) | ☐ last | ☐ |

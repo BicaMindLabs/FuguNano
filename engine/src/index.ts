@@ -88,6 +88,11 @@ export {
   renderInjection,
   type MatchOptions,
 } from './domain/skill-parse.js';
+export type { GoalSpec } from './domain/goal.js';
+export { parseGoalSpec, renderGoalTemplate } from './domain/goal-parse.js';
+export { renderSummary } from './domain/summary.js';
+export type { TaskPriority, TaskRef } from './domain/task-file.js';
+export { renderTaskFile } from './domain/task-file.js';
 export {
   rankAgents,
   applyOutcome,
@@ -109,6 +114,7 @@ export type { ExperienceStore } from './domain/ports/experience-store.js';
 export type { VcsPort } from './domain/ports/vcs.js';
 export type { Integrator, IntegrateOptions } from './domain/ports/integrator.js';
 export type { SkillCatalog } from './domain/ports/skill-catalog.js';
+export type { TaskStore } from './domain/ports/task-store.js';
 
 // Infra — injected IO
 export type { Clock } from './infra/clock.js';
@@ -139,6 +145,8 @@ export { FsExperienceStore } from './adapters/experience/fs-experience-store.js'
 export { GitVcsPort } from './adapters/integrate/git-vcs.js';
 export { DefaultIntegrator } from './adapters/integrate/default-integrator.js';
 export { FsSkillCatalog } from './adapters/skills/fs-skill-catalog.js';
+export { FsTaskStore } from './adapters/task/fs-task-store.js';
+export { runGoalGate, type GoalCheckOptions } from './adapters/goal/goal-gate.js';
 
 // App helpers
 export { waitForRound } from './app/wait-for-round.js';
