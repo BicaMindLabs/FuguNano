@@ -15,9 +15,9 @@ class WhichRunner implements CommandRunner {
 
 describe('runRecon', () => {
   it('probes role CLIs and backends, honoring the env for keys', async () => {
-    const runner = new WhichRunner(new Set(['claude', 'codex', 'ccb', 'cc-deepseek']));
+    const runner = new WhichRunner(new Set(['claude', 'codex', 'fugue-cc', 'cc-deepseek']));
     const report = await runRecon(runner, {
-      roles: ['claude', 'codex', 'ccb', 'agy'],
+      roles: ['claude', 'codex', 'fugue-cc', 'agy'],
       backends: [
         { launcher: 'cc-deepseek', keys: ['DEEPSEEK_API_KEY'] },
         { launcher: 'cc-glm', keys: ['GLM_API_KEY'] },

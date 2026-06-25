@@ -7,9 +7,10 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT" || exit 2
 fail=0
 
-# Scan scope: git-tracked files (fall back to find), excluding .git / node_modules
+# Scan scope: git-tracked plus untracked-but-not-ignored files (fall back to find),
+# excluding .git / node_modules.
 if git rev-parse --git-dir >/dev/null 2>&1; then
-  mapfile -t FILES < <(git ls-files)
+  mapfile -t FILES < <(git ls-files --cached --others --exclude-standard)
 else
   mapfile -t FILES < <(find . -type f -not -path './.git/*' -not -path '*/node_modules/*' | sed 's|^\./||')
 fi
@@ -25,9 +26,9 @@ for f in "${FILES[@]}"; do
   done < <(grep -nE "$SECRET_RE" "$f" 2>/dev/null)
 done
 
-# ── 2) key= in ccb.config(.example) must be <PLACEHOLDER> ─────
+# ── 2) key= in provider.config(.example) must be <PLACEHOLDER> ─────
 for f in "${FILES[@]}"; do
-  case "$f" in *ccb.config*) ;; *) continue ;; esac
+  case "$f" in *provider.config*) ;; *) continue ;; esac
   while IFS= read -r line; do
     content="${line#*:}"                             # strip grep -n's "lineno:" prefix
     # take the quoted value to the right of =, must look like <XXX>

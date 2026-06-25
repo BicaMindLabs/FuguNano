@@ -4,7 +4,7 @@ import { isErr, isOk } from '../../domain/result.js';
 import type { CommandResult, CommandRunner } from '../../infra/command-runner.js';
 import { GitVcsPort } from './git-vcs.js';
 
-const ID = { name: 'fanout', email: 'fanout@local' };
+const ID = { name: 'fuguectl', email: 'fuguectl@local' };
 
 class ScriptRunner implements CommandRunner {
   readonly calls: string[][] = [];
@@ -43,8 +43,8 @@ describe('GitVcsPort', () => {
     const result = await new GitVcsPort(runner).commitAll('/wt', ID, 'msg');
     expect(isOk(result) && result.value).toBe('abc123');
     const commit = runner.calls.find((c) => c.includes('commit'));
-    expect(commit).toContain('user.name=fanout');
-    expect(commit).toContain('user.email=fanout@local');
+    expect(commit).toContain('user.name=fuguectl');
+    expect(commit).toContain('user.email=fuguectl@local');
   });
 
   it('cherryPick aborts and reports a conflict on nonzero', async () => {

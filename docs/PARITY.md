@@ -1,6 +1,6 @@
-# Parity tracker — bash `fanout` → TypeScript engine
+# Parity tracker — bash `fuguectl` → TypeScript engine
 
-Tracks the incremental migration (see [ARCHITECTURE.md](ARCHITECTURE.md) §5). The bash `fanout` stays green at every step; a capability only cuts over once its TS slice meets or beats the bash suite's coverage. Until then the engine is opt-in (`FUGUE_ENGINE=1`).
+Tracks the incremental migration (see [ARCHITECTURE.md](ARCHITECTURE.md) §5). The bash `fuguectl` stays green at every step; a capability only cuts over once its TS slice meets or beats the bash suite's coverage. Until then the engine is opt-in (`FUGUE_ENGINE=1`).
 
 Legend: `bash ✓` shipped in shell · `ts …` engine status (`◐ core` = ports+adapters landed & tested · `+ cli` = a `fugue` CLI command now drives that core) · **cutover** = bash retired/shimmed.
 
@@ -20,15 +20,15 @@ The TS CLI (`fugue`, clipanion) landed in iter13 as a thin shell over the tested
 | 10  | `dispatch` (--harness ...)                          | `Harness` + `Phase`                                                      | ✓             | ◐ core (iter5)                        | ☐       |
 | 11  | `fleet` (status/up/down)                            | `Harness.health` + launcher                                              | ✓             | ◐ health (iter5)                      | ☐       |
 | 12  | `doctor`                                            | recon + recommend                                                        | ✓             | ◐ core + cli (iter13)                 | ☐       |
-| 13  | `plan` (multi-model panel)                          | planPanel (Harness fan-out)                                              | ✓             | ◐ core (iter11)                       | ☐       |
+| 13  | `plan` (multi-model panel)                          | planPanel (Harness parallel dispatch)                                              | ✓             | ◐ core (iter11)                       | ☐       |
 | 14  | `run` (set/round/status/next)                       | `RunState` facade (`RunStore`)                                           | ✓             | ◐ core (iter1)                        | ☐       |
 | 15  | `summary`                                           | observability over `RunState`/`ResultCache`                              | ✓             | ◐ core (iter10)                       | ☐       |
 | 16  | `task` (new/log/done)                               | `TaskStore` audit trail                                                  | ✓             | ◐ core + cli (iter13)                 | ☐       |
 | 17  | `template` (render)                                 | `ContextAssembler` (template part)                                       | ✓             | ◐ core (iter6)                        | ☐       |
-| 18  | `ccb-sync` (check/adapt)                            | CcbSync (drift detect)                                                   | ✓             | ◐ core (iter11)                       | ☐       |
+| 18  | `runtime` (check/adapt)                            | Runtime/provider sync (fugue-cc runtime)                                      | ✓             | ◐ core (iter11)                       | ☐       |
 | —   | `(coordinator)` — wires the ports into the pipeline | `Coordinator` + `wire.ts`                                                | n/a (driver)  | ◐ core (iter12)                       | ☐       |
 | —   | `(self-harness)` — self-improving harness loop      | `SelfHarnessLoop` + `WeaknessMiner`/`HarnessProposer`/`HarnessValidator` | n/a (net-new) | ◐ core + live adapters + cli (iter15) | ☐       |
 
 Migration order (riskiest-last): pure strategies/state first (`allocate`, `loop`, `cache`, gates), then stores (`workspace`/`experience`/`skills`), then IO-heavy adapters (`harness`/`fleet`/`dispatch`), then the `Coordinator`.
 
-Beyond parity — **net-new capabilities** that abstract a studied reference into the engine ("our own thing", not a bash port). `(self-harness)` realizes the Self-Harness paper ([arXiv 2606.09498](https://arxiv.org/abs/2606.09498)): with the model/evaluator/benchmark held fixed, only the harness config evolves — each round mines verifier-grounded weaknesses, proposes bounded single-surface edits, and promotes one only under the non-regression gate `Δin ≥ 0 ∧ Δho ≥ 0 ∧ max > 0`. Iter15 adds the live model-backed miner/proposer, task-list validator, JSON spec parser, `wireSelfHarness`, and `fugue self-harness template|run`; see [SELF_HARNESS.md](SELF_HARNESS.md) for the operator guide. It composes with the bandit `AllocationStrategy` (which picks _who_ runs) by learning _how the harness is configured_.
+Beyond parity — **net-new capabilities** that abstract a studied reference into the engine ("our own thing", not a bash port). `(self-harness)` realizes Shanghai Artificial Intelligence Laboratory's Self-Harness paper ([arXiv 2606.09498](https://arxiv.org/abs/2606.09498)): with the model/evaluator/benchmark held fixed, only the harness config evolves — each round mines verifier-grounded weaknesses, proposes bounded single-surface edits, and promotes one only under the non-regression gate `Δin ≥ 0 ∧ Δho ≥ 0 ∧ max > 0`. Iter15 adds the live model-backed miner/proposer, task-list validator, JSON spec parser, `wireSelfHarness`, and `fugue self-harness template|run`; see [SELF_HARNESS.md](SELF_HARNESS.md) for the operator guide. It composes with the bandit `AllocationStrategy` (which picks _who_ runs) by learning _how the harness is configured_.

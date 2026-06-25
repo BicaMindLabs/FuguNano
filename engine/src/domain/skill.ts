@@ -23,5 +23,5 @@ export interface SkillSource {
   readonly idPrefix?: string;
 }
 
-/** Note-prefix regex (bash FANOUT_SKILLS_NOTE_RE default): these ids are learning notes, not functional skills. */
+/** Note-prefix regex (bash FUGUE_SKILLS_NOTE_RE default): these ids are learning notes, not functional skills. */
 export const DEFAULT_NOTE_RE = /^(wdkns|book|csdiy|dlai|mit|mooc|child|tu-online)/u;

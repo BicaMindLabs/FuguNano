@@ -81,7 +81,7 @@ describe('PersistentBarrier', () => {
     expect(isComplete(settled)).toBe(true);
   });
 
-  it('concurrent marks do not lose updates (fan-in invariant)', async () => {
+  it('concurrent marks do not lose updates (join invariant)', async () => {
     const barrier = makeBarrier();
 
     await barrier.open(1, ['a', 'b', 'c', 'd', 'e']);

@@ -1,5 +1,7 @@
 # ── secrets — never enter the repo ───────────────────
-**/.ccb/ccb.config        # ccb config with the real key (only ccb.config.example is tracked)
+# Local fugue-cc provider runtime/config/workspaces; never track.
+.fugue-cc/
+**/.fugue-cc/
 *secrets*.env
 cc-model-secrets.env
 .env
@@ -8,14 +10,15 @@ cc-model-secrets.env
 # ── runtime / cache ──────────────────────────────────
 node_modules/
 .claude-envs/*/opt/
-.fanout-cache/        # fan-out result cache (runtime, round-N/ per round)
+# fan-out result cache (runtime, round-N/ per round)
+.fanout-cache/
 *.log
 .DS_Store
 
-# ── ccb runtime ──────────────────────────────────────
-.ccb/state/
-.ccb/*.sock
-.ccb/logs/
+# ── fugue-cc provider runtime ─────────────────────────
+.fugue-cc/state/
+.fugue-cc/*.sock
+.fugue-cc/logs/
 
 # ── task / report artifacts ──────────────────────────
 tasks/*.local.md

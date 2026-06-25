@@ -72,7 +72,7 @@ function runJson(args) {
   assert.match(result.stdout, /doubao\s+DOUBAO_PROFILE/);
 }
 
-// ── team fan-out (parsing only; --dry-run never calls a backend) ──────────────
+// ── team parallel dispatch (parsing only; --dry-run never calls a backend) ──────────────
 
 {
   // Default pool when no --models/--all is given.

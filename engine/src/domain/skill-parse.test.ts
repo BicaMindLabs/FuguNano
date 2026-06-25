@@ -39,17 +39,17 @@ describe('classifyType', () => {
   it('marks note-prefixed ids as notes, others functional', () => {
     expect(classifyType('wdkns-foo')).toBe('note');
     expect(classifyType('book-bar')).toBe('note');
-    expect(classifyType('fanout')).toBe('functional');
+    expect(classifyType('fugue')).toBe('functional');
   });
 });
 
 const catalog: Catalog = [
   {
-    id: 'fanout',
+    id: 'fugue',
     source: 'user',
     type: 'functional',
     path: 'a',
-    description: 'fan out work to agents',
+    description: 'parallelize work across agents',
   },
   { id: 'pdf', source: 'user', type: 'functional', path: 'b', description: 'pdf tools' },
   { id: 'book-x', source: 'user', type: 'note', path: 'c', description: 'book note about agents' },
@@ -58,12 +58,12 @@ const catalog: Catalog = [
 describe('matchSkills', () => {
   it('filters by query and ranks by hit count', () => {
     const out = matchSkills(catalog, 'agents');
-    expect(out.map((r) => r.id)).toEqual(['book-x', 'fanout']); // both hit once; tie broken by id asc
+    expect(out.map((r) => r.id)).toEqual(['book-x', 'fugue']); // both hit once; tie broken by id asc
   });
 
   it('respects type and limit', () => {
     expect(matchSkills(catalog, 'agents', { type: 'functional' }).map((r) => r.id)).toEqual([
-      'fanout',
+      'fugue',
     ]);
     expect(matchSkills(catalog, 'agents', { limit: 1 })).toHaveLength(1);
   });
@@ -73,15 +73,15 @@ describe('renderInjection', () => {
   it('emits a header, one line per skill, and a footer', () => {
     const out = renderInjection([
       {
-        id: 'fanout',
+        id: 'fugue',
         source: 'user',
         type: 'functional',
         path: 'a',
-        description: 'fan out work to agents',
+        description: 'parallelize work across agents',
       },
     ]);
     expect(out).toContain('[Skills available for this task');
-    expect(out).toContain('- fanout (a): fan out work to agents');
+    expect(out).toContain('- fugue (a): parallelize work across agents');
     expect(out).toContain('Invoke a needed skill');
   });
 });

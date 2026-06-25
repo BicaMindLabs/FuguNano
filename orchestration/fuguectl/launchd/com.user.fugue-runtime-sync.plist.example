@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- re-adapt after a fugue-cc provider update — WatchPaths watches the provider VERSION file; an update rewrite triggers a full adapt.
+     install: replace the placeholders with your absolute paths, copy to ~/Library/LaunchAgents/, launchctl load -w it.
+     migration: if you previously loaded com.user.fuguectl-runtime, unload that old label before loading com.user.fugue-runtime-sync.
+       __HOME__       → your $HOME (e.g. /Users/leo)
+       __FUGUECTL__  → fuguectl driver absolute path (e.g. __HOME__/.claude/skills/fugue/fuguectl)
+       __FUGUE_CC_WORK__   → main fugue-cc provider project root (e.g. __HOME__/Projects/fugue-cc-work)
+       __FUGUE_CC_CLAUDE__ → optional Claude-only provider project root (e.g. __HOME__/Projects/fugue-cc-claude)
+       __FUGUE_CC_VERSION_FILE__ → provider runtime VERSION file
+     adapt --apply kills each project's provider daemon(clears old code, next provider start loads the new version). Trigger timing = you just ran a provider update,
+     usually not mid parallel dispatch, so kill is safe. For more safety swap `adapt --apply` in the command back to `check`(report only, does not touch the daemon). -->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>com.user.fugue-runtime-sync</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/zsh</string>
+    <string>-lc</string>
+    <string>echo "===== $(date '+%Y-%m-%d %H:%M') fugue-cc provider update→adapt ====="; FUGUE_CC_WORK=__FUGUE_CC_WORK__ FUGUE_CC_CLAUDE=__FUGUE_CC_CLAUDE__ __FUGUECTL__ runtime adapt --apply</string>
+  </array>
+
+  <!-- provider update rewrites VERSION → triggers -->
+  <key>WatchPaths</key>
+  <array>
+    <string>__FUGUE_CC_VERSION_FILE__</string>
+  </array>
+
+  <key>RunAtLoad</key><false/>
+  <key>ThrottleInterval</key><integer>30</integer>
+
+  <key>StandardOutPath</key><string>__HOME__/Library/Logs/fugue-runtime-sync.log</string>
+  <key>StandardErrorPath</key><string>__HOME__/Library/Logs/fugue-runtime-sync.log</string>
+</dict>
+</plist>

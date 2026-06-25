@@ -1,6 +1,6 @@
 import type { TaskPriority, TaskRef } from '../task-file.js';
 
-/** Scaffolds + maintains TASK files (the fan-out audit trail). */
+/** Scaffolds + maintains TASK files (the parallel dispatch audit trail). */
 export interface TaskStore {
   /** Create `TASK-<date>-<NNN>.md`, returning its id + path. */
   create(title: string, priority?: TaskPriority): Promise<TaskRef>;

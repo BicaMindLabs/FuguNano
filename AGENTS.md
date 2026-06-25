@@ -5,28 +5,28 @@ Cross-harness entry for any coding agent (**Claude Code / Codex / OpenCode** all
 ## One entry point
 
 ```
-orchestration/fanout/fuguectl help
+orchestration/fuguectl/fuguectl help
 ```
 
-Unified driver (18 subcommands): `doctor` · `fleet` · `preflight` · `task` · `template` · `dispatch` · `cache` · `integrate` · `allocate` · `skills` · `workspace` · `experience` · `plan` · `goal` · `loop` · `run` · `summary` · `ccb-sync`. Every subcommand is plain bash — callable from any shell / harness. `orchestration/fanout/fanout` remains a backward-compatible alias.
+Unified driver (18 subcommands): `doctor` · `fleet` · `preflight` · `task` · `template` · `dispatch` · `cache` · `integrate` · `allocate` · `skills` · `workspace` · `experience` · `plan` · `goal` · `loop` · `run` · `summary` · `runtime`. Every subcommand is plain bash — callable from any shell / harness.
 
 ## The workflow (5 phases)
 
-Plan → Dispatch → Integrate → Review → **bounded Review-Fix Loop**. Full spec: [`orchestration/fanout/SKILL.md`](orchestration/fanout/SKILL.md) · [`docs/WORKFLOW.md`](docs/WORKFLOW.md). Higher-level entry modes: `goal` (declarative target + gate), `plan` (multi-model planning panel), `workspace` (per-task context isolation).
+Plan → Dispatch → Integrate → Review → **bounded Review-Fix Loop**. Full spec: [`orchestration/fuguectl/SKILL.md`](orchestration/fuguectl/SKILL.md) · [`docs/WORKFLOW.md`](docs/WORKFLOW.md). Higher-level entry modes: `goal` (declarative target + gate), `plan` (multi-model planning panel), `workspace` (per-task context isolation).
 
 ## Multi-harness dispatch
 
 The implementer backend is selected by `--harness`:
 
 ```
-fuguectl dispatch <target> --harness ccb|codex|opencode [--workspace ws] [--template impl --set ...]
+fuguectl dispatch <target> --harness fugue-cc|codex|opencode [--workspace ws] [--template impl --set ...]
 ```
 
-| harness         | runs                                                   | `<target>` is                                |
-| --------------- | ------------------------------------------------------ | -------------------------------------------- |
-| `ccb` (default) | Claude Code instances — the `cc-*` Chinese-model fleet | a ccb agent (e.g. `cc-deepseek`)             |
-| `codex`         | `codex exec`                                           | a Codex model (e.g. `gpt-5.5`)               |
-| `opencode`      | `opencode run`                                         | `provider/model` (e.g. `doubao/doubao-code`) |
+| harness              | runs                                                                 | `<target>` is                                |
+| -------------------- | -------------------------------------------------------------------- | -------------------------------------------- |
+| `fugue-cc` (default) | Claude Code instances — the `cc-*` Chinese-model fleet, via provider | a fugue-cc agent (e.g. `cc-deepseek`)        |
+| `codex`              | `codex exec`                                                         | a Codex model (e.g. `gpt-5.5`)               |
+| `opencode`           | `opencode run`                                                       | `provider/model` (e.g. `doubao/doubao-code`) |
 
 Reviewer (`coder`) and planner are likewise harness-agnostic.
 
@@ -35,14 +35,14 @@ Reviewer (`coder`) and planner are likewise harness-agnostic.
 - **`main` is the single source of truth** — implementers work in worktree sandboxes; only reviewed changes are cherry-picked back.
 - **Generation ≠ review** — implementers and the reviewer must be different model families.
 - **Bounded loop** — deterministic gate first, keep-best, meta-reflect on non-convergence; capped then escalate. Never loops forever, never hard-marks DONE.
-- **Fan-in barrier** — dispatch N ⇒ N must return before the next round.
+- **Join barrier** — dispatch N ⇒ N must return before the next round.
 - **Keys only in `~/.config/cc-model-secrets.env`** — never in the repo (CI + pre-commit scan blocks leaks).
 - **No Gemini in the review path** — review / second opinions go to Codex or a Chinese backend.
 
 ## Before dispatching
 
 ```
-fuguectl preflight        # go/no-go gate (deps · ccbd · ccb.config sanity · no-Gemini guard)
+fuguectl preflight        # go/no-go gate (deps · provider mount/config sanity · no-Gemini guard)
 fuguectl fleet status     # is the backend fleet up? (if down → fuguectl fleet up)
 ```
 

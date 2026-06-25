@@ -5,7 +5,7 @@ import { parseSelfHarnessSpec, renderSelfHarnessSpecTemplate } from './self-harn
 
 const validObject = (): Record<string, unknown> => ({
   agent: 'cc-deepseek',
-  harness: 'ccb',
+  harness: 'fugue-cc',
   k: 2,
   rounds: 3,
   runId: 'run-1',
@@ -30,7 +30,7 @@ describe('parseSelfHarnessSpec', () => {
     expect(result.ok).toBe(true);
     if (!result.ok) throw new Error(result.error);
     expect(result.value.agent).toBe('cc-deepseek');
-    expect(result.value.harness).toBe('ccb');
+    expect(result.value.harness).toBe('fugue-cc');
     expect(result.value.config.execution).toBe('execution text');
     expect(result.value.heldIn[0]?.key).toBe('in-1');
   });
@@ -167,7 +167,7 @@ describe('parseSelfHarnessSpec', () => {
     const spec = validObject();
     spec.harness = 'gemini';
 
-    expect(expectError(spec)).toBe('harness must be one of ccb, codex, opencode');
+    expect(expectError(spec)).toBe('harness must be one of fugue-cc, codex, opencode');
   });
 
   it('allows harness to be omitted', () => {
@@ -229,6 +229,7 @@ describe('renderSelfHarnessSpecTemplate', () => {
 
     expect(result.ok).toBe(true);
     if (!result.ok) throw new Error(result.error);
+    expect(result.value.harness).toBe('fugue-cc');
     for (const surface of EDITABLE_SURFACES) {
       expect(result.value.config[surface]).toContain(surface);
     }

@@ -22,32 +22,43 @@ Attributions
   openai/codex-plugin-cc (https://github.com/openai/codex-plugin-cc),
   the Codex plugin for Claude Code by OpenAI, licensed under Apache-2.0.
 
-- The Phase 5 "Review-Fix Loop" design in `orchestration/fanout/SKILL.md`
+- The Phase 5 "Review-Fix Loop" design in `orchestration/fuguectl/SKILL.md`
   draws on published work on agentic verification loops:
     - Tim Williams, "LLM Verification Loops: Best Practices and Patterns"
     - "Loop Engineering: Why the Best AI Agents in 2026 Are Built as Loops"
     - Reflexion / Self-Refine (academic literature)
 
 - The `Workspace isolation` and `Experience memory` concepts in
-  `orchestration/fanout/` are inspired by Zleap-AI/Zleap-Agent
+  `orchestration/fuguectl/` are inspired by Zleap-AI/Zleap-Agent
   (https://github.com/Zleap-AI/Zleap-Agent) — concepts only; the code is
   an independent implementation, as Zleap ships without a license.
 
-- The loop's auto-fix vs ask-user finding split, the `fanout run` state
+- The provider-runtime bridge was informed by SeemSeam/claude_codex_bridge
+  (https://github.com/SeemSeam/claude_codex_bridge) as a reference system;
+  fugue's public runtime surface and implementation naming are independent.
+
+- `fugue self-harness` is an independent engine-native abstraction of
+  Shanghai Artificial Intelligence Laboratory's paper "Self-Harness:
+  Harnesses That Improve Themselves" (arXiv:2606.09498), by Hangfan Zhang,
+  Shao Zhang, Kangcong Li, Chen Zhang, Yang Chen, Yiqun Zhang, Lei Bai, and
+  Shuyue Hu. The implementation here uses the paper's loop shape and
+  terminology as a research reference; it does not include paper code.
+
+- The loop's auto-fix vs ask-user finding split, the `fuguectl run` state
   facade, and the `check-docs` docs-match-code drift gate are inspired by
   kunchenguid/no-mistakes (https://github.com/kunchenguid/no-mistakes) and
   lavish-axi (https://github.com/kunchenguid/lavish-axi), licensed MIT —
   ideas only; the implementations here are independent.
 
 - The orchestrator-side ownership / violation-detection idea behind
-  `fanout integrate --ownership` is inspired by merkyor/Lynn
+  `fuguectl integrate --ownership` is inspired by merkyor/Lynn
   (https://gitee.com/merkyor/Lynn).
 
-- `fanout skills forge` delegates skill authoring to Anthropic's official
-  `skill-creator` Claude Code meta-skill, and the `fanout skills validate`
+- `fuguectl skills forge` delegates skill authoring to Anthropic's official
+  `skill-creator` Claude Code meta-skill, and the `fuguectl skills validate`
   gate mirrors the checks in its `quick_validate.py`.
 
-- The adaptive router (`fanout allocate`) draws on the multi-armed-bandit
+- The adaptive router (`fuguectl allocate`) draws on the multi-armed-bandit
   literature: Thompson Sampling (Agrawal & Goyal, 2012) and
   non-stationary / discounted bandits (Garivier & Moulines, 2011).
 

@@ -1,6 +1,6 @@
 ---
 name: cn-team
-description: How to fan a task out to multiple Chinese model backends and synthesize their outputs for unified review
+description: How to parallelize a task across multiple Chinese model backends and synthesize their outputs for unified review
 user-invocable: false
 ---
 
@@ -9,13 +9,13 @@ user-invocable: false
 Use this skill when `/cn:team` (or the companion `team` subcommand) broadcasts one task
 to several CN backends as the supplementary pool in a review/frontend/backend triangle.
 
-## When to fan out
+## When to split work
 
 - You want several independent CN opinions on the same problem, then a unified review.
 - You are assigning overflow or supplementary work and want to compare candidates before
   integrating one.
 - Prefer a single `/cn:<model>` or `/cn:ask` when one backend is clearly the right tool —
-  fan-out costs one run per member and burns more quota.
+  parallel dispatch costs one run per member and burns more quota.
 
 ## Choosing members
 

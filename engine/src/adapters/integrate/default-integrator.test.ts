@@ -8,7 +8,7 @@ import type { Identity, VcsError, Worktree } from '../../domain/vcs.js';
 import { allClean } from '../../domain/vcs.js';
 import { DefaultIntegrator } from './default-integrator.js';
 
-const ID: Identity = { name: 'fanout', email: 'fanout@local' };
+const ID: Identity = { name: 'fuguectl', email: 'fuguectl@local' };
 
 interface Script {
   readonly changed?: Readonly<Record<string, readonly string[]>>; // by worktree path

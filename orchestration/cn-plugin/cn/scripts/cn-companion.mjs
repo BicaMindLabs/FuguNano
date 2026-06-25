@@ -60,7 +60,7 @@ const MODELS = {
 
 const MODEL_NAMES = Object.keys(MODELS);
 const DEFAULT_MODEL = "doubao";
-// Default fan-out pool when `team` is called without --models/--all.
+// Default parallel dispatch pool when `team` is called without --models/--all.
 // Complementary by design: coder (qwen) · Chinese reasoning (glm) · long-context (kimi).
 const DEFAULT_TEAM = ["qwen", "glm", "kimi"];
 const TASK_TIMEOUT_MS = 300_000; // 5 min

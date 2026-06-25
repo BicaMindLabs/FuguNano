@@ -5,7 +5,7 @@ import { isTerminal } from './task.js';
 export type Deadline = number;
 
 /**
- * The fan-in ledger for one dispatch round: every expected key and its current
+ * The join ledger for one dispatch round: every expected key and its current
  * state. The barrier is satisfied when every expected key is terminal. `states`
  * holds terminal *and* pending entries; absent keys are implicitly `pending`.
  */

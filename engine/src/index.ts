@@ -48,7 +48,7 @@ export {
   evaluatePolicies,
   policyResultToGate,
 } from './domain/policy-eval.js';
-export { checkCcbConfig } from './domain/preflight-checks.js';
+export { checkProviderConfig } from './domain/preflight-checks.js';
 export type {
   DispatchRequest,
   DispatchResult,
@@ -94,8 +94,8 @@ export { renderSummary } from './domain/summary.js';
 export type { TaskPriority, TaskRef } from './domain/task-file.js';
 export { renderTaskFile } from './domain/task-file.js';
 export { renderPlanPrompt, DEFAULT_PLAN_AGENTS } from './domain/plan.js';
-export type { VersionDrift } from './domain/ccb-sync.js';
-export { detectDrift } from './domain/ccb-sync.js';
+export type { VersionDrift } from './domain/runtime-sync.js';
+export { detectDrift } from './domain/runtime-sync.js';
 export type { RoleStatus, BackendStatus, DoctorReport } from './domain/doctor.js';
 export { readyBackends, recommend } from './domain/doctor.js';
 export type {
@@ -134,6 +134,7 @@ export type { RunStore, RunPatch } from './domain/ports/run-store.js';
 export type { ReviewLoop } from './domain/ports/review-loop.js';
 export type { AllocationStrategy, RankOptions } from './domain/ports/allocation-strategy.js';
 export type { QualityGate } from './domain/ports/quality-gate.js';
+export { HARNESS_NAMES } from './domain/ports/harness.js';
 export type { Harness, HarnessName } from './domain/ports/harness.js';
 export type { WorkspaceStore } from './domain/ports/workspace-store.js';
 export type { ExperienceStore } from './domain/ports/experience-store.js';
@@ -167,7 +168,7 @@ export { FsRunStore } from './adapters/store/fs-run-store.js';
 export { PersistentBarrier } from './adapters/barrier/persistent-barrier.js';
 export { PersistentReviewLoop } from './adapters/loop/persistent-review-loop.js';
 export { BetaBernoulliAllocator } from './adapters/allocation/beta-bernoulli-allocator.js';
-export { CcbHarness } from './adapters/harness/ccb-harness.js';
+export { FugueCcHarness } from './adapters/harness/fugue-cc-harness.js';
 export { CodexHarness } from './adapters/harness/codex-harness.js';
 export { OpencodeHarness } from './adapters/harness/opencode-harness.js';
 export type { HarnessExecOptions } from './adapters/harness/exec-helpers.js';
@@ -190,14 +191,14 @@ export { DefaultIntegrator } from './adapters/integrate/default-integrator.js';
 export { FsSkillCatalog } from './adapters/skills/fs-skill-catalog.js';
 export { FsTaskStore } from './adapters/task/fs-task-store.js';
 export { runGoalGate, type GoalCheckOptions } from './adapters/goal/goal-gate.js';
-export { CcbSync, type CcbSyncOptions } from './adapters/ccb/ccb-sync.js';
+export { RuntimeSync, type RuntimeSyncOptions } from './adapters/runtime/runtime-sync.js';
 export { runRecon, type BackendSpec, type ReconOptions } from './adapters/doctor/recon.js';
 
 // App helpers
 export { waitForRound } from './app/wait-for-round.js';
 export { planPanel, type PlanEntry } from './app/plan-panel.js';
 
-// Coordinator — the composition that wires the ports into the fan-in pipeline
+// Coordinator — the composition that wires the ports into the join pipeline
 export {
   Coordinator,
   type CoordinatorDeps,
@@ -207,7 +208,7 @@ export {
 export { wireCoordinator, type WireConfig } from './app/wire.js';
 export { wireSelfHarness, type WireSelfHarnessConfig } from './app/wire.js';
 
-// Self-Harness — the engine's self-improving-harness loop (our abstraction of arXiv 2606.09498)
+// Self-Harness — engine-native harness evolution, inspired by Shanghai AI Lab's arXiv 2606.09498.
 export {
   SelfHarnessLoop,
   type SelfHarnessDeps,

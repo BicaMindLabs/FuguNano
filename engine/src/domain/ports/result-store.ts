@@ -1,7 +1,7 @@
 import type { Artifact } from '../artifact.js';
 
 /**
- * Durable storage of per-key task outputs (the fan-in result cache). An adapter
+ * Durable storage of per-key task outputs (the join result cache). An adapter
  * may be in-memory (tests) or filesystem-backed (parity with the bash cache).
  */
 export interface ResultStore {

@@ -20,7 +20,7 @@ export class DefaultIntegrator implements Integrator {
     options: IntegrateOptions = {},
   ): Promise<IntegrationReport> {
     const { ownership } = options;
-    const prefix = options.messagePrefix ?? 'fanout: integrate';
+    const prefix = options.messagePrefix ?? 'fuguectl: integrate';
     const results: AgentIntegration[] = [];
 
     for (const wt of worktrees) {

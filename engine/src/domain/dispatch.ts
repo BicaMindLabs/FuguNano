@@ -1,14 +1,15 @@
 /**
- * Dispatching work to an agent over a harness (ccb / codex / opencode).
+ * Dispatching work to an agent over a harness (fugue-cc / codex / opencode).
  *
  * Dispatch is modeled as one async call returning a `Result` — every harness we
- * target is a blocking CLI (`ccb ask`, `codex exec`, `opencode run`), so the
- * Promise resolves when the agent is done. Fan-out parallelism and resume live
- * in the Barrier/ResultStore layer, not here (see docs/ARCHITECTURE.md §5).
+ * target is a blocking CLI (`fugue-cc` via provider, `codex exec`,
+ * `opencode run`), so the Promise resolves when the agent is done. Parallel dispatch
+ * parallelism and resume live in the Barrier/ResultStore layer, not here (see
+ * docs/ARCHITECTURE.md §5).
  */
 
 export interface DispatchRequest {
-  /** Target: a ccb agent (cc-deepseek), a codex model, or an opencode provider/model. */
+  /** Target: a fugue-cc agent (cc-deepseek), a codex model, or an opencode provider/model. */
   readonly agent: string;
   /** The fully-rendered prompt fed to the agent. */
   readonly prompt: string;

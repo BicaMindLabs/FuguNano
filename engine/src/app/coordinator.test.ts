@@ -24,7 +24,7 @@ import { Coordinator, type CoordinatorDeps, type DispatchTask } from './coordina
 
 // ── minimal in-test fakes (app tests may not import infra/adapters) ──
 class FakeHarness implements Harness {
-  readonly name = 'ccb';
+  readonly name = 'fugue-cc';
   readonly dispatched: string[] = [];
   constructor(private readonly failAgents: ReadonlySet<string> = new Set()) {}
   dispatch(request: DispatchRequest): Promise<Result<DispatchResult, DispatchError>> {

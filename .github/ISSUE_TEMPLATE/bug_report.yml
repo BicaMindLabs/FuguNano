@@ -5,12 +5,12 @@ body:
   - type: markdown
     attributes:
       value: |
-        ⚠️ **Do not paste API keys / tokens / a full `ccb.config` here.** Redact logs before pasting.
+        ⚠️ **Do not paste API keys / tokens / a full `provider.config` here.** Redact logs before pasting.
   - type: input
     id: component
     attributes:
       label: Component that broke
-      placeholder: backends/cc-glm · fanout · ccb · cc-sync · cn-plugin
+      placeholder: backends/cc-glm · fuguectl · fugue-cc · runtime · cc-sync · cn-plugin
     validations:
       required: true
   - type: textarea

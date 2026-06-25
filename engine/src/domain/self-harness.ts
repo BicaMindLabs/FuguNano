@@ -1,8 +1,9 @@
 /**
  * Self-Harness — value objects for the engine's self-improving-harness loop.
  *
- * Our abstraction of the Self-Harness paper (arXiv 2606.09498): with the model,
- * evaluator, and benchmark held fixed, only the *harness configuration* evolves.
+ * Our abstraction of Shanghai AI Lab's Self-Harness paper (arXiv 2606.09498):
+ * with the model, evaluator, and benchmark held fixed, only the *harness
+ * configuration* evolves.
  * Each round mines verifier-grounded weaknesses, proposes bounded edits to the
  * declared editable surfaces, and promotes an edit only if it improves one
  * evaluation split without regressing the other. These types are pure; the

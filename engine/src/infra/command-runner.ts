@@ -1,6 +1,6 @@
 /**
  * Injected subprocess runner — lets harness adapters be tested with a fake
- * (no real ccb/codex/opencode) and keeps `child_process` out of domain/app.
+ * (no real fugue-cc/codex/opencode) and keeps `child_process` out of domain/app.
  */
 export interface CommandResult {
   readonly code: number;

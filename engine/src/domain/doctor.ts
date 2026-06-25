@@ -23,19 +23,19 @@ const hasRole = (report: DoctorReport, cli: string): boolean =>
 export const recommend = (report: DoctorReport): readonly string[] => {
   const recs: string[] = [];
   const ready = readyBackends(report);
-  const ccb = hasRole(report, 'ccb');
+  const fugueCc = hasRole(report, 'fugue-cc');
   const codex = hasRole(report, 'codex');
 
-  if (ccb && ready >= 2 && codex) {
+  if (fugueCc && ready >= 2 && codex) {
     recs.push(
-      'full fan-out: ccb multi-window → backends implement in parallel → Codex reviews → bounded loop',
+      'full fleet workflow: fugue-cc fleet → backends implement in parallel → Codex reviews → bounded loop',
     );
-  } else if (ready >= 1 && !ccb) {
+  } else if (ready >= 1 && !fugueCc) {
     recs.push(
-      'single-machine lite: dispatch via the /cn:* plugin (no auto review loop); install ccb for full fan-out',
+      'single-machine lite: dispatch via the /cn:* plugin (no auto review loop); install the fugue-cc provider for the full fleet workflow',
     );
   } else if (ready >= 1) {
-    recs.push('half setup: fan out manually as needed');
+    recs.push('half setup: dispatch manually as needed');
   } else {
     recs.push(
       'no ready backend yet: install launchers + configure keys in ~/.config/cc-model-secrets.env',

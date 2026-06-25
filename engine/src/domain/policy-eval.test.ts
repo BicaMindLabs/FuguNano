@@ -16,7 +16,7 @@ describe('noGeminiPolicy', () => {
     const sel: Selection = {
       implementers: ['deepseek', 'Gemini-pro'],
       reviewer: 'codex',
-      harness: 'ccb',
+      harness: 'fugue-cc',
     };
     const v = noGeminiPolicy.evaluate(sel);
     expect(v).toHaveLength(1);

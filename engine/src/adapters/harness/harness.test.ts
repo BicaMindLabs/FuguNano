@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { isErr, isOk } from '../../domain/result.js';
 import type { CommandOptions, CommandResult, CommandRunner } from '../../infra/command-runner.js';
-import { CcbHarness } from './ccb-harness.js';
+import { FugueCcHarness } from './fugue-cc-harness.js';
 import { CodexHarness } from './codex-harness.js';
 import { OpencodeHarness } from './opencode-harness.js';
 
@@ -32,12 +32,15 @@ const res = (over: Partial<CommandResult> = {}): CommandResult => ({
   ...over,
 });
 
-describe('CcbHarness', () => {
-  it('dispatch builds `ccb ask <agent> --compact` and pipes the prompt on stdin', async () => {
+describe('FugueCcHarness', () => {
+  it('dispatch builds `fugue-cc ask <agent> --compact` and pipes the prompt on stdin', async () => {
     const runner = new FakeRunner(res({ code: 0, stdout: 'done' }));
-    const result = await new CcbHarness(runner).dispatch({ agent: 'cc-deepseek', prompt: 'hi' });
+    const result = await new FugueCcHarness(runner).dispatch({
+      agent: 'cc-deepseek',
+      prompt: 'hi',
+    });
 
-    expect(runner.calls[0]?.command).toBe('ccb');
+    expect(runner.calls[0]?.command).toBe('fugue-cc');
     expect(runner.calls[0]?.args).toEqual(['ask', 'cc-deepseek', '--compact']);
     expect(runner.calls[0]?.options?.stdin).toBe('hi\n');
     expect(isOk(result) && result.value.output).toBe('done');
@@ -45,34 +48,39 @@ describe('CcbHarness', () => {
 
   it('maps a nonzero exit to a nonzero-exit error', async () => {
     const runner = new FakeRunner(res({ code: 2, stderr: 'boom' }));
-    const result = await new CcbHarness(runner).dispatch({ agent: 'cc-glm', prompt: 'x' });
+    const result = await new FugueCcHarness(runner).dispatch({ agent: 'cc-glm', prompt: 'x' });
     expect(isErr(result) && result.error.kind).toBe('nonzero-exit');
     expect(isErr(result) && result.error.exitCode).toBe(2);
   });
 
   it('maps a spawn failure to a spawn-failed error', async () => {
     const runner = new FakeRunner(res(), true);
-    const result = await new CcbHarness(runner).dispatch({ agent: 'cc-kimi', prompt: 'x' });
+    const result = await new FugueCcHarness(runner).dispatch({ agent: 'cc-kimi', prompt: 'x' });
     expect(isErr(result) && result.error.kind).toBe('spawn-failed');
   });
 
-  it('health is ready only when ccbd reports mount_state: mounted', async () => {
-    const mounted = await new CcbHarness(
+  it('health is ready only when provider reports mount_state: mounted', async () => {
+    const mounted = await new FugueCcHarness(
       new FakeRunner(res({ stdout: 'mount_state: mounted\nhealth: alive' })),
     ).health();
     expect(mounted.healthy).toBe(true);
 
-    const unmounted = await new CcbHarness(
+    const unmounted = await new FugueCcHarness(
       new FakeRunner(res({ stdout: 'mount_state: unmounted' })),
     ).health();
     expect(unmounted.healthy).toBe(false);
   });
 
-  it('health requires `ccb ping` to exit 0 (pipefail parity), not just the mounted line', async () => {
-    const result = await new CcbHarness(
+  it('health requires provider ping to exit 0 (pipefail parity), not just the mounted line', async () => {
+    const result = await new FugueCcHarness(
       new FakeRunner(res({ code: 1, stdout: 'mount_state: mounted' })),
     ).health();
     expect(result.healthy).toBe(false);
+  });
+
+  it('uses the fugue-native harness name', () => {
+    const harness = new FugueCcHarness(new FakeRunner(res()));
+    expect(harness.name).toBe('fugue-cc');
   });
 });
 

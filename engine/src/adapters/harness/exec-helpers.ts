@@ -8,7 +8,7 @@ import { err, ok } from '../../domain/result.js';
 import type { Result } from '../../domain/result.js';
 import type { CommandOptions, CommandRunner } from '../../infra/command-runner.js';
 
-/** Shared dispatch/health mapping for the blocking-CLI harnesses (ccb/codex/opencode). */
+/** Shared dispatch/health mapping for the blocking-CLI harnesses (fugue-cc/codex/opencode). */
 export interface HarnessExecOptions {
   readonly bin?: string;
   readonly cwd?: string;

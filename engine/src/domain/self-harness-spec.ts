@@ -1,3 +1,4 @@
+import { HARNESS_NAMES } from './ports/harness.js';
 import type { HarnessName } from './ports/harness.js';
 import { err, ok } from './result.js';
 import type { Result } from './result.js';
@@ -22,8 +23,8 @@ export interface SelfHarnessSpec {
   readonly heldOut: readonly EvalCase[];
 }
 
-const HARNESS_NAMES: readonly HarnessName[] = ['ccb', 'codex', 'opencode'];
 const HARNESS_NAME_SET: ReadonlySet<string> = new Set(HARNESS_NAMES);
+const HARNESS_NAMES_TEXT = HARNESS_NAMES.join(', ');
 const SURFACE_SET: ReadonlySet<string> = new Set(EDITABLE_SURFACES);
 const SPEC_KEY_SET: ReadonlySet<string> = new Set([
   'agent',
@@ -149,7 +150,7 @@ export const parseSelfHarnessSpec = (text: string): Result<SelfHarnessSpec, stri
   const runId = trimNonEmptyString(parsed.runId);
   if (runId === undefined) return err('runId must be a non-empty string');
   if (parsed.harness !== undefined && !isHarnessName(parsed.harness)) {
-    return err('harness must be one of ccb, codex, opencode');
+    return err(`harness must be one of ${HARNESS_NAMES_TEXT}`);
   }
 
   const config = parseConfig(parsed.config);
@@ -183,7 +184,7 @@ export const renderSelfHarnessSpecTemplate = (): string => {
   return `${JSON.stringify(
     {
       agent: 'cc-deepseek',
-      harness: 'ccb',
+      harness: 'fugue-cc',
       k: 2,
       rounds: 1,
       runId: 'source-run-id-mined-each-round',

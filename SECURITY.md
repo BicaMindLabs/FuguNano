@@ -4,11 +4,11 @@
 
 This workflow orchestrates several Chinese-model providers and **will touch API keys**. The repo's hard constraints:
 
-- **Real keys never enter the repo.** They live only in `~/.config/cc-model-secrets.env` (read by the launcher, highest priority) or in your project-local `.ccb/ccb.config` (ignored by `.gitignore`).
-- The repo only tracks `orchestration/ccb/ccb.config.example`, whose `key=` field is always the `<PROVIDER_API_KEY>` placeholder.
-- `.gitignore` ignores `**/.ccb/ccb.config`, `*secrets*.env`, `.env*`.
+- **Real keys never enter the repo.** They live only in `~/.config/cc-model-secrets.env` (read by the launcher, highest priority) or in your project-local `.fugue-cc/provider.config` (ignored by `.gitignore`).
+- The repo only tracks `orchestration/fugue-cc/provider.config.example`, whose `key=` values are always `<...>` placeholders.
+- `.gitignore` ignores `**/.fugue-cc/provider.config`, `*secrets*.env`, `.env*`.
 - Every commit/push passes three gates:
-  1. `scripts/scan-secrets.sh` — plaintext key fingerprints (`sk-`/`tp-`/zhipu format) + `ccb.config*`'s `key=` must be a placeholder.
+  1. `scripts/scan-secrets.sh` — plaintext key fingerprints (`sk-`/`tp-`/zhipu format) + `provider.config*`'s `key=` must be a placeholder.
   2. `gitleaks` (`.gitleaks.toml`) — scans the full git history.
   3. CI's `secret-scan` job runs both; red blocks the merge.
 - Enable locally: `pipx install pre-commit && pre-commit install`, and it scans automatically on commit.

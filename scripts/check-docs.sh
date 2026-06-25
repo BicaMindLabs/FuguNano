@@ -14,11 +14,10 @@
 # Exit codes: 0 consistent / 1 drift (prints findings)
 set -uo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-FANOUT="$ROOT/orchestration/fanout/fanout"
-FUGUECTL="$ROOT/orchestration/fanout/fuguectl"
+FUGUECTL="$ROOT/orchestration/fuguectl/fuguectl"
 RM_EN="$ROOT/README.md"
 RM_ZH="$ROOT/README_ZH.md"
-FANOUT_DIR="$ROOT/orchestration/fanout"
+FUGUE_DIR="$ROOT/orchestration/fuguectl"
 SELF_DOC="$ROOT/docs/SELF_HARNESS.md"
 SELF_DOMAIN="$ROOT/engine/src/domain/self-harness.ts"
 SELF_CLI="$ROOT/engine/src/cli/commands/self-harness.ts"
@@ -27,7 +26,6 @@ fail=0
 no(){ echo "  ✗ $1"; fail=1; }
 ok(){ echo "  ✓ $1"; }
 
-[ -f "$FANOUT" ] || { echo "check-docs: cannot find $FANOUT" >&2; exit 2; }
 [ -f "$FUGUECTL" ] || { echo "check-docs: cannot find $FUGUECTL" >&2; exit 2; }
 [ -f "$RM_ZH" ] || { echo "check-docs: cannot find $RM_ZH (the repo is bilingual; keep README_ZH.md)" >&2; exit 2; }
 [ -f "$SELF_DOC" ] || { echo "check-docs: cannot find $SELF_DOC" >&2; exit 2; }
@@ -40,7 +38,7 @@ SUBS=()
 while IFS= read -r sub; do
   SUBS+=("$sub")
 done < <(
-  grep -oE '^[[:space:]]+[a-z][a-z0-9|_-]*\)' "$FANOUT" \
+  grep -oE '^[[:space:]]+[a-z][a-z0-9|_-]*\)' "$FUGUECTL" \
     | tr -d ' )' | sed 's/|.*//' \
     | grep -vxE 'help|selftest'
 )
@@ -64,7 +62,7 @@ grep -qF "$N_SUBS 个子命令" "$RM_ZH" \
   || no "$(basename "$RM_ZH"): did not find '$N_SUBS 个子命令' (actual $N_SUBS; fix README_ZH's subcommand count)"
 
 # 3) test-suite-count claim consistent (EN + ZH)
-N_SUITES="$(find "$FANOUT_DIR" -maxdepth 1 -name '*.test.sh' | grep -c .)"
+N_SUITES="$(find "$FUGUE_DIR" -maxdepth 1 -name '*.test.sh' | grep -c .)"
 grep -qF "$N_SUITES test suites" "$RM_EN" \
   && ok "$(basename "$RM_EN"): test-suite-count claim = $N_SUITES" \
   || no "$(basename "$RM_EN"): did not find '$N_SUITES test suites' (actual $N_SUITES; fix the README's test-suite count)"
@@ -112,5 +110,5 @@ for surface in "${SELF_SURFACES[@]}"; do
 done
 
 echo ""
-if [ "$fail" -eq 0 ]; then echo "✓ check-docs: docs and code are consistent ($N_SUBS fuguectl subcommands · $N_SUITES fanout test suites · ${#SELF_COMMANDS[@]} self-harness commands · ${#SELF_SURFACES[@]} self-harness surfaces)"; exit 0
+if [ "$fail" -eq 0 ]; then echo "✓ check-docs: docs and code are consistent ($N_SUBS fuguectl subcommands · $N_SUITES fuguectl test suites · ${#SELF_COMMANDS[@]} self-harness commands · ${#SELF_SURFACES[@]} self-harness surfaces)"; exit 0
 else echo "✗ check-docs: docs drift (✗ above) — fix the README and re-run"; exit 1; fi

@@ -33,7 +33,7 @@ export const assembleContext = (input: AssembleInput): PromptBundle => {
 };
 
 /**
- * Render a bundle to the layered text (parity with bash `fanout workspace context`).
+ * Render a bundle to the layered text (parity with bash `fuguectl workspace context`).
  * Variable content is right-trimmed so sections are separated by exactly one blank
  * line regardless of trailing newlines in the source (e.g. `_system.md`).
  */

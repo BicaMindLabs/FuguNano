@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto';
 
 import { BetaBernoulliAllocator } from '../adapters/allocation/beta-bernoulli-allocator.js';
 import { PersistentBarrier } from '../adapters/barrier/persistent-barrier.js';
-import { CcbHarness } from '../adapters/harness/ccb-harness.js';
+import { FugueCcHarness } from '../adapters/harness/fugue-cc-harness.js';
 import { CodexHarness } from '../adapters/harness/codex-harness.js';
 import { OpencodeHarness } from '../adapters/harness/opencode-harness.js';
 import { HarnessBackedProposer } from '../adapters/self-harness/harness-proposer.js';
@@ -27,7 +27,7 @@ import { SelfHarnessLoop } from './self-harness-loop.js';
 export interface WireConfig {
   /** Root dir for the engine's durable state (allocation/barrier/results/runs). */
   readonly stateDir: string;
-  /** Which dispatch harness to use (default ccb). */
+  /** Which dispatch harness to use (default fugue-cc). */
   readonly harness?: HarnessName;
   /** Allocation bench prior (default: empty → unlisted prior for everyone). */
   readonly bench?: BenchTable;
@@ -44,8 +44,8 @@ export interface WireSelfHarnessConfig {
 const buildHarness = (name: HarnessName, runner: CommandRunner, cwd?: string): Harness => {
   const options = cwd !== undefined ? { cwd } : {};
   switch (name) {
-    case 'ccb':
-      return new CcbHarness(runner, options);
+    case 'fugue-cc':
+      return new FugueCcHarness(runner, options);
     case 'codex':
       return new CodexHarness(runner, options);
     case 'opencode':
@@ -71,7 +71,7 @@ export const wireCoordinator = (config: WireConfig): Coordinator => {
         rng: systemRng,
       },
     ),
-    harness: buildHarness(config.harness ?? 'ccb', runner, config.cwd),
+    harness: buildHarness(config.harness ?? 'fugue-cc', runner, config.cwd),
     barrier: new PersistentBarrier(fs, joinPath(config.stateDir, 'barrier')),
     resultStore: new FsResultStore(fs, joinPath(config.stateDir, 'results')),
     runStore: new FsRunStore(fs, joinPath(config.stateDir, 'runs')),
@@ -84,7 +84,7 @@ export const wireCoordinator = (config: WireConfig): Coordinator => {
 export const wireSelfHarness = (cfg: WireSelfHarnessConfig): SelfHarnessLoop => {
   const fs = new NodeFileSystem();
   const runner = new NodeCommandRunner();
-  const harness = buildHarness(cfg.spec.harness ?? 'ccb', runner, cfg.cwd);
+  const harness = buildHarness(cfg.spec.harness ?? 'fugue-cc', runner, cfg.cwd);
   const runStore = new FsRunStore(fs, joinPath(cfg.stateDir, 'runs'));
 
   return new SelfHarnessLoop({

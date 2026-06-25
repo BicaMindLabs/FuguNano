@@ -8,7 +8,7 @@ export interface BackendSpec {
 }
 
 export interface ReconOptions {
-  /** Role CLIs to probe (default: the fan-out roles). */
+  /** Role CLIs to probe (default: the parallel dispatch roles). */
   readonly roles?: readonly string[];
   /** Backends to probe. */
   readonly backends?: readonly BackendSpec[];
@@ -16,7 +16,7 @@ export interface ReconOptions {
   readonly env?: Readonly<Record<string, string | undefined>>;
 }
 
-const DEFAULT_ROLES = ['claude', 'codex', 'ccb', 'agy', 'opencode', 'git', 'tmux'] as const;
+const DEFAULT_ROLES = ['claude', 'codex', 'fugue-cc', 'agy', 'opencode', 'git', 'tmux'] as const;
 
 /** Probe the environment (via `command -v`) and assemble a DoctorReport. */
 export const runRecon = async (

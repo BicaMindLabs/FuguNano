@@ -1,4 +1,4 @@
-/** Multi-model planning panel (bash `plan`): fan a goal decomposition out to several models. */
+/** Multi-model planning panel (bash `plan`): ask several models to decompose a goal. */
 export const renderPlanPrompt = (goal: string): string =>
   [
     'Decompose this goal into a concrete, file-level implementation plan:',

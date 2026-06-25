@@ -38,10 +38,10 @@ Rule: `domain` imports nothing outward. `app` imports only `domain`. `adapters`/
 | **lavish-axi** (`build:skill --check`)                                                                       | docs-drift gate                                                                                                     | a `QualityGate` adapter                                                                                                                                                                      |
 | our **preflight** + no-Gemini + gen≠review                                                                   | deterministic go/no-go AND run policy                                                                               | `QualityGate` (deterministic) + `Policy`/`PolicyEvaluator` (selection-time)                                                                                                                  |
 | **Lynn** (orchestrator-side ownership)                                                                       | enforce ownership on integration                                                                                    | `Integrator` + `VcsPort` + `OwnershipPolicy`                                                                                                                                                 |
-| our **fan-in barrier**                                                                                       | dispatch N ⇒ N terminal, durable, resumable                                                                         | `ResultStore` + `Barrier`/`RoundManifest`                                                                                                                                                    |
+| our **join barrier**                                                                                       | dispatch N ⇒ N terminal, durable, resumable                                                                         | `ResultStore` + `Barrier`/`RoundManifest`                                                                                                                                                    |
 | **skills catalog**                                                                                           | one catalog over all sources; inject only needed                                                                    | `SkillCatalog` (search) + `SkillInjector`                                                                                                                                                    |
-| **codex-plugin-cc** (multi-harness)                                                                          | one job model over ccb/codex/opencode                                                                               | `Harness` (submit/status/cancel/collect)                                                                                                                                                     |
-| **Self-Harness** ([arXiv 2606.09498](https://arxiv.org/abs/2606.09498); evolve the _harness_, not the model) | mine verifier-grounded weaknesses → propose bounded single-surface edits → promote only under a non-regression gate | `SelfHarnessLoop` (app) + `WeaknessMiner`/`HarnessProposer`/`HarnessValidator` (ports) + live self-harness adapters + `fugue self-harness` CLI + pure `acceptEdit` (`Δin≥0 ∧ Δho≥0 ∧ max>0`) |
+| **codex-plugin-cc** (multi-harness)                                                                          | one job model over fugue-cc/codex/opencode; fugue-cc is the provider-runtime adapter                                     | `Harness` (submit/status/cancel/collect)                                                                                                                                                     |
+| **Self-Harness** (Shanghai AI Lab, [arXiv 2606.09498](https://arxiv.org/abs/2606.09498); evolve the _harness_, not the model) | mine verifier-grounded weaknesses → propose bounded single-surface edits → promote only under a non-regression gate | `SelfHarnessLoop` (app) + `WeaknessMiner`/`HarnessProposer`/`HarnessValidator` (ports) + live self-harness adapters + `fugue self-harness` CLI + pure `acceptEdit` (`Δin≥0 ∧ Δho≥0 ∧ max>0`) |
 
 ## 4. Domain — value objects
 
@@ -115,14 +115,14 @@ type Policy = { id: string; evaluate(sel: Selection): PolicyResult }; // no-Gemi
 `async` at the world's edge, pure otherwise. No `any`; expected failure is a typed `Result<T,E>`, exceptions only for programmer error.
 
 ```ts
-// dispatch work to an agent over a fleet (ccb/codex/opencode). NOT "returns a Verdict".
+// dispatch work to an agent over a fleet (fugue-cc/codex/opencode). NOT "returns a Verdict".
 // Revised from the iter0 submit/status/collect/cancel job model (iter5): every
-// harness we target is a blocking CLI (`ccb ask`, `codex exec`, `opencode run`),
+// harness we target is a blocking CLI (`fugue-cc`, `codex exec`, `opencode run`),
 // so one async dispatch + Result is exact; an async job machine over a synchronous
-// tool was unjustified. Fan-out parallelism + resume live in Barrier/ResultStore,
+// tool was unjustified. Parallel dispatch parallelism + resume live in Barrier/ResultStore,
 // not here. A future remote-queue harness can poll internally and still resolve one Promise.
 interface Harness {
-  readonly name: "ccb" | "codex" | "opencode";
+  readonly name: "fugue-cc" | "codex" | "opencode";
   dispatch(
     req: DispatchRequest,
   ): Promise<Result<DispatchResult, DispatchError>>;
@@ -136,7 +136,7 @@ interface AllocationStrategy {
   snapshot(): StrategyState; // persistable
 }
 
-// durable outputs + the fan-in invariant, split
+// durable outputs + the join invariant, split
 interface ResultStore {
   put(key: string, a: Artifact[]): Promise<void>;
   get(key: string): Promise<Artifact[] | null>;
@@ -240,14 +240,14 @@ Pipeline (today's 5 phases, now typed): **Plan → Dispatch → Integrate → Re
 
 Higher modes (goal-mode, planning-panel, Conductor-style recursion) are other Phase compositions over the same ports — not special branches.
 
-CLI-surface homes for the rest: `task`→audit/`Run` facade · `template`→`ContextAssembler` · `run`/`summary`→`Run`/`RunEvent` projections · `fleet`→`Harness.health` + launcher adapter · `doctor`→recon over `Harness.health`+gates · `ccb-sync`→ccb harness maintenance · `self-harness`→spec-driven harness evolution.
+CLI-surface homes for the rest: `task`→audit/`Run` facade · `template`→`ContextAssembler` · `run`/`summary`→`Run`/`RunEvent` projections · `fleet`→`Harness.health` + launcher adapter · `doctor`→recon over `Harness.health`+gates · `runtime`→provider maintenance (`runtime` alias) · `self-harness`→spec-driven harness evolution.
 
 ## 7. Migration plan (incremental, bash stays green)
 
-Bash `fanout` works and is tested at every step. Migrate **capability by capability** (port + adapter + tests + CLI), engine opt-in (`FUGUE_ENGINE=1`) until parity; [PARITY.md](PARITY.md) tracks each.
+Bash `fuguectl` works and is tested at every step. Migrate **capability by capability** (port + adapter + tests + CLI), engine opt-in (`FUGUE_ENGINE=1`) until parity; [PARITY.md](PARITY.md) tracks each.
 
 1. **iter0** — this doc + skeleton (strict tsconfig, tsup, vitest, eslint, clipanion; `domain/` values+ports compiling; CI `test:engine`).
-2. **iter1** — **`RunState + ResultStore + Barrier`** (proves durable state, injected IO, timeout/cancel semantics, and the central fan-in invariant against bash parity). Property-tested with fast-check.
+2. **iter1** — **`RunState + ResultStore + Barrier`** (proves durable state, injected IO, timeout/cancel semantics, and the central join invariant against bash parity). Property-tested with fast-check.
 3. **iter1.5** — `AllocationStrategy` (+ all three adapters) with full `record/feed/stats/decay --sample` parity; property tests for ranking invariants.
 4. **iter2+** — `ReviewLoop`, `QualityGate`/`PolicyEvaluator`, `Integrator`/`VcsPort`, `Workspace`/`ContextAssembler`, `ExperienceStore`, `SkillCatalog`/`Injector`, `Harness` adapters, then the `Coordinator`.
 5. **cutover** — at parity the bash tool becomes a shim or is removed; selftest/check-docs move to the TS suite.

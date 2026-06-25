@@ -1,0 +1,106 @@
+# provider.config.example — sanitized template
+# ─────────────────────────────────────────────────────────────────────
+# Usage: copy to .fugue-cc/provider.config in your project root, replace <...> placeholders with real keys.
+#   cp orchestration/fugue-cc/provider.config.example /path/to/proj/.fugue-cc/provider.config
+# Real keys all live in ~/.config/cc-model-secrets.env (read by the backends launcher);
+# the key= lines here are only for fugue-cc direct spawn, **never commit a provider.config with real keys**
+# (this repo's .gitignore already ignores **/.fugue-cc/provider.config, only tracks .example).
+# ─────────────────────────────────────────────────────────────────────
+version = 2
+entry_window = "main"
+
+[windows]
+# planner = you, in the strategy layer (e.g. Claude Desktop app), running fugue-cc ask directly (placeholder)
+main   = "planner:claude"
+# implementer layer: Chinese-model clones, each isolated in its own worktree (single source of truth = main branch)
+work   = "cc-deepseek:claude(worktree), cc-glm:claude(worktree), cc-kimi:claude(worktree), cc-minimax:claude(worktree), cc-mimo:claude(worktree), cc-stepfun:claude(worktree)"
+ark    = "cc-doubao:claude(worktree), cc-ark-auto:claude(worktree)"
+# reviewer layer: Codex (gpt-5.5 frontier) —— generation != review, independent cross-vendor second opinion
+review = "coder:codex"
+
+[ui.sidebar]
+mode = "every_window"
+width = "15%"
+bottom_height = 20
+
+[ui.sidebar.view]
+agents_height = "50%"
+comms_height  = "15%"
+tips_height   = "35%"
+comms_limit   = 3
+
+[agents.planner]
+description = "main pane placeholder (the human is the real planner, running fugue-cc ask directly in the strategy layer e.g. Claude Desktop app)"
+
+[agents.cc-deepseek]
+description = "DeepSeek V4-Pro clone (latest, strongest reasoning, native Anthropic endpoint)"
+key = "<DEEPSEEK_API_KEY>"
+url = "https://api.deepseek.com/anthropic"
+model = "deepseek-v4-pro"
+[agents.cc-deepseek.env]
+CLAUDE_CODE_SIMPLE = "1"
+
+[agents.cc-glm]
+description = "Zhipu GLM 5.2 clone (latest, native Anthropic endpoint)"
+key = "<GLM_API_KEY>"
+url = "https://open.bigmodel.cn/api/anthropic"
+model = "glm-5.2"
+[agents.cc-glm.env]
+CLAUDE_CODE_SIMPLE = "1"
+
+[agents.cc-kimi]
+description = "Moonshot Kimi For Coding clone (claude-cli UA only)"
+key = "<KIMI_API_KEY>"
+url = "https://api.kimi.com/coding"
+model = "kimi-for-coding"
+[agents.cc-kimi.env]
+CLAUDE_CODE_SIMPLE = "1"
+
+[agents.cc-minimax]
+description = "MiniMax M3 clone (latest frontier, native Anthropic endpoint)"
+key = "<MINIMAX_API_KEY>"
+url = "https://api.minimaxi.com/anthropic"
+model = "MiniMax-M3"
+[agents.cc-minimax.env]
+CLAUDE_CODE_SIMPLE = "1"
+
+[agents.cc-mimo]
+description = "Xiaomi MiMo v2.5 Pro clone (native Anthropic endpoint)"
+key = "<MIMO_API_KEY>"
+url = "https://token-plan-sgp.xiaomimimo.com/anthropic"
+model = "mimo-v2.5-pro"
+[agents.cc-mimo.env]
+CLAUDE_CODE_SIMPLE = "1"
+
+[agents.cc-stepfun]
+description = "StepFun Step Plan clone (step-3.7-flash thinking)"
+key = "<STEPFUN_API_KEY>"
+url = "https://api.stepfun.com/step_plan"
+model = "step-3.7-flash"
+[agents.cc-stepfun.env]
+CLAUDE_CODE_SIMPLE = "1"
+
+# ─── Volcano Ark Coding Plan aggregation layer ──────────────────────────────
+# One ARK key gives access to 8+ models: ark-code-latest / doubao-seed-code /
+# deepseek-v4-flash / deepseek-v4-pro / kimi-k2.6 / glm-5.1 / minimax-latest
+# Endpoint: https://ark.cn-beijing.volces.com/api/coding (do not use /api/v3, it incurs extra charges)
+
+[agents.cc-doubao]
+description = "ByteDance Doubao Seed 2.0 coding edition (via Volcano Ark Coding Plan)"
+key = "<ARK_API_KEY>"
+url = "https://ark.cn-beijing.volces.com/api/coding"
+model = "doubao-seed-code-preview-latest"
+[agents.cc-doubao.env]
+CLAUDE_CODE_SIMPLE = "1"
+
+[agents.cc-ark-auto]
+description = "Volcano Ark Coding Plan auto-switch (pick model in console, takes effect in 3-5min)"
+key = "<ARK_API_KEY>"
+url = "https://ark.cn-beijing.volces.com/api/coding"
+model = "ark-code-latest"
+[agents.cc-ark-auto.env]
+CLAUDE_CODE_SIMPLE = "1"
+
+[agents.coder]
+description = "Codex CLI Reviewer/Implementer (gpt-5.5 frontier, strongest under a ChatGPT account)"
+model = "gpt-5.5"

@@ -13,7 +13,7 @@ import type { Result } from '../domain/result.js';
 import { planPanel } from './plan-panel.js';
 
 class FakeHarness implements Harness {
-  readonly name = 'ccb';
+  readonly name = 'fugue-cc';
   readonly prompts: string[] = [];
   dispatch(request: DispatchRequest): Promise<Result<DispatchResult, DispatchError>> {
     this.prompts.push(request.prompt);

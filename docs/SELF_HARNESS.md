@@ -1,10 +1,12 @@
 # Self-Harness
 
 Self-Harness is fugue's net-new loop for improving the harness itself, not the
-model. It is our abstraction of arXiv 2606.09498: keep the model, evaluator, and
-benchmark fixed; mine verifier-grounded weaknesses; ask a harness-backed agent
-for bounded edits to declared harness surfaces; promote an edit only if it
-improves at least one fixed split without regressing the other.
+model. It is our abstraction of Shanghai Artificial Intelligence Laboratory's
+paper "Self-Harness: Harnesses That Improve Themselves" (arXiv 2606.09498):
+keep the model, evaluator, and benchmark fixed; mine verifier-grounded
+weaknesses; ask a harness-backed agent for bounded edits to declared harness
+surfaces; promote an edit only if it improves at least one fixed split without
+regressing the other.
 
 The implementation is split into pure domain logic, live adapters, and a CLI:
 
@@ -44,7 +46,7 @@ The spec is strict JSON:
 ```json
 {
   "agent": "cc-deepseek",
-  "harness": "ccb",
+  "harness": "fugue-cc",
   "k": 2,
   "rounds": 1,
   "runId": "source-run-id-mined-each-round",
@@ -80,8 +82,8 @@ Validation rules:
 
 - `agent` and `runId` must be non-empty strings; identifier whitespace is
   trimmed during parsing.
-- `harness`, if present, must be `ccb`, `codex`, or `opencode`; when omitted,
-  CLI wiring dispatches through `ccb`.
+- `harness`, if present, must be `fugue-cc`, `codex`, or `opencode`; when
+  omitted, CLI wiring dispatches through `fugue-cc`.
 - `k` and `rounds` must be positive integers.
 - The top-level object is strict: unknown fields are rejected.
 - `config` must contain exactly the editable surfaces declared by

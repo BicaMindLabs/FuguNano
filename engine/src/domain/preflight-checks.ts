@@ -1,6 +1,6 @@
 import type { GateCheck, GateResult } from './gate.js';
 
-// Parity with bash fanout-preflight.sh (deterministic ccb.config checks):
+// Parity with bash fuguectl-preflight.sh (deterministic provider config checks):
 //   no-Gemini:   ^[^#]*(model|url)[[:space:]]*=.*(gemini|antigravity)   (case-insensitive)
 //                ^[^#]* means the model/url token is not preceded by '#', so comment lines are ignored.
 //   model line:  ^[[:space:]]*model[[:space:]]*=
@@ -11,8 +11,8 @@ const EMPTY_MODEL = /^\s*model\s*=\s*"?"?\s*$/u;
 
 const splitLines = (text: string): readonly string[] => text.split(/\r?\n/u);
 
-/** Deterministic go/no-go checks over a ccb.config file's text (IO-free). */
-export const checkCcbConfig = (configText: string): GateResult => {
+/** Deterministic go/no-go checks over a provider config file's text (IO-free). */
+export const checkProviderConfig = (configText: string): GateResult => {
   const lines = splitLines(configText);
   const checks: GateCheck[] = [];
 
@@ -22,7 +22,7 @@ export const checkCcbConfig = (configText: string): GateResult => {
           name: 'no-gemini',
           severity: 'fail',
           detail:
-            'ccb.config model/url contains gemini/antigravity — violates the no-Gemini hard rule',
+            'provider config model/url contains gemini/antigravity — violates the no-Gemini hard rule',
         }
       : { name: 'no-gemini', severity: 'ok', detail: 'no-Gemini guard passed' },
   );
@@ -35,12 +35,16 @@ export const checkCcbConfig = (configText: string): GateResult => {
           severity: 'ok',
           detail: `${modelCount} agent(s) configured a model`,
         }
-      : { name: 'model-configured', severity: 'warn', detail: 'ccb.config has no model line' },
+      : { name: 'model-configured', severity: 'warn', detail: 'provider config has no model line' },
   );
 
   checks.push(
     lines.some((line) => EMPTY_MODEL.test(line))
-      ? { name: 'model-nonempty', severity: 'fail', detail: 'ccb.config has an empty model value' }
+      ? {
+          name: 'model-nonempty',
+          severity: 'fail',
+          detail: 'provider config has an empty model value',
+        }
       : { name: 'model-nonempty', severity: 'ok', detail: 'no empty model values' },
   );
 

@@ -17,12 +17,12 @@ verify: ## Launcher self-test + cc-models doctor
 	./backends/verify.sh && cc-models doctor
 
 doctor: ## Environment recon + workflow recommendation (run on any machine)
-	bash orchestration/fanout/fuguectl doctor
+	bash orchestration/fuguectl/fuguectl doctor
 
-install-skill: ## Install as a Claude Code skill (~/.claude/skills/fanout, backs up first if present)
+install-skill: ## Install as a Claude Code skill (~/.claude/skills/fugue, backs up first if present)
 	bash scripts/install-skill.sh
 
-test: ## Run plugin + fuguectl/fanout tests
+test: ## Run plugin + fuguectl tests
 	npm test
 
 test-engine: ## Run TypeScript engine checks

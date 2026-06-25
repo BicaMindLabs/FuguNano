@@ -1,4 +1,4 @@
-/** TASK file scaffold (bash `task`): an auditable record per fan-out run. */
+/** TASK file scaffold (bash `task`): an auditable record per parallel dispatch run. */
 export type TaskPriority = 'P0' | 'P1' | 'P2';
 
 export interface TaskRef {

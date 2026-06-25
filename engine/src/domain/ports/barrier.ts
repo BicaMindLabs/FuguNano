@@ -2,7 +2,7 @@ import type { TaskState } from '../task.js';
 import type { RoundManifest } from '../round.js';
 
 /**
- * The fan-in barrier: dispatch N ⇒ N terminal. Durable + resumable (state
+ * The join barrier: dispatch N ⇒ N terminal. Durable + resumable (state
  * survives a process restart), and explicit about *how* each key ended
  * (`done | fail | timeout | canceled`) rather than just "all back".
  *

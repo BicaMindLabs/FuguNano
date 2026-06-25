@@ -9,7 +9,7 @@ const skillMd = (desc: string): string => `---\nname: x\ndescription: ${desc}\n-
 
 const seed = async (): Promise<FsSkillCatalog> => {
   const fs = new MemoryFileSystem(systemClock);
-  await fs.write('/user/fanout/SKILL.md', skillMd('fan out work'));
+  await fs.write('/user/fugue/SKILL.md', skillMd('parallelize work'));
   await fs.write('/user/book-x/SKILL.md', skillMd('a book note'));
   await fs.write('/user/notes.txt', 'ignore'); // no SKILL.md → skipped
   await fs.write('/plug/imagegen/SKILL.md', skillMd('make images'));
@@ -25,10 +25,10 @@ describe('FsSkillCatalog', () => {
     const catalog = await (await seed()).index();
     expect(catalog.map((r) => `${r.id}:${r.source}:${r.type}`)).toEqual([
       'book-x:user:note', // sorted by id
-      'fanout:user:functional',
+      'fugue:user:functional',
       'official:imagegen:plugin:functional',
     ]);
-    expect(catalog.find((r) => r.id === 'fanout')?.description).toBe('fan out work');
+    expect(catalog.find((r) => r.id === 'fugue')?.description).toBe('parallelize work');
   });
 
   it('matches a query across the catalog', async () => {
@@ -37,8 +37,8 @@ describe('FsSkillCatalog', () => {
   });
 
   it('injects a context block for selected ids', async () => {
-    const block = await (await seed()).inject(['fanout', 'official:imagegen']);
-    expect(block).toContain('- fanout (/user/fanout/SKILL.md): fan out work');
+    const block = await (await seed()).inject(['fugue', 'official:imagegen']);
+    expect(block).toContain('- fugue (/user/fugue/SKILL.md): parallelize work');
     expect(block).toContain('- official:imagegen (/plug/imagegen/SKILL.md): make images');
   });
 });

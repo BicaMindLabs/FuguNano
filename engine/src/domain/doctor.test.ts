@@ -33,10 +33,10 @@ describe('readyBackends', () => {
 });
 
 describe('recommend', () => {
-  it('recommends full fan-out with ccb + 2 ready backends + codex', () => {
+  it('recommends the full fleet workflow with the fugue-cc provider + 2 ready backends + codex', () => {
     const r = report(
       [
-        ['ccb', true],
+        ['fugue-cc', true],
         ['codex', true],
         ['claude', true],
       ],
@@ -45,13 +45,13 @@ describe('recommend', () => {
         ['b', true, true],
       ],
     );
-    expect(recommend(r)[0]).toContain('full fan-out');
+    expect(recommend(r)[0]).toContain('fugue-cc fleet');
   });
 
   it('warns to use a Chinese backend, not Gemini, when codex is missing', () => {
     const r = report(
       [
-        ['ccb', true],
+        ['fugue-cc', true],
         ['claude', true],
       ],
       [

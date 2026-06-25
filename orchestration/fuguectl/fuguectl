@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+# fuguectl — fugue workflow control-plane entrypoint.
+#
+#   fuguectl doctor              env recon + workflow recommendation
+#   fuguectl fleet status|up [--pty]|down  bring up/view/stop fugue-cc fleet (strip CLAUDE_CODE_* + detached tmux; --pty fallback)
+#   fuguectl preflight [cfg]     pre-run go/no-go gate (deps/provider mount/no-Gemini/config)
+#   fuguectl task new|log|done   TASK file scaffold/log/finalize
+#   fuguectl template <n> [--set K=V]   render prompt template (impl|analysis|review)
+#   fuguectl dispatch <agent> --template <n>|--prompt-file <f> [--task <file>]
+#                              wraps selected harness: render prompt → dispatch → log
+#   fuguectl cache ...           result cache + join barrier (init|put|fail|barrier|collect|resume|...)
+#   fuguectl integrate --work <repo> --agents "a b" [--onconflict abort|skip]  Phase3 worktree→main cherry-pick(conflict isolation)
+#   fuguectl allocate <task-type> [--top]|record|stats|reset   recommend model (bench prior + live posterior mix)
+#   fuguectl skills index|list|match|show|inject   local skills catalog(mother dir)+ inject agent on demand
+#   fuguectl workspace list|show|model|context <name>   workspace context isolation (Zleap-inspired)
+#   fuguectl experience add|list|recall|show <ws>   experience memory: done→extract method→redact store→reuse
+#   fuguectl plan "<goal>" [--models a,b,c]   multi-model planning panel (each writes a plan)
+#   fuguectl goal template|show|check <spec>  goal mode: declarative goal + deterministic acceptance gate
+#   fuguectl loop init|record|decide|status   Phase 5 review-fix state machine (exit-state decision+keep-best)
+#   fuguectl run set|round|status|next|clear   cross-phase run status facade (aggregate TASK/cache/loop → JSON, axi-inspired)
+#   fuguectl summary <round> [--task <file>]   round observability summary (incl. elapsed)
+#   fuguectl runtime check|adapt [--apply]     post-provider update sync adapt
+#   fuguectl selftest            run all *.test.sh
+#   fuguectl help                this help
+set -uo pipefail
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+CLI_NAME="fuguectl"
+print_help(){ sed -n '2,24p' "$0"; }
+
+sub="${1:-help}"; shift || true
+case "$sub" in
+  doctor)    exec bash "$HERE/fuguectl-doctor.sh"    "$@";;
+  preflight) exec bash "$HERE/fuguectl-preflight.sh" "$@";;
+  fleet)     exec bash "$HERE/fuguectl-fleet.sh"     "$@";;
+  task)      exec bash "$HERE/fuguectl-task.sh"      "$@";;
+  template)  exec bash "$HERE/fuguectl-template.sh"  "$@";;
+  dispatch)  exec bash "$HERE/fuguectl-dispatch.sh"  "$@";;
+  cache)     exec bash "$HERE/fuguectl-cache.sh"     "$@";;
+  integrate) exec bash "$HERE/fuguectl-integrate.sh" "$@";;
+  allocate)  exec bash "$HERE/fuguectl-allocate.sh"  "$@";;
+  skills)    exec bash "$HERE/fuguectl-skills.sh"    "$@";;
+  workspace) exec bash "$HERE/fuguectl-workspace.sh" "$@";;
+  experience) exec bash "$HERE/fuguectl-experience.sh" "$@";;
+  plan)      exec bash "$HERE/fuguectl-plan.sh"      "$@";;
+  goal)      exec bash "$HERE/fuguectl-goal.sh"      "$@";;
+  loop)      exec bash "$HERE/fuguectl-loop.sh"      "$@";;
+  run)       exec bash "$HERE/fuguectl-run.sh"       "$@";;
+  summary|round-summary) exec bash "$HERE/fuguectl-summary.sh" "$@";;
+  runtime) exec bash "$HERE/fuguectl-runtime.sh" "$@";;
+  selftest)
+    ec=0
+    for t in "$HERE"/*.test.sh; do
+      [ -f "$t" ] || continue
+      echo "── $(basename "$t") ──"
+      ( bash "$t" ) || ec=1
+    done
+    [ "$ec" -eq 0 ] && echo "✓ selftest all passed" || echo "✗ selftest had failures"
+    exit "$ec";;
+  help|-h|--help) print_help;;
+  *) echo "$CLI_NAME: unknown subcommand '$sub' (doctor|fleet|preflight|task|template|dispatch|cache|integrate|allocate|skills|workspace|experience|plan|goal|loop|run|summary|runtime|selftest|help)" >&2; exit 2;;
+esac
