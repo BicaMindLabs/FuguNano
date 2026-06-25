@@ -245,6 +245,52 @@ describe('TaskListHarnessValidator', () => {
     expect(scores).toEqual({ inPass: 0, inTotal: 3, outPass: 0, outTotal: 2 });
   });
 
+  it('repeats each case `samples` times and scales totals (denoise stochastic eval)', async () => {
+    const harness = new SequencedHarness([pass('x'), pass('x'), pass('x')]);
+    const validator = new TaskListHarnessValidator(harness, {
+      heldIn: [{ id: 'in-1', expected: 'x' }],
+      heldOut: [],
+      renderPrompt,
+      verify: (testCase, result) => result.output === testCase.expected,
+      agent: 'agent-1',
+      samples: 3,
+    });
+
+    const scores = await validator.score(config);
+
+    expect(scores).toEqual({ inPass: 3, inTotal: 3, outPass: 0, outTotal: 0 });
+    expect(harness.requests).toHaveLength(3);
+  });
+
+  it('aggregates a flaky case across repeats (2 of 3 pass)', async () => {
+    const harness = new SequencedHarness([pass('yes'), pass('no'), pass('yes')]);
+    const scores = await new TaskListHarnessValidator(harness, {
+      heldIn: [{ id: 'in-1', expected: 'yes' }],
+      heldOut: [],
+      renderPrompt,
+      verify: (testCase, result) => result.output === testCase.expected,
+      agent: 'agent-1',
+      samples: 3,
+    }).score(config);
+
+    expect(scores).toEqual({ inPass: 2, inTotal: 3, outPass: 0, outTotal: 0 });
+  });
+
+  it('normalizes a non-positive or non-finite samples to 1', async () => {
+    const harness = new SequencedHarness([pass('x')]);
+    const scores = await new TaskListHarnessValidator(harness, {
+      heldIn: [{ id: 'in-1', expected: 'x' }],
+      heldOut: [],
+      renderPrompt,
+      verify: (testCase, result) => result.output === testCase.expected,
+      agent: 'agent-1',
+      samples: 0,
+    }).score(config);
+
+    expect(scores).toEqual({ inPass: 1, inTotal: 1, outPass: 0, outTotal: 0 });
+    expect(harness.requests).toHaveLength(1);
+  });
+
   it('returns zeros for empty splits', async () => {
     const harness = new SequencedHarness([]);
     const scores = await new TaskListHarnessValidator<Case>(harness, {

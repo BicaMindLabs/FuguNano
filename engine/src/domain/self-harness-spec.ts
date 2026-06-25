@@ -18,6 +18,8 @@ export interface SelfHarnessSpec {
   readonly harnessArgs?: readonly string[];
   readonly k: number;
   readonly rounds: number;
+  /** Repeats per eval case to denoise stochastic scoring (default 1). */
+  readonly samples?: number;
   /** Source run mined on every round; callers that need fresh evidence should run the CLI per source run. */
   readonly runId: string;
   readonly config: HarnessConfig;
@@ -34,6 +36,7 @@ const SPEC_KEY_SET: ReadonlySet<string> = new Set([
   'harnessArgs',
   'k',
   'rounds',
+  'samples',
   'runId',
   'config',
   'heldIn',
@@ -174,6 +177,12 @@ export const parseSelfHarnessSpec = (text: string): Result<SelfHarnessSpec, stri
     harnessArgs = result.value;
   }
 
+  let samples: number | undefined;
+  if (parsed.samples !== undefined) {
+    if (!isPositiveInteger(parsed.samples)) return err('samples must be a positive integer');
+    samples = parsed.samples;
+  }
+
   const config = parseConfig(parsed.config);
   if (!config.ok) return config;
 
@@ -193,7 +202,8 @@ export const parseSelfHarnessSpec = (text: string): Result<SelfHarnessSpec, stri
     heldOut: heldOut.value,
   };
   const withHarness = parsed.harness === undefined ? base : { ...base, harness: parsed.harness };
-  return ok(harnessArgs === undefined ? withHarness : { ...withHarness, harnessArgs });
+  const withArgs = harnessArgs === undefined ? withHarness : { ...withHarness, harnessArgs };
+  return ok(samples === undefined ? withArgs : { ...withArgs, samples });
 };
 
 export const renderSelfHarnessSpecTemplate = (): string => {
@@ -208,6 +218,7 @@ export const renderSelfHarnessSpecTemplate = (): string => {
       harness: 'fugue-cc',
       k: 2,
       rounds: 1,
+      samples: 2,
       runId: 'source-run-id-mined-each-round',
       config,
       heldIn: [

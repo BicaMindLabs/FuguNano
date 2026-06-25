@@ -145,6 +145,7 @@ export const wireSelfHarness = (cfg: WireSelfHarnessConfig): SelfHarnessLoop => 
           return false;
         }
       },
+      ...(cfg.spec.samples !== undefined ? { samples: cfg.spec.samples } : {}),
     }),
     k: cfg.spec.k,
   });

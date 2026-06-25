@@ -12,9 +12,21 @@ export interface TaskListHarnessValidatorOptions<TCase> {
   readonly verify: (testCase: TCase, result: DispatchResult) => boolean | Promise<boolean>;
   readonly agent: string;
   readonly taskType?: string;
+  /**
+   * Repeats per case to denoise stochastic evaluation (default 1). Both pass counts
+   * and totals scale by this, so the acceptance gate aggregates across repeats —
+   * the paper's "repeat candidate evaluation and aggregate pass counts" — instead
+   * of trusting a single noisy sample.
+   */
+  readonly samples?: number;
 }
 
 const DEFAULT_TASK_TYPE = 'self-harness-eval';
+
+const normalizeSamples = (value: number | undefined): number => {
+  if (value === undefined || !Number.isFinite(value)) return 1;
+  return Math.max(1, Math.trunc(value));
+};
 
 /** Harness-backed Stage-3 validator over fixed held-in and held-out task lists. */
 export class TaskListHarnessValidator<TCase> implements HarnessValidator {
@@ -24,6 +36,7 @@ export class TaskListHarnessValidator<TCase> implements HarnessValidator {
   private readonly verify: (testCase: TCase, result: DispatchResult) => boolean | Promise<boolean>;
   private readonly agent: string;
   private readonly taskType: string;
+  private readonly samples: number;
 
   constructor(
     private readonly harness: Harness,
@@ -35,6 +48,7 @@ export class TaskListHarnessValidator<TCase> implements HarnessValidator {
     this.verify = options.verify;
     this.agent = options.agent;
     this.taskType = options.taskType ?? DEFAULT_TASK_TYPE;
+    this.samples = normalizeSamples(options.samples);
   }
 
   async score(config: HarnessConfig): Promise<SplitScores> {
@@ -42,16 +56,18 @@ export class TaskListHarnessValidator<TCase> implements HarnessValidator {
     const outPass = await this.scoreSplit(config, this.heldOut);
     return {
       inPass,
-      inTotal: this.heldIn.length,
+      inTotal: this.heldIn.length * this.samples,
       outPass,
-      outTotal: this.heldOut.length,
+      outTotal: this.heldOut.length * this.samples,
     };
   }
 
   private async scoreSplit(config: HarnessConfig, cases: readonly TCase[]): Promise<number> {
     let passes = 0;
     for (const testCase of cases) {
-      if (await this.scoreCase(config, testCase)) passes += 1;
+      for (let sample = 0; sample < this.samples; sample += 1) {
+        if (await this.scoreCase(config, testCase)) passes += 1;
+      }
     }
     return passes;
   }

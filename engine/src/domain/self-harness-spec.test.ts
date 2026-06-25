@@ -203,6 +203,35 @@ describe('parseSelfHarnessSpec', () => {
     expect(result.value.harnessArgs).toBeUndefined();
   });
 
+  it('accepts an optional samples count', () => {
+    const spec = validObject();
+    spec.samples = 3;
+
+    const result = parseObject(spec);
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) throw new Error(result.error);
+    expect(result.value.samples).toBe(3);
+  });
+
+  it('leaves samples undefined when omitted', () => {
+    const spec = validObject();
+    delete spec.samples;
+
+    const result = parseObject(spec);
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) throw new Error(result.error);
+    expect(result.value.samples).toBeUndefined();
+  });
+
+  it('reports a non-positive samples', () => {
+    const spec = validObject();
+    spec.samples = 0;
+
+    expect(expectError(spec)).toBe('samples must be a positive integer');
+  });
+
   it('reports a non-array harnessArgs', () => {
     const spec = validObject();
     spec.harnessArgs = '-c mcp_servers={}';
