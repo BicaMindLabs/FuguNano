@@ -262,6 +262,64 @@ describe('fugue CLI', () => {
     });
   });
 
+  describe('plan command', () => {
+    let dir: string;
+    let bin: string;
+    let out: string;
+    let calls: string;
+    let prompts: string;
+
+    beforeEach(async () => {
+      dir = await mkdtemp(join(tmpdir(), 'fugue-plan-'));
+      bin = join(dir, 'fugue-cc');
+      out = join(dir, 'plans');
+      calls = join(dir, 'calls.txt');
+      prompts = join(dir, 'prompts.txt');
+      await writeFile(
+        bin,
+        ['#!/usr/bin/env bash', `echo "$2" >> "${calls}"`, `cat >> "${prompts}"`, ''].join('\n'),
+        'utf8',
+      );
+      await chmod(bin, 0o755);
+    });
+
+    afterEach(async () => {
+      await rm(dir, { recursive: true, force: true });
+    });
+
+    it('dispatches the planning prompt to selected models and lists output files', async () => {
+      const planned = await run([
+        'plan',
+        'build a login feature',
+        '--models',
+        'cc-a,cc-b',
+        '--out',
+        out,
+        '--bin',
+        bin,
+      ]);
+      const called = await readFile(calls, 'utf8');
+      const prompt = await readFile(prompts, 'utf8');
+
+      expect(planned.code).toBe(0);
+      expect(called).toContain('cc-a');
+      expect(called).toContain('cc-b');
+      expect(planned.out).toContain('cc-a.plan.md');
+      expect(prompt).toContain('build a login feature');
+      expect(prompt).toContain(`write to ${join(out, 'cc-a.plan.md')}`);
+    });
+
+    it('uses the cross-family default model set', async () => {
+      await run(['plan', 'default models test', '--out', out, '--bin', bin]);
+      const called = await readFile(calls, 'utf8');
+
+      expect(called.trim().split(/\r?\n/u)).toHaveLength(3);
+      expect(called).toContain('cc-deepseek');
+      expect(called).toContain('cc-kimi');
+      expect(called).toContain('coder');
+    });
+  });
+
   describe('runtime commands', () => {
     let dir: string;
     let bin: string;

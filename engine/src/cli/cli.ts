@@ -15,6 +15,7 @@ import {
   ExperienceShowCommand,
 } from './commands/experience.js';
 import { GoalCheckCommand, GoalShowCommand, GoalTemplateCommand } from './commands/goal.js';
+import { PlanCommand } from './commands/plan.js';
 import { RuntimeAdaptCommand, RuntimeCheckCommand } from './commands/runtime.js';
 import { SelfHarnessRunCommand, SelfHarnessTemplateCommand } from './commands/self-harness.js';
 import { SummaryCommand } from './commands/summary.js';
@@ -52,6 +53,7 @@ export const buildCli = (): Cli => {
   cli.register(GoalTemplateCommand);
   cli.register(GoalShowCommand);
   cli.register(GoalCheckCommand);
+  cli.register(PlanCommand);
   cli.register(RuntimeCheckCommand);
   cli.register(RuntimeAdaptCommand);
   cli.register(TemplateRenderCommand);
