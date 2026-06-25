@@ -19,6 +19,7 @@ import { GoalCheckCommand, GoalShowCommand, GoalTemplateCommand } from './comman
 import { PlanCommand } from './commands/plan.js';
 import { PreflightCommand } from './commands/preflight.js';
 import { RuntimeAdaptCommand, RuntimeCheckCommand } from './commands/runtime.js';
+import { RunCommand } from './commands/run.js';
 import { SelfHarnessRunCommand, SelfHarnessTemplateCommand } from './commands/self-harness.js';
 import { SummaryCommand } from './commands/summary.js';
 import { TaskDoneCommand, TaskLogCommand, TaskNewCommand } from './commands/task.js';
@@ -60,6 +61,7 @@ export const buildCli = (): Cli => {
   cli.register(CacheCommand);
   cli.register(RuntimeCheckCommand);
   cli.register(RuntimeAdaptCommand);
+  cli.register(RunCommand);
   cli.register(TemplateRenderCommand);
   cli.register(WorkspaceListCommand);
   cli.register(WorkspaceShowCommand);

@@ -351,6 +351,108 @@ describe('fugue CLI', () => {
     });
   });
 
+  describe('run command', () => {
+    let dir: string;
+    let cache: string;
+    let task: string;
+
+    beforeEach(async () => {
+      dir = await mkdtemp(join(tmpdir(), 'fugue-run-'));
+      cache = join(dir, 'cache');
+      task = join(dir, 'TASK.md');
+    });
+
+    afterEach(async () => {
+      await rm(dir, { recursive: true, force: true });
+    });
+
+    const args = (...rest: readonly string[]): readonly string[] => [
+      'run',
+      '--cache',
+      cache,
+      ...rest,
+    ];
+
+    it('aggregates task, cache, and loop state into JSON and human summaries', async () => {
+      const noRun = await run(args('status'));
+      const missingTask = await run(args('set', '--task', join(dir, 'missing.md')));
+
+      await writeFile(task, '# TASK-test\nStatus: IN_PROGRESS\n', 'utf8');
+      const set = await run(args('set', '--task', task, '--round', '2'));
+      const runMeta = await readFile(join(cache, 'run.meta'), 'utf8');
+      const initialStatus = await run(args('status'));
+      let initialStatusIsJson = true;
+      try {
+        JSON.parse(initialStatus.out);
+      } catch {
+        initialStatusIsJson = false;
+      }
+
+      const round = join(cache, 'round-2');
+      await mkdir(round, { recursive: true });
+      await writeFile(join(round, 'manifest.tsv'), 't1\tcc-deepseek\nt2\tcc-glm\n', 'utf8');
+      await writeFile(join(round, 't1.result'), 'r1\n', 'utf8');
+      await writeFile(join(round, 't1.status'), 'done\n', 'utf8');
+      const openStatus = await run(args('status'));
+      const openNext = await run(args('next'));
+
+      await writeFile(join(round, 't2.status'), 'fail\n', 'utf8');
+      await writeFile(join(round, 't2.reason'), 'x\n', 'utf8');
+      const passedStatus = await run(args('status'));
+
+      const loop = join(cache, 'loop');
+      await mkdir(loop, { recursive: true });
+      await writeFile(
+        join(loop, 'meta'),
+        'max_rounds=3\ntask_file=\nbest_sha=sha1\nbest_n=2\n',
+        'utf8',
+      );
+      await writeFile(join(loop, 'rounds.tsv'), '1\tpass\tNEEDSFIX\t2\t0\t0\tsha1\tnote\n', 'utf8');
+      const loopStatus = await run(args('status'));
+      const human = await run(args('status', '--human'));
+
+      const roundUpdate = await run(args('round', '3'));
+      const roundStatus = await run(args('status'));
+      const clear = await run(args('clear'));
+      const afterClear = await run(args('next'));
+
+      expect(noRun.code).toBe(2);
+      expect(missingTask.code).toBe(2);
+      expect(missingTask.err).toContain('no TASK file');
+      expect(set.code).toBe(0);
+      expect(runMeta).toContain(`task=${task}`);
+      expect(initialStatus.out).toContain('"round": 2');
+      expect(initialStatus.out).toContain('"task_status": "IN_PROGRESS"');
+      expect(initialStatus.out).toContain('"initialized": false');
+      expect(initialStatusIsJson).toBe(true);
+      expect(openStatus.out).toContain('"total": 2');
+      expect(openStatus.out).toContain('"pending": 1');
+      expect(openStatus.out).toContain('"barrier": "open"');
+      expect(openNext.out).toContain('waiting on 1+0/2');
+      expect(passedStatus.out).toContain('"barrier": "passed"');
+      expect(loopStatus.out).toContain('"decision": "CONTINUE"');
+      expect(human.out).toContain('-- run: TASK.md');
+      expect(human.out).toContain('cache:');
+      expect(human.out).toContain('loop:');
+      expect(human.out).toContain('next:');
+      expect(roundUpdate.out).toContain('round → 3');
+      expect(roundStatus.out).toContain('"round": 3');
+      expect(clear.out).toContain('cleared current run context');
+      expect(afterClear.code).toBe(2);
+    });
+
+    it('rejects invalid round values', async () => {
+      await writeFile(task, '# TASK-test\nStatus: IN_PROGRESS\n', 'utf8');
+      const set = await run(args('set', '--task', task, '--round', '0'));
+      const round = await run(args('round', 'abc'));
+
+      expect(set.code).toBe(2);
+      expect(set.err).toContain('--round must be');
+      expect(round.code).toBe(2);
+      expect(round.err).toContain('usage: round');
+    });
+  });
+
   describe('plan command', () => {
     let dir: string;
     let bin: string;
