@@ -52,6 +52,12 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: "20"
+      - name: install engine
+        run: npm ci
+        working-directory: engine
+      - name: build engine (fuguectl shims delegate to engine/dist/cli/main.js)
+        run: npm run build
+        working-directory: engine
       - name: npm test
         run: npm test
 
