@@ -1,5 +1,5 @@
 import { spawnSync } from "node:child_process";
-import { mkdtempSync, rmSync } from "node:fs";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -20,6 +20,26 @@ export const run = (command, args, options = {}) =>
     env: process.env,
     ...options,
   });
+
+export const runGit = (args, options = {}) =>
+  run(
+    "git",
+    [
+      "-c",
+      "user.email=t@t",
+      "-c",
+      "user.name=t",
+      "-c",
+      "commit.gpgsign=false",
+      "-c",
+      "init.defaultBranch=main",
+      ...args,
+    ],
+    options,
+  );
+
+export const writeExecutable = (file, lines) =>
+  writeFileSync(file, [...lines, ""].join("\n"), { mode: 0o755 });
 
 export const countLines = (text) =>
   text.split(/\r?\n/u).filter((line) => line.length > 0).length;

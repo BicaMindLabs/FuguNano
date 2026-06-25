@@ -39,15 +39,7 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: "20"
-      - name: Ensure shellcheck (preinstalled on ubuntu-latest; binary fallback)
-        run: |
-          if ! command -v shellcheck >/dev/null 2>&1; then
-            SC_VER=0.10.0
-            curl -sSL "https://github.com/koalaman/shellcheck/releases/download/v${SC_VER}/shellcheck-v${SC_VER}.linux.x86_64.tar.xz" | tar -xJ
-            sudo install "shellcheck-v${SC_VER}/shellcheck" /usr/local/bin/shellcheck
-          fi
-          shellcheck --version
-      - name: launcher syntax + shellcheck
+      - name: Launcher syntax
         run: npm run lint:shell
       - name: Docs match code (README ↔ fuguectl subcommands/counts)
         run: npm run check:docs

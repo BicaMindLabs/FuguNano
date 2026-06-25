@@ -91,8 +91,8 @@ else
     `${basename(readmeZh)}: did not find '${String(subcommands.length)} 个子命令' (actual ${String(subcommands.length)}; fix README_ZH's subcommand count)`,
   );
 
-const testSuites = readdirSync(fugueDir).filter(
-  (file) => file.endsWith(".test.sh") || file.endsWith(".test.mjs"),
+const testSuites = readdirSync(fugueDir).filter((file) =>
+  file.endsWith(".test.mjs"),
 ).length;
 if (en.includes(`${String(testSuites)} test suites`))
   ok(`${basename(readmeEn)}: test-suite-count claim = ${String(testSuites)}`);

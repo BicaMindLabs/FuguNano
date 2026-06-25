@@ -3,7 +3,7 @@
 [![CI](https://github.com/BicaMindLabs/open-sakanafugu/actions/workflows/ci.yml/badge.svg)](https://github.com/BicaMindLabs/open-sakanafugu/actions/workflows/ci.yml)
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![Node](https://img.shields.io/badge/node-%E2%89%A518.18-339933.svg)](package.json)
-[![Tests](https://img.shields.io/badge/tests-262%20passing-success.svg)](orchestration/fuguectl)
+[![Tests](https://img.shields.io/badge/tests-263%20passing-success.svg)](orchestration/fuguectl)
 
 **English | [简体中文](README_ZH.md)**
 
@@ -239,7 +239,7 @@ The strict JSON spec, editable surfaces, validation rules, and smoke tests are i
 make ci          # scan + launcher lint + docs + plugin/fuguectl + engine checks
 make ci-clean    # same, but clean-installs engine dependencies first
 make scan        # secret-leak gate
-make lint        # launcher syntax + shellcheck
+make lint        # Node launcher syntax check
 make check-docs  # README + Self-Harness docs drift gate
 make test        # cn-plugin + fuguectl selftest
 make test-engine # TypeScript engine typecheck + lint + vitest

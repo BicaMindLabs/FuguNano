@@ -9,7 +9,7 @@ git clone https://github.com/BicaMindLabs/fugue
 cd fugue
 
 # Tools (for running the gates locally)
-brew install shellcheck gitleaks        # or apt
+brew install gitleaks        # or apt
 pipx install pre-commit && pre-commit install   # scans automatically on commit
 ```
 
@@ -18,7 +18,7 @@ pipx install pre-commit && pre-commit install   # scans automatically on commit
 | Gate    | Command     | What it checks                                                                 |
 | ------- | ----------- | ------------------------------------------------------------------------------ |
 | Secrets | `make scan` | Plaintext key fingerprints + `provider.config*`'s `key=` must be a placeholder |
-| Scripts | `make lint` | `bash -n` syntax + shellcheck (via `.shellcheckrc`)                            |
+| Scripts | `make lint` | Node launcher syntax + no checked-in `.sh` scripts                             |
 | Tests   | `make test` | cn-plugin's node tests                                                         |
 | All     | `make ci`   | The three above run in sequence (= CI equivalent)                              |
 

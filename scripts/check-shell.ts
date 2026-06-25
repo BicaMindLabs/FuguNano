@@ -48,17 +48,7 @@ for (const script of uniqueScripts) {
   else shellScripts.push(script);
 }
 
-console.log(`── syntax (${String(uniqueScripts.length)} scripts) ──`);
-for (const script of shellScripts) {
-  const result = spawnSync("bash", ["-n", script], {
-    cwd: root,
-    stdio: "ignore",
-  });
-  if (result.status !== 0) {
-    console.log(`  ✗ syntax: ${script}`);
-    failed = true;
-  }
-}
+console.log(`── node syntax (${String(nodeScripts.length)} launchers) ──`);
 for (const script of nodeScripts) {
   const result = spawnSync(process.execPath, ["--check", script], {
     cwd: root,
@@ -71,23 +61,14 @@ for (const script of nodeScripts) {
 }
 if (!failed) console.log("  ✓ all pass");
 
-const shellcheckProbe = spawnSync("shellcheck", ["--version"], {
-  cwd: root,
-  stdio: "ignore",
-});
-if (shellcheckProbe.status === 0) {
-  console.log("── shellcheck -S warning (via .shellcheckrc) ──");
-  const result = spawnSync("shellcheck", ["-S", "warning", ...shellScripts], {
-    cwd: root,
-    stdio: "inherit",
-  });
-  if (result.status === 0) console.log("  ✓ 0 warnings");
-  else {
-    console.log("  ✗ shellcheck has findings");
-    failed = true;
-  }
+if (shellScripts.length === 0) {
+  console.log("── no shell scripts ──");
+  console.log("  ✓ none found");
 } else {
-  console.log("── shellcheck not installed, skipping (CI will run it) ──");
+  console.log("── no shell scripts ──");
+  for (const script of shellScripts)
+    console.log(`  ✗ shell script remains: ${script}`);
+  failed = true;
 }
 
 process.exit(failed ? 1 : 0);

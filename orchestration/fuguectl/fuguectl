@@ -28,18 +28,17 @@ const help = `fuguectl — fugue workflow control-plane entrypoint.
   fuguectl run set|round|status|next|clear
   fuguectl summary <round> [--task <file>]
   fuguectl runtime check|adapt [--apply]
-  fuguectl selftest            run all *.test.sh / *.test.mjs
+  fuguectl selftest            run all *.test.mjs
   fuguectl help                this help`;
 
 const selftest = () => {
   let failed = false;
   for (const file of readdirSync(here).sort()) {
-    if (!file.endsWith(".test.sh") && !file.endsWith(".test.mjs")) continue;
+    if (!file.endsWith(".test.mjs")) continue;
     const test = join(here, file);
     if (!existsSync(test)) continue;
     console.log(`── ${basename(test)} ──`);
-    const command = file.endsWith(".test.mjs") ? process.execPath : "bash";
-    const result = spawnSync(command, [test], { stdio: "inherit" });
+    const result = spawnSync(process.execPath, [test], { stdio: "inherit" });
     if (result.status !== 0) failed = true;
   }
   console.log(failed ? "✗ selftest had failures" : "✓ selftest all passed");

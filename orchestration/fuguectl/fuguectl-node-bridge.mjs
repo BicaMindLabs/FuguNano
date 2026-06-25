@@ -50,7 +50,12 @@ export const runSubcommandBridge = ({
   runEngine([command, subcommand, ...rest]);
 };
 
-export const runSimpleBridge = ({ argv, command, help, helpOnEmpty = true }) => {
+export const runSimpleBridge = ({
+  argv,
+  command,
+  help,
+  helpOnEmpty = true,
+}) => {
   const [first = ""] = argv;
   if ((helpOnEmpty && first === "") || first === "-h" || first === "--help") {
     printHelp(help);
