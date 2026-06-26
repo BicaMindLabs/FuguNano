@@ -20,7 +20,9 @@ import { NodeCommandRunner } from '../../infra/node-command-runner.js';
 import { NodeFileSystem } from '../../infra/node-file-system.js';
 
 const stateDir = (): string =>
-  process.env.FUGUE_STATE ?? joinPath(joinPath(homedir(), '.config'), 'fugue');
+  process.env.FUGUNANO_STATE ??
+  process.env.FUGUE_STATE ??
+  joinPath(joinPath(homedir(), '.config'), 'fugunano');
 
 const rootDir = (): string =>
   process.env.FUGUE_SKILLS_ROOT ?? joinPath(joinPath(homedir(), '.claude'), 'skills');

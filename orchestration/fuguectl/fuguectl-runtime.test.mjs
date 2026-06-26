@@ -42,7 +42,7 @@ writeFileSync(
     "const sub = args[1];",
     "if (root !== 'runtime') die('expected runtime');",
     "const bin = opt('--bin', process.env.FUGUE_CC_BIN || 'fugue-cc');",
-    "const state = opt('--state', process.env.FUGUE_STATE || path.join(process.env.HOME || '', '.config/fugue'));",
+    "const state = opt('--state', process.env.FUGUNANO_STATE || process.env.FUGUE_STATE || path.join(process.env.HOME || '', '.config/fugunano'));",
     "const driver = opt('--driver-name', process.env.FUGUE_DRIVER_NAME || 'fuguectl');",
     "const install = opt('--install', process.env.FUGUE_CC_INSTALL || path.join(process.env.HOME || '', '.local/share/codex-dual'));",
     "const stamp = path.join(state, 'runtime-version');",
@@ -97,7 +97,7 @@ writeFileSync(
 );
 
 process.env.FUGUE_CC_BIN = fakeProvider;
-process.env.FUGUE_STATE = join(tmp, "state");
+process.env.FUGUNANO_STATE = join(tmp, "state");
 process.env.FUGUE_CC_INSTALL = join(tmp, "install");
 delete process.env.FUGUE_CC_WORK;
 delete process.env.FUGUE_CC_CLAUDE;
@@ -121,13 +121,13 @@ suite.ok("runtime entrypoint suggests fuguectl runtime adapt", () =>
 run(runtime, ["adapt"]);
 suite.ok(
   "dry-run does not write stamp",
-  () => !existsSync(join(process.env.FUGUE_STATE, "runtime-version")),
+  () => !existsSync(join(process.env.FUGUNANO_STATE, "runtime-version")),
 );
 
 run(runtime, ["adapt", "--apply"]);
 suite.ok("apply writes stamp=current version", () =>
   readFileSync(
-    join(process.env.FUGUE_STATE, "runtime-version"),
+    join(process.env.FUGUNANO_STATE, "runtime-version"),
     "utf8",
   ).includes("v9.9.9"),
 );
@@ -155,7 +155,7 @@ suite.ok("adapt with FUGUE_CC_WORK runs config validation", () =>
 );
 suite.ok("adapt with FUGUE_CC_WORK still records stamp", () =>
   readFileSync(
-    join(process.env.FUGUE_STATE, "runtime-version"),
+    join(process.env.FUGUNANO_STATE, "runtime-version"),
     "utf8",
   ).includes("v9.9.9"),
 );

@@ -77,8 +77,8 @@ fugue-cc
 然后在另一个 shell 中运行 operator：
 
 ```bash
-/path/to/fugue/orchestration/fuguectl/fuguectl preflight
-/path/to/fugue/orchestration/fuguectl/fuguectl fleet status
+/path/to/fugunano/orchestration/fuguectl/fuguectl preflight
+/path/to/fugunano/orchestration/fuguectl/fuguectl fleet status
 ```
 
 ## Operator Skill
@@ -87,10 +87,10 @@ fugue-cc
 make install-skill
 ```
 
-这会把 `/fugue` 安装到 `~/.claude/skills/fugue`，作为 Claude Code 的便捷 operator 入口。但 workflow 本身不绑定 Claude Code：Codex、OpenCode 和其他 agent 也可以读取 [AGENTS.md](AGENTS.md)，并通过同一套 agent profiles 派发。安装后可冒烟测试：
+这会把 `/fugunano` 安装到 `~/.claude/skills/fugunano`，作为 Claude Code 的便捷 operator 入口。但 workflow 本身不绑定 Claude Code：Codex、OpenCode 和其他 agent 也可以读取 [AGENTS.md](AGENTS.md)，并通过同一套 agent profiles 派发。安装后可冒烟测试：
 
 ```bash
-~/.claude/skills/fugue/fuguectl selftest
+~/.claude/skills/fugunano/fuguectl selftest
 ```
 
 ## Loop 如何工作
@@ -198,7 +198,7 @@ npm run build
 node dist/cli/main.js self-harness template > /tmp/self-harness.json
 node dist/cli/main.js self-harness run \
   --spec /tmp/self-harness.json \
-  --state ~/.config/fugue \
+  --state ~/.config/fugunano \
   --cwd /path/to/workspace
 ```
 

@@ -5,8 +5,8 @@ PRs welcome. This is a workflow repo that stitches together Chinese-model backen
 ## Dev Environment
 
 ```bash
-git clone https://github.com/BicaMindLabs/fugue
-cd fugue
+git clone https://github.com/BicaMindLabs/FuguNano fugunano
+cd fugunano
 
 # Tools (for running the gates locally)
 brew install gitleaks        # or apt

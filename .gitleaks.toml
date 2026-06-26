@@ -5,12 +5,12 @@ useDefault = true
 [allowlist]
 description = "Placeholders and valid attributions, not real secrets"
 regexes = [
-  # the <PROVIDER_API_KEY> placeholder in ccb.config.example
+  # the <PROVIDER_API_KEY> placeholder in provider.config.example
   '''<[A-Z_]+_API_KEY>''',
   # example ID snippets in the docs
   '''sk-xxx|sk-\.\.\.|<your-[a-z-]+>''',
 ]
 paths = [
   # the template file inherently contains a placeholder key=, not a leak
-  '''orchestration/ccb/ccb\.config\.example''',
+  '''orchestration/fugue-cc/provider\.config\.example''',
 ]

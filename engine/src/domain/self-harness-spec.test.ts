@@ -300,10 +300,12 @@ describe('renderSelfHarnessSpecTemplate', () => {
     }
     expect(result.value.heldIn[0]?.promptTemplate).toContain('\n\nTask:');
     expect(result.value.heldIn[0]?.promptTemplate).not.toContain('\\n');
-    expect(result.value.heldIn[0]?.promptTemplate).toContain('/tmp/fugue-self-harness-held-in');
-    expect(result.value.heldIn[0]?.gate).toContain('rm -f /tmp/fugue-self-harness-held-in');
-    expect(result.value.heldOut[0]?.promptTemplate).toContain('/tmp/fugue-self-harness-held-out');
-    expect(result.value.heldOut[0]?.gate).toContain('rm -f /tmp/fugue-self-harness-held-out');
+    expect(result.value.heldIn[0]?.promptTemplate).toContain('/tmp/fugunano-self-harness-held-in');
+    expect(result.value.heldIn[0]?.gate).toContain('rm -f /tmp/fugunano-self-harness-held-in');
+    expect(result.value.heldOut[0]?.promptTemplate).toContain(
+      '/tmp/fugunano-self-harness-held-out',
+    );
+    expect(result.value.heldOut[0]?.gate).toContain('rm -f /tmp/fugunano-self-harness-held-out');
     expect(result.value.heldIn[0]?.gate).not.toBe(result.value.heldOut[0]?.gate);
   });
 });

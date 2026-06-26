@@ -1585,6 +1585,7 @@ describe('fugue CLI', () => {
 
     afterEach(async () => {
       delete process.env.FUGUE_CC_BIN;
+      delete process.env.FUGUNANO_STATE;
       delete process.env.FUGUE_STATE;
       delete process.env.FUGUE_CC_INSTALL;
       delete process.env.FUGUE_CC_WORK;
@@ -1669,7 +1670,7 @@ describe('fugue CLI', () => {
 
     it('uses env-backed runtime defaults when CLI options are omitted', async () => {
       process.env.FUGUE_CC_BIN = bin;
-      process.env.FUGUE_STATE = state;
+      process.env.FUGUNANO_STATE = state;
       process.env.FUGUE_CC_INSTALL = install;
       process.env.FUGUE_CC_WORK = work;
       process.env.FUGUE_DRIVER_NAME = 'fctl';
@@ -1686,6 +1687,19 @@ describe('fugue CLI', () => {
       expect(apply.out).toContain('config validation');
       expect(stamp.trim()).toBe('v9.9.9');
       expect(killCalls).toContain('/work');
+    });
+
+    it('keeps FUGUE_STATE as a compatibility fallback', async () => {
+      process.env.FUGUE_CC_BIN = bin;
+      process.env.FUGUE_STATE = state;
+      process.env.FUGUE_CC_INSTALL = install;
+      process.env.FUGUE_CC_WORK = work;
+
+      const apply = await run(['runtime', 'adapt', '--apply', '--preflight-script', preflight]);
+      const stamp = await readFile(join(state, 'runtime-version'), 'utf8');
+
+      expect(apply.code).toBe(0);
+      expect(stamp.trim()).toBe('v9.9.9');
     });
   });
 
@@ -1861,8 +1875,8 @@ describe('fugue CLI', () => {
       const parsed = parseSelfHarnessSpec(out);
       expect(parsed.ok).toBe(true);
       if (!parsed.ok) throw new Error(parsed.error);
-      expect(parsed.value.heldIn[0]?.gate).toContain('rm -f /tmp/fugue-self-harness-held-in');
-      expect(parsed.value.heldOut[0]?.gate).toContain('rm -f /tmp/fugue-self-harness-held-out');
+      expect(parsed.value.heldIn[0]?.gate).toContain('rm -f /tmp/fugunano-self-harness-held-in');
+      expect(parsed.value.heldOut[0]?.gate).toContain('rm -f /tmp/fugunano-self-harness-held-out');
     });
 
     it('run exits 1 with a clear error for a missing spec', async () => {

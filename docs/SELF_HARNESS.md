@@ -32,7 +32,7 @@ Run the loop:
 ```bash
 node dist/cli/main.js self-harness run \
   --spec /tmp/self-harness.json \
-  --state ~/.config/fugue \
+  --state ~/.config/fugunano \
   --cwd /path/to/workspace
 ```
 
@@ -65,15 +65,15 @@ The spec is strict JSON:
   "heldIn": [
     {
       "key": "held-in-example",
-      "promptTemplate": "Use {{system-prompt}}\n\nTask: create /tmp/fugue-self-harness-held-in",
-      "gate": "test -f /tmp/fugue-self-harness-held-in && rm -f /tmp/fugue-self-harness-held-in"
+      "promptTemplate": "Use {{system-prompt}}\n\nTask: create /tmp/fugunano-self-harness-held-in",
+      "gate": "test -f /tmp/fugunano-self-harness-held-in && rm -f /tmp/fugunano-self-harness-held-in"
     }
   ],
   "heldOut": [
     {
       "key": "held-out-example",
-      "promptTemplate": "Use {{verification}}\n\nTask: create /tmp/fugue-self-harness-held-out",
-      "gate": "test -f /tmp/fugue-self-harness-held-out && rm -f /tmp/fugue-self-harness-held-out"
+      "promptTemplate": "Use {{verification}}\n\nTask: create /tmp/fugunano-self-harness-held-out",
+      "gate": "test -f /tmp/fugunano-self-harness-held-out && rm -f /tmp/fugunano-self-harness-held-out"
     }
   ]
 }
@@ -193,7 +193,7 @@ completed run first, put its ID in `runId`, then run:
 ```bash
 node dist/cli/main.js self-harness run \
   --spec /tmp/self-harness.json \
-  --state ~/.config/fugue \
+  --state ~/.config/fugunano \
   --cwd /path/to/workspace
 ```
 

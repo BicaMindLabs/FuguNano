@@ -11,8 +11,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/), versioning [SemV
 
 ### Changed
 
-- **Renamed: fugue -> FuguNano**: the project and npm packages are now `FuguNano` / `@bicamindlabs/fugunano-engine`, and the product is presented as **FuguNano** — the lightweight, training-free engineering framework in the OpenFugu direction (Fugu and OpenFugu both train a coordinator; FuguNano replaces training with composable strategies). Updated every project-name reference, badge, and hosting URL to `BicaMindLabs/FuguNano`.
-- **Node-only operator cutover**: migrated the remaining `fuguectl` selftest suites from Bash to Node `.mjs`, deleted every tracked `.sh` file plus `.shellcheckrc`, and made `fuguectl selftest` discover only `.test.mjs`. The launcher gate is now `npm run lint:launchers`: Node launchers must parse and any newly tracked shell script fails the gate. Current operator evidence: **20 test suites, 263 assertions**.
+- **FuguNano repo identity cleanup**: the project and npm packages are now `FuguNano` / `@bicamindlabs/fugunano-engine`, and the product is presented as **FuguNano** — the lightweight, training-free engineering framework in the OpenFugu direction (Fugu and OpenFugu both train a coordinator; FuguNano replaces training with composable strategies). Updated project-name references, badges, install paths, default state paths, and hosting URLs to `BicaMindLabs/FuguNano`; the existing `fuguectl` operator command remains as the compatibility command surface.
+- **Node-only operator cutover**: migrated the remaining `fuguectl` selftest suites from Bash to Node `.mjs`, deleted the retired shell launchers and shell-lint config, and made `fuguectl selftest` discover only `.test.mjs`. The launcher gate is now `npm run lint:launchers`: Node launchers must parse and any newly tracked shell script fails the gate. Current operator evidence: **20 test suites, 263 assertions**.
 - **README and repo front door refresh**: renamed the Chinese mirror to `README.zh-CN.md`, added for-the-badge language/runtime/CI/license metrics, refreshed the bilingual overview diagrams, and updated docs/CI/pre-commit/package scripts to describe the Node wrapper + TypeScript engine architecture instead of the retired shell migration.
 - **Runtime naming cleanup**: made `fugue-cc` the sole public provider-runtime name. The default dispatch harness is `fugue-cc`, `fuguectl runtime` is the maintenance command, provider config lives under `.fugue-cc/provider.config`, and docs/env vars now use only `FUGUE_CC_*`.
 - **CI script split for the TypeScript engine**: root `make ci` / `npm run ci` now stay fast and use installed engine dependencies, while `make ci-clean` / `npm run ci:clean` run `npm ci` inside `engine/` before `npm run check`; README/PR guidance now points fresh clones at the clean path and documents the separate GitHub Actions engine job.
@@ -44,8 +44,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/), versioning [SemV
 
 ### Changed
 
-- **Renamed: open-sakanafugu -> fugue** (to escape the crowded `open*fugu` namespace and the name clash with trotsky1997/OpenFugu). A _fugue_ weaves several independent voices into one by strict counterpoint — the multi-agent metaphor — and puns on _fugu_; the Sakana-Fugu framing stays in the README as "inspired by." Updated every project-name reference and hosting URL to BicaMindLabs/fugue.
-- **Differentiate from OpenFugu**: the `Relation to Sakana Fugu` section (both READMEs) now points to [trotsky1997/OpenFugu](https://github.com/trotsky1997/OpenFugu) — a sibling open _reimplementation_ that actually trains TRINITY/Conductor and serves an API — and states plainly that fugue deliberately takes the training-free harness route. OpenFugu added to Acknowledgements.
+- **Renamed the public repo to FuguNano**: FuguNano keeps the multi-agent coordination metaphor while making the public repo name explicit and lightweight; the Sakana Fugu framing stays in the README as "inspired by." Updated project-name references and hosting URLs to BicaMindLabs/FuguNano.
+- **Differentiate from OpenFugu**: the `Relation to Sakana Fugu` section (both READMEs) now points to [trotsky1997/OpenFugu](https://github.com/trotsky1997/OpenFugu) — a sibling open _reimplementation_ that actually trains TRINITY/Conductor and serves an API — and states plainly that FuguNano deliberately takes the training-free harness route. OpenFugu added to Acknowledgements.
 - **Bilingual README restored (EN + 简体中文)**: keeps `README.md` and `README.zh-CN.md` as full, current mirrors. Added language switching to both, and restored bilingual enforcement in `check-docs.ts` (every `fuguectl <sub>` + the subcommand/test-suite counts must match the code in _both_ READMEs — EN "N subcommands"/"N test suites", ZH "N 个子命令"/"N 套测试"). The rest of the repo stays English-only; only the README is bilingual.
 - **Repositioned the narrative around Sakana Fugu (the new name's framing)**: the README intro now leads with "many agents behind one interface, coordinated by orchestration not a bigger model," presents the 9-model fleet as the _workers_ under that lens, and adds a **Relation to Sakana Fugu** section mapping TRINITY/Conductor concepts to this repo's pieces (one `fuguectl` CLI = the interface; Codex = the verifier; the Beta-Bernoulli `allocate` bandit = a training-free analogue of the learned coordinator; workspace/skills/ownership isolation = access-lists) with an honest same/different (training-free, self-hostable, inspired-not-derived). Acknowledgements + NOTICE credit Sakana AI's Fugu.
 - **Repo docs are English-first with bilingual README**: non-README project docs, comments, templates, and CI text are English; the README pair remains bilingual and enforced by `check-docs.ts`.
@@ -71,32 +71,32 @@ First public release — the Chinese-model multi-agent coding workflow plus its 
 
 **`fuguectl` CLI tooling layer** — unified driver `orchestration/fuguectl/fuguectl` (doctor/fleet/preflight/task/template/dispatch/cache/allocate/workspace/experience/plan/goal/summary/runtime/selftest):
 
-- `fuguectl-doctor.sh` — environment recon + workflow recommendation.
-- `fuguectl-preflight.sh` — go/no-go gate (deps / provider daemon / provider config sanity / **no-Gemini guard** / `--probe` endpoint liveness / `--config-only`).
-- `fuguectl-fleet.sh` + `fleet-launch.py` — bring up/check/stop the fugue-cc fleet; strips `CLAUDE_CODE_*` (OAuth false-401) + detached tmux, with `--pty` (pty.fork) fallback. Solves "stuck-in-queue, no worker".
-- `fuguectl-cache.sh` — result cache + **join barrier** (dispatch N ⇒ return N) + timing + resume.
-- `fuguectl-task.sh` — TASK scaffolder (new/log/done, cross GNU/BSD sed).
-- `fuguectl-template.sh` + `templates/` — externalized prompt templates (impl/analysis/review).
-- `fuguectl-dispatch.sh` — wraps `fugue-cc ask` (render → dispatch → log; `--workspace`).
-- `fuguectl-summary.sh` — round observability summary (status + elapsed).
-- `fuguectl-allocate.sh` + `allocation.tsv` — bench-driven task-type → model allocation.
-- `fuguectl-workspace.sh` + `workspaces/` — per-task **context isolation** (`System + Workspace + Tools + Memory + History`), inspired by Zleap-Agent.
-- `fuguectl-experience.sh` — **experience memory** (completed work → reusable method → sanitized → recalled into workspace context), inspired by Zleap-Agent.
-- `fuguectl-plan.sh` — multi-model planning panel (design panel).
-- `fuguectl-goal.sh` — **goal mode**: declarative spec + deterministic acceptance gate.
-- `fuguectl-runtime.sh` + `launchd/com.user.fugue-runtime-sync.plist.example` — runtime provider sync (`fuguectl runtime`) for version drift / grafting checks / daemon restart.
+- `fuguectl-doctor` — environment recon + workflow recommendation.
+- `fuguectl-preflight` — go/no-go gate (deps / provider daemon / provider config sanity / **no-Gemini guard** / `--probe` endpoint liveness / `--config-only`).
+- `fuguectl-fleet` + `fleet-launch.py` — bring up/check/stop the fugue-cc fleet; strips `CLAUDE_CODE_*` (OAuth false-401) + detached tmux, with `--pty` (pty.fork) fallback. Solves "stuck-in-queue, no worker".
+- `fuguectl-cache` — result cache + **join barrier** (dispatch N ⇒ return N) + timing + resume.
+- `fuguectl-task` — TASK scaffolder (new/log/done, cross GNU/BSD sed).
+- `fuguectl-template` + `templates/` — externalized prompt templates (impl/analysis/review).
+- `fuguectl-dispatch` — wraps `fugue-cc ask` (render → dispatch → log; `--workspace`).
+- `fuguectl-summary` — round observability summary (status + elapsed).
+- `fuguectl-allocate` + `allocation.tsv` — bench-driven task-type → model allocation.
+- `fuguectl-workspace` + `workspaces/` — per-task **context isolation** (`System + Workspace + Tools + Memory + History`), inspired by Zleap-Agent.
+- `fuguectl-experience` — **experience memory** (completed work → reusable method → sanitized → recalled into workspace context), inspired by Zleap-Agent.
+- `fuguectl-plan` — multi-model planning panel (design panel).
+- `fuguectl-goal` — **goal mode**: declarative spec + deterministic acceptance gate.
+- `fuguectl runtime` + `launchd/com.user.fugunano-runtime-sync.plist.example` — runtime provider sync for version drift / grafting checks / daemon restart.
 
 **Agent Team** — `docs/AGENT_TEAM.md` (multi-model planning + hierarchical sub-agents: fugue-cc fleet vs. native Claude Code subagents) + `orchestration/agent-team/team-review.workflow.mjs` (Workflow orchestration example).
 
 **Frontend** — agy (Antigravity) as Frontend Implementer (manual or headless `agy --print`); frontend-only, never reviews (no-Gemini).
 
-**Install** — `scripts/install-skill.sh` + `make install-skill` → install as a Claude Code Skill (`~/.claude/skills/fugue`, backs up existing); bilingual `/fugue` triggers.
+**Install** — `scripts/install-skill.ts` + `make install-skill` → install as a Claude Code Skill (`~/.claude/skills/fugunano`, backs up existing); bilingual `/fugunano` triggers.
 
-**Engineering** — CI (`secret-scan` + `shell` + `node`), `scripts/scan-secrets.sh` + `scripts/check-shell.sh` (shared by Make/CI/pre-commit), `.gitleaks.toml`, `.shellcheckrc`, `.pre-commit-config.yaml`, `Makefile`, `.editorconfig`, `.gitattributes`, `package.json`, `SECURITY.md`, `CONTRIBUTING.md`, PR/issue templates. **14 test suites, 119 assertions; CI green.**
+**Engineering** — CI (`secret-scan` + launcher lint + `node`), `scripts/scan-secrets.ts` + `scripts/check-launchers.ts` (shared by Make/CI/pre-commit), `.gitleaks.toml`, `.pre-commit-config.yaml`, `Makefile`, `.editorconfig`, `.gitattributes`, `package.json`, `SECURITY.md`, `CONTRIBUTING.md`, PR/issue templates. **14 test suites, 119 assertions; CI green.**
 
 ### Documentation
 
-- Bilingual GitHub-standard README: English `README.md` + `README_ZH.md` (badges / TOC / architecture / CLI reference / workflow / security / acknowledgements). Acknowledges openai/codex-plugin-cc (Apache-2.0) + Zleap-Agent (concepts).
+- Bilingual GitHub-standard README: English `README.md` + `README.zh-CN.md` (badges / TOC / architecture / CLI reference / workflow / security / acknowledgements). Acknowledges openai/codex-plugin-cc (Apache-2.0) + Zleap-Agent (concepts).
 
-[Unreleased]: https://github.com/BicaMindLabs/fugue/compare/v1.0.0...HEAD
-[1.0.0]: https://github.com/BicaMindLabs/fugue/releases/tag/v1.0.0
+[Unreleased]: https://github.com/BicaMindLabs/FuguNano/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/BicaMindLabs/FuguNano/releases/tag/v1.0.0

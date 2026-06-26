@@ -92,8 +92,8 @@ fugue-cc
 Then run the operator from another shell:
 
 ```bash
-/path/to/fugue/orchestration/fuguectl/fuguectl preflight
-/path/to/fugue/orchestration/fuguectl/fuguectl fleet status
+/path/to/fugunano/orchestration/fuguectl/fuguectl preflight
+/path/to/fugunano/orchestration/fuguectl/fuguectl fleet status
 ```
 
 ## Operator Skill
@@ -102,13 +102,13 @@ Then run the operator from another shell:
 make install-skill
 ```
 
-This installs `/fugue` to `~/.claude/skills/fugue` as a convenience operator
+This installs `/fugunano` to `~/.claude/skills/fugunano` as a convenience operator
 entry for Claude Code. The workflow itself is not Claude Code-specific: Codex,
 OpenCode, and other agents can follow [AGENTS.md](AGENTS.md) and dispatch through
 the same agent profiles. Smoke-test the installed bundle:
 
 ```bash
-~/.claude/skills/fugue/fuguectl selftest
+~/.claude/skills/fugunano/fuguectl selftest
 ```
 
 ## How The Loop Works
@@ -227,7 +227,7 @@ npm run build
 node dist/cli/main.js self-harness template > /tmp/self-harness.json
 node dist/cli/main.js self-harness run \
   --spec /tmp/self-harness.json \
-  --state ~/.config/fugue \
+  --state ~/.config/fugunano \
   --cwd /path/to/workspace
 ```
 

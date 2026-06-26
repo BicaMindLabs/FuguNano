@@ -58,7 +58,7 @@ export class SelfHarnessRunCommand extends Command {
     description: 'Path to a self-harness JSON spec; runId is mined every round',
   });
   state = Option.String('--state', stateDir(), {
-    description: 'Durable state root (default: FUGUE_STATE or ~/.config/fugue)',
+    description: 'Durable state root (default: FUGUNANO_STATE or ~/.config/fugunano)',
   });
   cwd = Option.String('--cwd', {
     description: 'Working directory for harness dispatches and shell gates',

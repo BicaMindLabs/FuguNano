@@ -10,8 +10,6 @@ cc-model-secrets.env
 # ── runtime / cache ──────────────────────────────────
 node_modules/
 .claude-envs/*/opt/
-# fan-out result cache (runtime, round-N/ per round)
-.fanout-cache/
 *.log
 .DS_Store
 

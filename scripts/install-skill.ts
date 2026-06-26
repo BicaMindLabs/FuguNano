@@ -22,7 +22,7 @@ if (home === undefined || home.length === 0) {
 const src = join(root, "orchestration", "fuguectl");
 const skillsDir =
   process.env.CLAUDE_SKILLS_DIR ?? join(home, ".claude", "skills");
-const dest = join(skillsDir, "fugue");
+const dest = join(skillsDir, "fugunano");
 
 if (!existsSync(join(src, "SKILL.md"))) {
   console.error(`✗ cannot find ${join(src, "SKILL.md")}`);
@@ -61,7 +61,7 @@ for (const file of readdirSync(dest)) {
 
 console.log(`✓ fuguectl skill installed to ${dest}`);
 console.log(
-  '  Next: reopen a Claude Code session -> type /fugue or say "use fuguectl to do X / multi-agent collaboration"',
+  '  Next: reopen a Claude Code session -> type /fugunano or say "use fuguectl to do X / multi-agent collaboration"',
 );
 console.log(`  Self-test: ${join(dest, "fuguectl")} selftest`);
 console.log(

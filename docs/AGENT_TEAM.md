@@ -81,4 +81,4 @@ fuguectl experience recall code              # recall this workstation's experie
 fuguectl workspace context code              # the Memory segment has auto-injected the experience above
 ```
 
-The store lives in `${FUGUE_STATE:-~/.config/fugue}/experience/<ws>/` (not in the repo, accumulated at runtime). This is isomorphic to Leo's habit of "distilling skills" — completed work settles into a reusable method.
+The store lives in `${FUGUNANO_STATE:-~/.config/fugunano}/experience/<ws>/` (not in the repo, accumulated at runtime). This is isomorphic to Leo's habit of "distilling skills" — completed work settles into a reusable method. `FUGUE_STATE` remains a compatibility fallback for existing local setups.

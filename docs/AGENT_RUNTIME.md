@@ -1,6 +1,6 @@
 # Agent Runtime Profiles
 
-fugue no longer treats a single provider-backed clone fleet as the workflow
+FuguNano no longer treats a single provider-backed clone fleet as the workflow
 boundary. That fleet is one supported runtime behind the same port. The engine
 names a logical agent, then resolves it to a concrete harness and target at
 dispatch time.

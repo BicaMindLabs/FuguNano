@@ -54,7 +54,9 @@ export const defaultCacheRoot = (metaUrl: string): string =>
   process.env.FUGUE_CACHE ?? joinPath(repoRoot(metaUrl), '.fuguectl-cache');
 
 export const defaultStateDir = (): string =>
-  process.env.FUGUE_STATE ?? joinPath(homedir(), '.config', 'fugue');
+  process.env.FUGUNANO_STATE ??
+  process.env.FUGUE_STATE ??
+  joinPath(homedir(), '.config', 'fugunano');
 
 export const defaultAllocationTable = (metaUrl: string): string =>
   process.env.FUGUE_ALLOCATION ?? joinPath(fuguectlDir(metaUrl), 'allocation.tsv');

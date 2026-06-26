@@ -1,11 +1,11 @@
 ---
-name: fugue
-description: Use this skill for a multi-agent collaborative coding task. Triggers (CN/EN): "/fugue" · "run the fuguectl flow" · "use fuguectl to do X" · "use cc clones + codex to write Y" · "multi-agent collaboration to do Z" · "frontend + backend + review to do W" · "split across multiple agents in parallel" · "parallelize X" · "use the model fleet + a reviewer to build Y" · "split this across multiple agents" · "frontend + backend + review". Use whenever a request benefits from 2+ fugue-cc agents (implementer backends + an independent reviewer). Implements a Planner / Implementers / Reviewer matrix: Planner = your strategic layer (e.g. Claude Desktop), Backend Implementers = the fugue-cc model fleet (Claude + the Chinese-model clones deepseek/glm/kimi/minimax/mimo/stepfun/doubao/ark-auto), Reviewer/Judge = an independent frontier model (e.g. Codex). Auto-creates a TASK file, dispatches via `fuguectl dispatch`, integrates via git worktree cherry-pick to the main branch, runs reviewer with a VERDICT, then a bounded review-fix loop (NEEDS FIX → operator patches → re-review, capped then escalate; never loops forever / never hard-marks DONE). Always uses each provider's latest model.
+name: fugunano
+description: Use this skill for a multi-agent collaborative coding task. Triggers (CN/EN): "/fugunano" · "run the fuguectl flow" · "use fuguectl to do X" · "use cc clones + codex to write Y" · "multi-agent collaboration to do Z" · "frontend + backend + review to do W" · "split across multiple agents in parallel" · "parallelize X" · "use the model fleet + a reviewer to build Y" · "split this across multiple agents" · "frontend + backend + review". Use whenever a request benefits from 2+ fugue-cc agents (implementer backends + an independent reviewer). Implements a Planner / Implementers / Reviewer matrix: Planner = your strategic layer (e.g. Claude Desktop), Backend Implementers = the fugue-cc model fleet (Claude + the Chinese-model clones deepseek/glm/kimi/minimax/mimo/stepfun/doubao/ark-auto), Reviewer/Judge = an independent frontier model (e.g. Codex). Auto-creates a TASK file, dispatches via `fuguectl dispatch`, integrates via git worktree cherry-pick to the main branch, runs reviewer with a VERDICT, then a bounded review-fix loop (NEEDS FIX → operator patches → re-review, capped then escalate; never loops forever / never hard-marks DONE). Always uses each provider's latest model.
 metadata:
-  short-description: Fugue multi-agent coding workflow
+  short-description: FuguNano multi-agent coding workflow
 ---
 
-# Fugue — multi-agent coding workflow
+# FuguNano — multi-agent coding workflow
 
 Invoke when the request is **"build X via parallel dispatch" / "use the fleet to write Y" / "multi-agent collaboration" / "code + tests + review"**.
 
@@ -116,7 +116,7 @@ ROUND=1   # bump per round (including each Phase 5 loop round)
 **② Dispatch** each subtask. `"$FO" dispatch <agent> --harness fugue-cc --template impl --set ROLE=.. --set SCOPE=.. --set FILES=.. [--task "$F"]` wraps template-render + provider dispatch + TASK-log (templates: `impl`/`analysis`/`review`). The prompt must **mandate worktree edits to real files**:
 
 ```bash
-cat > /tmp/fugue-impl-prompt.md <<'EOF'
+cat > /tmp/fugunano-impl-prompt.md <<'EOF'
 Your role: <role>, working inside a git worktree (cwd is already the worktree).
 
 Task: <scope description>
@@ -129,13 +129,13 @@ Hard requirements:
 
 If you only print code in chat, integration cannot pick it up and the task fails.
 EOF
-"$FO" dispatch <agent> --harness fugue-cc --prompt-file /tmp/fugue-impl-prompt.md --task "$F"
+"$FO" dispatch <agent> --harness fugue-cc --prompt-file /tmp/fugunano-impl-prompt.md --task "$F"
 ```
 
 For **review/analysis (non-coding) tasks**, the prompt must order the agent to **Write the artifact to a file**, never chat-only — provider scrollback is volatile and concurrent output can overwrite chat output. Template:
 
 ```bash
-cat > /tmp/fugue-analysis-prompt.md <<'EOF'
+cat > /tmp/fugunano-analysis-prompt.md <<'EOF'
 Your role: <role>
 Task: <review/analysis scope>
 Input files: <list> (Read them)
@@ -144,7 +144,7 @@ Output schema:
   <structured fields, e.g. VERDICT / Confidence / Findings (file:line)>
 Hard: 1. Read inputs; 2. Write the output file; 3. no chat output
 EOF
-"$FO" dispatch <agent> --harness fugue-cc --prompt-file /tmp/fugue-analysis-prompt.md --task "$F"
+"$FO" dispatch <agent> --harness fugue-cc --prompt-file /tmp/fugunano-analysis-prompt.md --task "$F"
 ```
 
 - Backend implementers (the clones + optional `coder`) live in `$FUGUE_CC_WORK`; `cc-claude` in `$FUGUE_CC_CLAUDE`.
@@ -195,7 +195,7 @@ Each agent edits _different_ files (Phase 1 split), so conflicts are rare; when 
 ```bash
 cd "$FUGUE_CC_WORK"
 DIFF=$(git diff main...HEAD)
-cat > /tmp/fugue-review-prompt.md <<EOF
+cat > /tmp/fugunano-review-prompt.md <<EOF
 Your role: independent reviewer, the final quality gate.
 
 Review the integrated change (git diff main...HEAD):
@@ -208,7 +208,7 @@ List only real problems; if none, output VERDICT: ACCEPTED
 If problems exist, output VERDICT: NEEDS FIX plus a problem list
 Be concise.
 EOF
-"$FO" dispatch gpt-5.5 --harness codex --prompt-file /tmp/fugue-review-prompt.md --task "$F"
+"$FO" dispatch gpt-5.5 --harness codex --prompt-file /tmp/fugunano-review-prompt.md --task "$F"
 ```
 
 - `VERDICT: ACCEPTED` → wrap up (TASK → Status: DONE + Completed, push / deliver).
