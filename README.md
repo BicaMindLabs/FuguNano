@@ -142,7 +142,7 @@ govern, coordination becomes the system capability. The difference is where
 that coordination layer lives.
 
 <p align="center">
-  <img src="docs/readme-fugu-comparison.svg" alt="Fugu, OpenFugu, and FuguNano comparison" width="920">
+  <img src="docs/readme-fugu-comparison.svg" alt="Fugu、OpenFugu 与 FuguNano 对比" width="920">
 </p>
 
 | System       | Coordination layer              | What it opens                                                                 | Adoption shape                                                          |

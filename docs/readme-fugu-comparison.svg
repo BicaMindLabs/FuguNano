@@ -4,11 +4,10 @@
   role="img"
   aria-labelledby="title desc"
 >
-  <title id="title">Fugu, OpenFugu, and FuguNano comparison</title>
+  <title id="title">Fugu、OpenFugu 与 FuguNano 对比</title>
   <desc id="desc">
-    A three-column comparison showing Fugu as a managed learned conductor,
-    OpenFugu as an open training and serving reconstruction, and FuguNano as a
-    cloneable no-training engineering loop.
+    三列对比图：Fugu 是托管的训练式协调层，OpenFugu 是开放训练与服务重建，
+    FuguNano 是可克隆、免训练的工程闭环。
   </desc>
   <defs>
     <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
@@ -143,9 +142,9 @@
     stroke="#334155"
   />
 
-  <text x="72" y="86" class="title">Fugu / OpenFugu / FuguNano</text>
+  <text x="72" y="86" class="title">Fugu / OpenFugu / FuguNano 对比</text>
   <text x="72" y="120" class="subtitle">
-    Same direction: capability through coordination. Different entry point: service, training stack, or repo-native loop.
+    同一条路线：能力来自协调。不同入口：托管服务、训练栈，或仓库原生工程闭环。
   </text>
 
   <line
@@ -177,13 +176,13 @@
     stroke="#3b82f6"
   />
   <rect x="96" y="190" width="86" height="24" rx="12" fill="#7ad7ff" />
-  <text x="112" y="207" class="pill">SERVICE</text>
+  <text x="114" y="207" class="pill">托管服务</text>
   <text x="96" y="252" class="cardTitle">Sakana Fugu</text>
-  <text x="96" y="287" class="body">OpenAI-compatible API</text>
-  <text x="96" y="315" class="body">learned conductor</text>
-  <text x="96" y="343" class="body">frontier model pool</text>
+  <text x="96" y="287" class="body">主流兼容接口</text>
+  <text x="96" y="315" class="body">训练式协调器</text>
+  <text x="96" y="343" class="body">前沿模型池</text>
   <line x1="96" y1="365" x2="322" y2="365" stroke="#334155" />
-  <text x="96" y="388" class="tiny">managed orchestration layer</text>
+  <text x="96" y="388" class="tiny">托管的运行时编排层</text>
 
   <rect
     x="428"
@@ -195,13 +194,13 @@
     stroke="#e4b85a"
   />
   <rect x="452" y="190" width="112" height="24" rx="12" fill="#e4b85a" />
-  <text x="468" y="207" class="pill">TRAIN + SERVE</text>
+  <text x="468" y="207" class="pill">训练服务</text>
   <text x="452" y="252" class="cardTitle">OpenFugu</text>
-  <text x="452" y="287" class="body">open reconstruction</text>
-  <text x="452" y="315" class="body">TRINITY · sep-CMA-ES</text>
-  <text x="452" y="343" class="body">Conductor · GRPO</text>
+  <text x="452" y="287" class="body">开放重建</text>
+  <text x="452" y="315" class="body">训练算法路线</text>
+  <text x="452" y="343" class="body">协调器优化</text>
   <line x1="452" y1="365" x2="690" y2="365" stroke="#334155" />
-  <text x="452" y="388" class="tiny">for rebuilding the conductor route</text>
+  <text x="452" y="388" class="tiny">重建训练式协调器路线</text>
 
   <rect
     x="754"
@@ -214,14 +213,14 @@
     stroke-width="2"
   />
   <rect x="778" y="170" width="108" height="24" rx="12" fill="#18d9c5" />
-  <text x="794" y="187" class="pill">CLONE + RUN</text>
+  <text x="794" y="187" class="pill">克隆即跑</text>
   <text x="778" y="252" class="cardTitle">FuguNano</text>
-  <text x="778" y="287" class="body">repo-native engineering loop</text>
-  <text x="778" y="315" class="strong">no coordinator training</text>
-  <text x="778" y="343" class="body">review gates + Self-Harness</text>
-  <text x="778" y="371" class="body">strict TS · ports &amp; adapters</text>
+  <text x="778" y="287" class="body">仓库原生工程闭环</text>
+  <text x="778" y="315" class="strong">无需训练协调器</text>
+  <text x="778" y="343" class="body">审查门 + 自改进基座</text>
+  <text x="778" y="371" class="body">严格类型 · 端口/适配器</text>
   <line x1="778" y1="393" x2="1024" y2="393" stroke="#2dd4bf" />
-  <text x="778" y="416" class="tiny">open, auditable, self-improving</text>
+  <text x="778" y="416" class="tiny">开放、可审计、会自改进</text>
 
   <rect
     x="72"
@@ -232,10 +231,10 @@
     fill="#0f172a"
     stroke="#334155"
   />
-  <text x="102" y="493" class="axis">Where the coordination lives</text>
-  <text x="368" y="493" class="body">product API</text>
-  <text x="548" y="493" class="body">training + serving stack</text>
-  <text x="812" y="493" class="strong">local engineering loop</text>
+  <text x="102" y="493" class="axis">协调层放在哪里</text>
+  <text x="368" y="493" class="body">产品接口</text>
+  <text x="548" y="493" class="body">训练与服务栈</text>
+  <text x="812" y="493" class="strong">本地工程闭环</text>
   <line x1="102" y1="508" x2="1018" y2="508" stroke="#1e293b" />
-  <text x="102" y="526" class="tiny">FuguNano keeps the same multi-model ambition but moves the first useful step into a normal repository.</text>
+  <text x="102" y="526" class="tiny">FuguNano 保留多模型协作的野心，但把第一步放进一个普通仓库里。</text>
 </svg>
