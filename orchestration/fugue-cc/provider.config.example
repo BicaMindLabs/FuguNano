@@ -12,7 +12,7 @@ entry_window = "main"
 [windows]
 # planner = you, in the strategy layer (e.g. Claude Desktop app), running fugue-cc ask directly (placeholder)
 main   = "planner:claude"
-# implementer layer: Chinese-model clones, each isolated in its own worktree (single source of truth = main branch)
+# implementer layer: provider-backed model profiles, each isolated in its own worktree (single source of truth = main branch)
 work   = "cc-deepseek:claude(worktree), cc-glm:claude(worktree), cc-kimi:claude(worktree), cc-minimax:claude(worktree), cc-mimo:claude(worktree), cc-stepfun:claude(worktree)"
 ark    = "cc-doubao:claude(worktree), cc-ark-auto:claude(worktree)"
 # reviewer layer: Codex (gpt-5.5 frontier) —— generation != review, independent cross-vendor second opinion

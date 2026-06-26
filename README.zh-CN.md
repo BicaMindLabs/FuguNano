@@ -4,7 +4,7 @@
 
 # FuguNano
 
-### 免训练的多 agent 编码编排，把模型 fleet 变成可治理 loop。
+### 免训练、模型中立的多 agent 编码编排，把可用模型变成可治理 loop。
 
 <p align="center">
   <img src="https://img.shields.io/badge/Runtime-Node%20%E2%89%A518.18-339933?style=for-the-badge&logo=node.js&logoColor=white" alt="Node.js >= 18.18" />
@@ -31,11 +31,14 @@
 </div>
 
 > FuguNano 负责规划、派发、缓存、整合、审查、修复，并让 harness 自己从失败中改进。
+> 它不绑定某一类模型或某一个地区的供应商：今天接入你能稳定使用、信任的模型，
+> 明天社区可以继续补新的 runtime，而工程闭环保持不变。
 
 ## 亮点
 
 - **一个操作面** - `fuguectl` 驱动 preflight、dispatch、cache、integration、review、loop state、routing、skills 和 runtime maintenance。
 - **Agent runtime 中立** - 逻辑 agent profile 可以把任务路由到 Claude Code provider instance、Codex model、OpenCode provider，或未来新增的 harness，而 loop 不变。
+- **可扩展模型池** - 现有 profile 只是起点。社区可以继续接入可用的商业、开源、私有、本地或自托管模型，而不改变 FuguNano 的核心协议。
 - **真实隔离** - worker 在独立 worktree 中编辑，配合 scoped workspace、按需 skills 和 ownership enforcement。
 - **审查保持独立** - implementer 写代码，Codex 或另一个配置好的非 Gemini reviewer 给出 `ACCEPTED` / `NEEDS FIX`。
 - **输出不会丢** - 每个派发任务都先落 cache；join barrier 强制“派出 N 个，收回 N 个”。

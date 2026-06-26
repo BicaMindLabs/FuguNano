@@ -29,7 +29,7 @@ The planner writes the requirement into a task file such as `~/.claude/tasks/TAS
 
 The operator reads the task, splits it into parallelizable subtasks, and picks logical agent profiles by the decision tree:
 
-- Chinese-language scenario / domestic API / SQL -> Chinese-model profile (doubao/qwen/glm/kimi...)
+- Chinese-language scenario / provider-specific API / SQL -> matching model profile (doubao/qwen/glm/kimi...)
 - English / algorithms / refactoring -> Codex or a strong-reasoning profile (deepseek/minimax)
 - Math and logic -> stepfun
 - One subtask = one independent, copy-ready prompt (**no broadcasting a single generic prompt to everyone**).

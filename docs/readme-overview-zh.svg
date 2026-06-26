@@ -112,9 +112,7 @@
   />
 
   <text x="80" y="112" class="title">FuguNano</text>
-  <text x="80" y="148" class="tag">
-    免训练的多 agent 编码编排，把模型 fleet 变成可治理 loop。
-  </text>
+  <text x="80" y="148" class="tag">免训练、模型中立的多 agent 编码编排。</text>
   <text x="80" y="178" class="tag">worker 实现，reviewer 决策。</text>
   <text x="80" y="206" class="tag">harness 从失败中改进。</text>
 

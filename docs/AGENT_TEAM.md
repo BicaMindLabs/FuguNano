@@ -30,7 +30,7 @@ Synthesis = the planner (you/Claude) reads the N plans, takes the intersection +
 
 ```
 Top team:   planner
-            |- Member A = cn-dispatch -> Chinese model (implements subtasks)
+            |- Member A = cn-dispatch -> provider-backed model profile (implements subtasks)
             |- Member B = codex-rescue -> Codex (review/hard problems)
             \- Member C = Explore -> read-only search
    When a member's task is complex (the member is itself a full agent loop):
@@ -39,7 +39,7 @@ Top team:   planner
 
 - The top level uses the host agent's subagent tool to spawn members (`subagent_type` picks cn-dispatch / codex-rescue / Explore / general-purpose where available).
 - If a member is a full agent, it can spawn sub-agents internally (hierarchy +1).
-- For **deterministic orchestration** (parallel dispatch/pipeline/loop) use the `Workflow` tool: `agent(prompt, {agentType:'cn-dispatch'})` points a member at a Chinese model; `pipeline()` chains "implement -> review".
+- For **deterministic orchestration** (parallel dispatch/pipeline/loop) use the `Workflow` tool: `agent(prompt, {agentType:'cn-dispatch'})` points a member at a provider-backed model profile; `pipeline()` chains "implement -> review".
 
 ## Honest Constraints (avoid the traps)
 

@@ -1,6 +1,6 @@
-# Task: Chinese CC clone "read docs → learn → rebuild" model sync
+# Task: provider profile "read docs → learn → rebuild" model sync
 
-You are the model-maintenance agent for the CC Chinese-model clone fleet. Goal: go read each LLM vendor's **official latest docs/releases**, learn its current model lineup and access methods, then **rebuild** the shared `~/bin/cc-model-launcher.mjs` runtime + `~/bin/cc-model-registry.tsv` so they stay current.
+You are the model-maintenance agent for the provider-backed CC profile fleet. Goal: go read each LLM vendor's **official latest docs/releases**, learn its current model lineup and access methods, then **rebuild** the shared `~/bin/cc-model-launcher.mjs` runtime + `~/bin/cc-model-registry.tsv` so they stay current.
 
 ## Hard rules (must follow)
 

@@ -37,7 +37,7 @@ Reviewer (`coder`) and planner are likewise harness-agnostic.
 - **Bounded loop** — deterministic gate first, keep-best, meta-reflect on non-convergence; capped then escalate. Never loops forever, never hard-marks DONE.
 - **Join barrier** — dispatch N ⇒ N must return before the next round.
 - **Keys only in `~/.config/cc-model-secrets.env`** — never in the repo (CI + pre-commit scan blocks leaks).
-- **No Gemini in the review path** — review / second opinions go to Codex or a Chinese backend.
+- **No Gemini in the review path** — review / second opinions go to Codex or another configured non-Gemini backend.
 
 ## Before dispatching
 

@@ -2,7 +2,7 @@
 
 ## Secret Handling (core security constraint of this repo)
 
-This workflow orchestrates several Chinese-model providers and **will touch API keys**. The repo's hard constraints:
+This workflow orchestrates several model providers and **will touch API keys**. The repo's hard constraints:
 
 - **Real keys never enter the repo.** They live only in `~/.config/cc-model-secrets.env` (read by the launcher, highest priority) or in your project-local `.fugue-cc/provider.config` (ignored by `.gitignore`).
 - The repo only tracks `orchestration/fugue-cc/provider.config.example`, whose `key=` values are always `<...>` placeholders.

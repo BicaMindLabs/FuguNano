@@ -216,7 +216,7 @@ export class PreflightCommand extends Command {
       warn(
         lines,
         status,
-        'no codex — review must fall back to a Chinese-model agent (cross-vendor, not Gemini)',
+        'no codex — review must fall back to another configured non-Gemini agent',
       );
     }
 

@@ -4,7 +4,7 @@
 
 # FuguNano
 
-### Governed multi-agent coding, no coordinator training required.
+### Model-agnostic multi-agent coding, no coordinator training required.
 
 <p align="center">
   <img src="https://img.shields.io/badge/Runtime-Node%20%E2%89%A518.18-339933?style=for-the-badge&logo=node.js&logoColor=white" alt="Node.js >= 18.18" />
@@ -32,6 +32,8 @@
 
 > FuguNano turns a model fleet into a reliable coding loop: plan, dispatch, cache,
 > integrate, review, repair, and improve the harness itself.
+> It is intentionally provider-neutral: use the accessible models you trust
+> today, add more runtimes tomorrow, and keep the engineering loop the same.
 
 ## Highlights
 
@@ -40,6 +42,9 @@
 - **Runtime-neutral agents** - logical agent profiles route work to Claude Code
   provider instances, Codex models, OpenCode providers, or future harnesses
   without changing the loop.
+- **Extensible model pool** - current profiles are just starting points.
+  Community adapters can add accessible commercial, open, private, local, or
+  self-hosted models without changing FuguNano's core contract.
 - **Real isolation** - workers edit separate worktrees with scoped workspaces,
   selected skills, and optional ownership enforcement.
 - **Review stays independent** - implementers write, while Codex or another

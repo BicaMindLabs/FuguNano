@@ -26,7 +26,7 @@
 
   <!-- Implementers -->
   <rect x="48" y="262" width="240" height="90" rx="9" fill="#dcfce7" stroke="#16a34a"/>
-  <text x="168" y="283" text-anchor="middle" font-weight="700" fill="#166534">Implementers — 9 Chinese LLMs</text>
+  <text x="168" y="283" text-anchor="middle" font-weight="700" fill="#166534">Implementers — extensible model pool</text>
   <text x="168" y="301" text-anchor="middle" font-size="10.5" fill="#15803d">deepseek · glm · kimi · qwen · doubao</text>
   <text x="168" y="316" text-anchor="middle" font-size="10.5" fill="#15803d">minimax · mimo · stepfun · longcat</text>
   <text x="168" y="334" text-anchor="middle" font-size="10.5" fill="#15803d">via fugue-cc · isolated worktrees</text>
