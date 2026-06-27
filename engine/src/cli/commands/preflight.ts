@@ -6,7 +6,7 @@ import { Command, Option } from 'clipanion';
 
 import { checkProviderConfig } from '../../domain/preflight-checks.js';
 import type { GateCheck } from '../../domain/gate.js';
-import type { HarnessName } from '../../domain/ports/harness.js';
+import { HARNESS_NAMES, type HarnessName } from '../../domain/ports/harness.js';
 import { NodeCommandRunner } from '../../infra/node-command-runner.js';
 import { NodeFileSystem } from '../../infra/node-file-system.js';
 import type { CommandRunner } from '../../infra/command-runner.js';
@@ -30,7 +30,7 @@ const fs = (): NodeFileSystem => new NodeFileSystem();
 const nonEmptyEnv = (value: string | undefined): string | undefined =>
   value !== undefined && value.length > 0 ? value : undefined;
 
-const PREFLIGHT_HARNESSES: readonly PreflightHarness[] = ['fugue-cc', 'codex', 'opencode', 'all'];
+const PREFLIGHT_HARNESSES: readonly PreflightHarness[] = [...HARNESS_NAMES, 'all'];
 
 const parseHarness = (value: string): PreflightHarness | null =>
   PREFLIGHT_HARNESSES.includes(value as PreflightHarness) ? (value as PreflightHarness) : null;
@@ -43,6 +43,8 @@ const includesCodex = (harness: PreflightHarness): boolean =>
 
 const includesOpencode = (harness: PreflightHarness): boolean =>
   harness === 'opencode' || harness === 'all';
+
+const includesAgy = (harness: PreflightHarness): boolean => harness === 'agy' || harness === 'all';
 
 const trimNonEmpty = (value: string | undefined): string | undefined => {
   const trimmed = value?.trim();
@@ -180,6 +182,7 @@ export class PreflightCommand extends Command {
   bin = Option.String('--bin', process.env.FUGUE_CC_BIN ?? 'fugue-cc');
   codexBin = Option.String('--codex-bin', process.env.FUGUE_CODEX ?? 'codex');
   opencodeBin = Option.String('--opencode-bin', process.env.FUGUE_OPENCODE ?? 'opencode');
+  agyBin = Option.String('--agy-bin', process.env.FUGUE_AGY ?? 'agy');
   model = Option.String('--model');
   target = Option.String('--target');
   cacheScript = Option.String('--cache-script', fuguectlScript(import.meta.url, 'cache'));
@@ -188,7 +191,7 @@ export class PreflightCommand extends Command {
     const harness = parseHarness(this.harness);
     if (harness === null) {
       this.context.stderr.write(
-        `unknown --harness '${this.harness}' (fugue-cc|codex|opencode|all)\n`,
+        `unknown --harness '${this.harness}' (${[...HARNESS_NAMES, 'all'].join('|')})\n`,
       );
       return 1;
     }
@@ -205,7 +208,17 @@ export class PreflightCommand extends Command {
 
     if (!this.configOnly) await this.runDependencyChecks(lines, status, runner, work, harness);
     if (!this.configOnly && includesOpencode(harness) && modelToCheck !== undefined) {
-      await this.runOpencodeModelCheck(modelToCheck, lines, status, runner);
+      await this.runListedModelCheck(
+        this.opencodeBin,
+        'opencode',
+        modelToCheck,
+        lines,
+        status,
+        runner,
+      );
+    }
+    if (!this.configOnly && includesAgy(harness) && modelToCheck !== undefined) {
+      await this.runListedModelCheck(this.agyBin, 'agy', modelToCheck, lines, status, runner);
     }
 
     const configPath =
@@ -280,6 +293,11 @@ export class PreflightCommand extends Command {
       else fail(lines, status, `missing ${this.opencodeBin}`);
     }
 
+    if (includesAgy(harness)) {
+      if (await cliExists(runner, this.agyBin)) ok(lines, this.agyBin);
+      else fail(lines, status, `missing ${this.agyBin}`);
+    }
+
     if (includesFugueCc(harness)) {
       if (await commandExists(runner, 'tmux')) ok(lines, 'tmux');
       else warn(lines, status, 'no tmux (fugue-cc panes need it)');
@@ -326,16 +344,18 @@ export class PreflightCommand extends Command {
     return model ?? target;
   }
 
-  private async runOpencodeModelCheck(
+  private async runListedModelCheck(
+    bin: string,
+    harnessName: 'opencode' | 'agy',
     model: string,
     lines: string[],
     status: MutableStatus,
     runner: CommandRunner,
   ): Promise<void> {
     try {
-      const result = await runner.run(this.opencodeBin, ['models']);
+      const result = await runner.run(bin, ['models']);
       if (result.code !== 0) {
-        fail(lines, status, `opencode models failed; cannot validate ${model}`);
+        fail(lines, status, `${harnessName} models failed; cannot validate ${model}`);
         return;
       }
       const models = new Set(
@@ -345,12 +365,12 @@ export class PreflightCommand extends Command {
           .filter((line) => line.length > 0),
       );
       if (models.has(model)) {
-        ok(lines, `opencode model available (${model})`);
+        ok(lines, `${harnessName} model available (${model})`);
         return;
       }
-      fail(lines, status, `opencode model not found (${model}); run: ${this.opencodeBin} models`);
+      fail(lines, status, `${harnessName} model not found (${model}); run: ${bin} models`);
     } catch {
-      fail(lines, status, `opencode models failed; cannot validate ${model}`);
+      fail(lines, status, `${harnessName} models failed; cannot validate ${model}`);
     }
   }
 

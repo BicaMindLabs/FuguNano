@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 
 import { BetaBernoulliAllocator } from '../adapters/allocation/beta-bernoulli-allocator.js';
 import { PersistentBarrier } from '../adapters/barrier/persistent-barrier.js';
+import { AgyHarness } from '../adapters/harness/agy-harness.js';
 import { FugueCcHarness } from '../adapters/harness/fugue-cc-harness.js';
 import { CodexHarness } from '../adapters/harness/codex-harness.js';
 import type { HarnessExecOptions } from '../adapters/harness/exec-helpers.js';
@@ -64,6 +65,8 @@ const buildHarness = (
       return new CodexHarness(runner, options);
     case 'opencode':
       return new OpencodeHarness(runner, options);
+    case 'agy':
+      return new AgyHarness(runner, options);
   }
 };
 

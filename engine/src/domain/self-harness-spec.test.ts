@@ -167,7 +167,7 @@ describe('parseSelfHarnessSpec', () => {
     const spec = validObject();
     spec.harness = 'gemini';
 
-    expect(expectError(spec)).toBe('harness must be one of fugue-cc, codex, opencode');
+    expect(expectError(spec)).toBe('harness must be one of fugue-cc, codex, opencode, agy');
   });
 
   it('allows harness to be omitted', () => {

@@ -8,6 +8,7 @@ import { Command, Option, UsageError } from 'clipanion';
 import { FsExperienceStore } from '../../adapters/experience/fs-experience-store.js';
 import { CodexHarness } from '../../adapters/harness/codex-harness.js';
 import { FugueCcHarness } from '../../adapters/harness/fugue-cc-harness.js';
+import { AgyHarness } from '../../adapters/harness/agy-harness.js';
 import { OpencodeHarness } from '../../adapters/harness/opencode-harness.js';
 import { FsSkillCatalog } from '../../adapters/skills/fs-skill-catalog.js';
 import { FsWorkspaceStore } from '../../adapters/workspace/fs-workspace-store.js';
@@ -204,7 +205,7 @@ export class DispatchCommand extends Command {
 
   override async execute(): Promise<number> {
     if (!isHarnessName(this.harness)) {
-      this.context.stderr.write(`unknown harness '${this.harness}' (fugue-cc|codex|opencode)\n`);
+      this.context.stderr.write(`unknown harness '${this.harness}' (${HARNESS_NAMES.join('|')})\n`);
       return 2;
     }
     if (this.codexClean && this.harness !== 'codex') {
@@ -275,6 +276,12 @@ export class DispatchCommand extends Command {
       case 'opencode':
         return new OpencodeHarness(runner, {
           bin: process.env.FUGUE_OPENCODE ?? 'opencode',
+          ...(timeoutMs !== undefined ? { timeoutMs } : {}),
+          ...(this.harnessArgs.length > 0 ? { args: this.harnessArgs } : {}),
+        });
+      case 'agy':
+        return new AgyHarness(runner, {
+          bin: process.env.FUGUE_AGY ?? 'agy',
           ...(timeoutMs !== undefined ? { timeoutMs } : {}),
           ...(this.harnessArgs.length > 0 ? { args: this.harnessArgs } : {}),
         });

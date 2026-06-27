@@ -21,12 +21,12 @@ Three roles, five phases. Planner orchestrates, the implementer fleet writes cod
 
 ## Roles
 
-| Role                                              | Agent                                                                                                                                                                                                                                  | Call                                                                                                                                                     |
-| ------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Planner / Integrator / Fixer**                  | You (your strategic layer — e.g. Claude Desktop)                                                                                                                                                                                       | Direct shell + `"$FO" dispatch`; **not itself in a provider pane**                                                                                       |
-| **Backend Implementers** (auto parallel dispatch) | `cc-claude` (Claude, in `$FUGUE_CC_CLAUDE`) + provider-backed profiles such as `cc-deepseek` `cc-glm` `cc-kimi` `cc-minimax` `cc-mimo` `cc-stepfun` `cc-doubao` `cc-ark-auto` (in `$FUGUE_CC_WORK`), plus any community-added profiles | `"$FO" dispatch cc-X --harness fugue-cc ...`                                                                                                             |
-| **Frontend Implementer** (opt-in)                 | **Antigravity (`agy` CLI)**                                                                                                                                                                                                            | manual in the IDE, or headless `agy --print "<prompt>"`; commit/paste output, integrator merges. Supported implementer runtime; keep review independent. |
-| **Reviewer / Final Judge**                        | Codex or `coder` (an independent frontier model)                                                                                                                                                                                       | `"$FO" dispatch <reviewer> --harness codex\|fugue-cc` → VERDICT: ACCEPTED or NEEDS FIX                                                                   |
+| Role                                              | Agent                                                                                                                                                                                                                                  | Call                                                                                                                           |
+| ------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| **Planner / Integrator / Fixer**                  | You (your strategic layer — e.g. Claude Desktop)                                                                                                                                                                                       | Direct shell + `"$FO" dispatch`; **not itself in a provider pane**                                                             |
+| **Backend Implementers** (auto parallel dispatch) | `cc-claude` (Claude, in `$FUGUE_CC_CLAUDE`) + provider-backed profiles such as `cc-deepseek` `cc-glm` `cc-kimi` `cc-minimax` `cc-mimo` `cc-stepfun` `cc-doubao` `cc-ark-auto` (in `$FUGUE_CC_WORK`), plus any community-added profiles | `"$FO" dispatch cc-X --harness fugue-cc ...`                                                                                   |
+| **Frontend Implementer** (opt-in)                 | **Antigravity (`agy` CLI)**                                                                                                                                                                                                            | `"$FO" dispatch default --harness agy ...`, manual in the IDE, or headless `agy --prompt "<prompt>"`; keep review independent. |
+| **Reviewer / Final Judge**                        | Codex or `coder` (an independent frontier model)                                                                                                                                                                                       | `"$FO" dispatch <reviewer> --harness codex\|fugue-cc` → VERDICT: ACCEPTED or NEEDS FIX                                         |
 
 > Generation ≠ review: implementers and the reviewer must be **different model families** (research shows ~+20% over self-review).
 
@@ -40,7 +40,7 @@ Three roles, five phases. Planner orchestrates, the implementer fleet writes cod
 
 - **Goal mode** — declarative target with a deterministic gate: `"$FO" goal template` → fill `outcome/gate/rubric/rounds` → `"$FO" goal check <spec>` runs the gate (the loop drives to it). Goal met = gate 0 + reviewer ACCEPTED.
 - **First-run onboarding** — `"$FO" help quickstart` prints the safe local path, and `"$FO" init --dry-run` reports Codex/OpenCode/fugue-cc readiness plus missing local templates. Only `"$FO" init --write` creates local secrets/provider config templates.
-- **Planning panel** — multi-model decomposition: `"$FO" plan "<goal>" --harness fugue-cc --models cc-deepseek,cc-kimi,coder` asks several models to decompose the goal (each Writes its plan); use `--harness codex|opencode` for a lite planning pass when the worktree fleet is not installed. You synthesize the returned plans into Phase 1.
+- **Planning panel** — multi-model decomposition: `"$FO" plan "<goal>" --harness fugue-cc --models cc-deepseek,cc-kimi,coder` asks several models to decompose the goal (each Writes its plan); use `--harness codex|opencode|agy` for a lite planning pass when the worktree fleet is not installed. You synthesize the returned plans into Phase 1.
 - **Allocation (adaptive)** — `"$FO" allocate <task-type> --top` → recommended model; a **bench-prior + battle-experience blend** (Beta-Bernoulli): the static `allocation.tsv` is the prior, and `"$FO" allocate record <task-type> <agent> ok|fail` (call after each verdict — ACCEPTED→`ok`, NEEDS FIX→`fail`) updates the posterior. **Cold-start == the static bench order**; it drifts only once you've recorded outcomes (KAPPA pseudo-counts gate how much), with Laplace smoothing so no agent is starved by one failure. `"$FO" allocate stats <type>` shows scores; `reset` clears. **Auto-feed (data flywheel)**: dispatch with `"$FO" dispatch <agent> --task-type <T> ...` so it logs `(T, agent)` to a ledger; after the round's verdict, `"$FO" allocate feed --from-ledger --result ok [--fail <agents-that-needed-fixing>]` feeds the whole round at once (the `cc-` prefix is normalized to the bench's bare name, so experience lands on the same key it ranks). Routing self-improves from verdicts without per-agent manual calls — but it plateaus at "best-in-pool per coarse task-type", and old stats decay when you upgrade a provider's model. **Iterations**: `--sample` switches ranking from greedy posterior-mean to **Thompson Sampling** (Gaussian-approx Beta sample → explores under-sampled agents, won't lock onto an early winner; Agrawal-Goyal 2012). `"$FO" allocate decay --gamma G [--type T]` discounts counts (`s,f ×G`) to forget stale stats after a model upgrade (discounted bandit; Garivier-Moulines 2011).
 - **Workspace isolation** (inspired by Zleap-Agent) — `"$FO" workspace context <ws>` assembles layered context per station (System + Workspace + Tools + Memory + History); `"$FO" dispatch <agent> --workspace <ws> ...` injects it as a prefix, so a (weak) model sees only what this station should see, not drowned in the full context. Stations: main/code/sql/chinese/review/web.
 - **Skills mother-catalog (progressive disclosure)** — 3 steps: ① `"$FO" skills index` scans **3 sources** (user `~/.claude/skills` + `.system` meta-skills incl. the official `skill-creator`/`plugin-creator` + plugin marketplaces, `plugin:skill` ids) into one compact catalog (source·functional/note·path) = the mother index; ② the Planner reads it (or `"$FO" skills match "<subtask>"`) and assigns skills per subtask/agent; ③ `"$FO" dispatch <agent> --skills "a,b"` injects _only_ those skills into that agent's context — a weak model crawls just what it needs, not all 500+. This is fuguectl's isolation philosophy applied to the skill dimension. ④ **Close the loop (precipitate→create→re-classify)**: `"$FO" skills forge --name X (--from-experience <ws/slug> | --source <f>) [--agent A]` gathers material → candidate gate → dispatches a worker (with `skill-creator` injected) to author a proper skill → `"$FO" skills validate <name>` quality gate (mirrors the official `quick_validate.py`; `--official` uses it) → on pass, `"$FO" skills index --refresh` folds it back into the catalog for next time. **Authoring is delegated to the official `skill-creator`** (not re-implemented).
@@ -155,7 +155,8 @@ EOF
 - Backend implementers (the clones + optional `coder`) live in `$FUGUE_CC_WORK`; `cc-claude` in `$FUGUE_CC_CLAUDE`.
 - Frontend / UI work (if any) goes to **Antigravity (`agy`)** — either manual in the IDE, or headless:
   ```bash
-  agy --print --print-timeout 5m "<frontend task prompt>"   # add --dangerously-skip-permissions only in a sandbox
+  "$FO" dispatch default --harness agy --harness-arg=--new-project --prompt-file /tmp/frontend-task.md
+  agy --prompt "<frontend task prompt>" --print-timeout 5m   # add --dangerously-skip-permissions only in a sandbox
   ```
   Commit/paste its output; the integrator merges to main. **`agy` is supported as a frontend implementer runtime; keep review on an independent path such as Codex.**
 
@@ -280,17 +281,17 @@ The fleet's models are pinned in the provider config under `.fugue-cc/` (see `or
 
 ## Choosing an implementer
 
-| Subtask type                   | Preferred implementer                         |
-| ------------------------------ | --------------------------------------------- |
-| Frontier reasoning + coding    | `cc-claude`                                   |
-| Reasoning + complex algorithms | `cc-deepseek`                                 |
-| Chinese docs / docstrings      | `cc-glm`                                      |
-| Long context (>50K)            | `cc-kimi`                                     |
-| Math / step-by-step thinking   | `cc-stepfun` / `cc-minimax`                   |
-| Volcengine ecosystem           | `cc-doubao`                                   |
-| General coding / fallback      | `cc-mimo` / `cc-ark-auto`                     |
-| Frontend / UI / visual         | `agy` (Antigravity — manual or `agy --print`) |
-| Final review / verdict         | `coder`                                       |
+| Subtask type                   | Preferred implementer                                            |
+| ------------------------------ | ---------------------------------------------------------------- |
+| Frontier reasoning + coding    | `cc-claude`                                                      |
+| Reasoning + complex algorithms | `cc-deepseek`                                                    |
+| Chinese docs / docstrings      | `cc-glm`                                                         |
+| Long context (>50K)            | `cc-kimi`                                                        |
+| Math / step-by-step thinking   | `cc-stepfun` / `cc-minimax`                                      |
+| Volcengine ecosystem           | `cc-doubao`                                                      |
+| General coding / fallback      | `cc-mimo` / `cc-ark-auto`                                        |
+| Frontend / UI / visual         | `agy` (Antigravity — `--harness agy`, manual, or `agy --prompt`) |
+| Final review / verdict         | `coder`                                                          |
 
 **Do not override the model in provider calls** — the model is fixed per agent in provider config; select by _agent_, not by model.
 

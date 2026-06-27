@@ -33,6 +33,15 @@ dispatch time.
       "modelFamily": "kimi",
       "roles": ["implementer"],
       "canEditFiles": true
+    },
+    {
+      "id": "agy-ui",
+      "harness": "agy",
+      "target": "default",
+      "modelFamily": "gemini",
+      "roles": ["implementer"],
+      "canEditFiles": true,
+      "workspace": "code"
     }
   ]
 }
@@ -41,7 +50,7 @@ dispatch time.
 | Field         | Meaning                                                                                                     |
 | ------------- | ----------------------------------------------------------------------------------------------------------- |
 | `id`          | Stable logical agent name used by plans, task files, and allocation tables.                                 |
-| `harness`     | Runtime adapter: `fugue-cc`, `codex`, or `opencode`.                                                        |
+| `harness`     | Runtime adapter: `fugue-cc`, `codex`, `opencode`, or `agy`.                                                 |
 | `target`      | Optional harness-native agent/model. If omitted, `id` is dispatched directly.                               |
 | `modelFamily` | Policy label used for bans and generation-versus-review checks.                                             |
 | `roles`       | Optional role allow-list: `planner`, `implementer`, `reviewer`, `fixer`. Omitted means legacy unrestricted. |
@@ -91,12 +100,16 @@ for typed routing and coordinator behavior. The `agents`, `task`, `template`,
 
 This keeps existing `fuguectl dispatch cc-deepseek --harness fugue-cc` workflows
 working, while allowing a single engine round to mix `fugue-cc` implementers,
-Codex reviewers, and OpenCode providers.
+Codex reviewers, OpenCode providers, and Antigravity implementers.
 
 OpenCode currently can print provider/model errors to stderr while still
 exiting 0. The OpenCode adapter treats an empty-stdout, error-looking stderr as
 `unavailable`, so `fuguectl dispatch --harness opencode` fails visibly instead
 of caching an empty "successful" artifact.
+
+Antigravity uses the same harness port through `agy --prompt`. A target of
+`default` uses the current Antigravity settings; any other target is passed as
+`--model <target>`.
 
 ## Policy
 

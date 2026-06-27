@@ -6,14 +6,14 @@ This doc is the **stable contract** downstream depends on.
 
 ## What downstream gets
 
-| Capability                  | Interface                                                        | Notes                                                                              |
-| --------------------------- | ---------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| Runtime profiles            | `fuguectl agents template\|validate\|list\|resolve`              | `AgentRegistry` maps logical ids to harness-native targets                         |
-| Harness-agnostic dispatch   | `fuguectl dispatch <target> --harness fugue-cc\|codex\|opencode` | one call dispatches an implementer on any supported harness                        |
-| Bench-driven model choice   | `fuguectl allocate <task-type> [--top]`                          | task-type → recommended model                                                      |
-| Result cache + join barrier | `fuguectl cache …`                                               | dispatch N ⇒ return N before next round                                            |
-| Fleet lifecycle             | `fuguectl fleet status\|up\|down`                                | strips `CLAUDE_CODE_*` + detached tmux / pty.fork for the `fugue-cc` runtime       |
-| Preflight gate              | `fuguectl preflight --harness fugue-cc\|codex\|opencode\|all`    | selected-runtime deps · provider mount/config sanity · **legacy Gemini CLI guard** |
+| Capability                  | Interface                                                             | Notes                                                                              |
+| --------------------------- | --------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| Runtime profiles            | `fuguectl agents template\|validate\|list\|resolve`                   | `AgentRegistry` maps logical ids to harness-native targets                         |
+| Harness-agnostic dispatch   | `fuguectl dispatch <target> --harness fugue-cc\|codex\|opencode\|agy` | one call dispatches an implementer on any supported harness                        |
+| Bench-driven model choice   | `fuguectl allocate <task-type> [--top]`                               | task-type → recommended model                                                      |
+| Result cache + join barrier | `fuguectl cache …`                                                    | dispatch N ⇒ return N before next round                                            |
+| Fleet lifecycle             | `fuguectl fleet status\|up\|down`                                     | strips `CLAUDE_CODE_*` + detached tmux / pty.fork for the `fugue-cc` runtime       |
+| Preflight gate              | `fuguectl preflight --harness fugue-cc\|codex\|opencode\|agy\|all`    | selected-runtime deps · provider mount/config sanity · **legacy Gemini CLI guard** |
 
 All of the above are plain CLI commands on `$PATH` (install the skill or add `orchestration/fuguectl/` to `$PATH`) — language-agnostic, callable from a Node/Go/Python framework via `child_process`/`exec`.
 

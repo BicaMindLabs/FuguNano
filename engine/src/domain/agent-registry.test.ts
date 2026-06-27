@@ -46,6 +46,14 @@ describe('parseAgentRegistryJson', () => {
             reviewAllowed: true,
             workspace: 'review',
           },
+          {
+            id: 'agy-ui',
+            harness: 'agy',
+            target: 'default',
+            modelFamily: 'gemini',
+            roles: ['implementer'],
+            workspace: 'code',
+          },
         ],
       }),
     );
@@ -60,6 +68,7 @@ describe('parseAgentRegistryJson', () => {
     expect(coder && agentHasRole(coder, 'reviewer')).toBe(true);
     expect(agentsForRole(registry, 'implementer').map((agent) => agent.id)).toEqual([
       'cc-deepseek',
+      'agy-ui',
     ]);
   });
 

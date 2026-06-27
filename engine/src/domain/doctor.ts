@@ -23,6 +23,7 @@ const liteHarnesses = (report: DoctorReport): readonly string[] => {
   const harnesses: string[] = [];
   if (hasRole(report, 'codex')) harnesses.push('codex');
   if (hasRole(report, 'opencode')) harnesses.push('opencode');
+  if (hasRole(report, 'agy')) harnesses.push('agy');
   return harnesses;
 };
 

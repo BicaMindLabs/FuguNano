@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { isErr, isOk } from '../../domain/result.js';
 import type { CommandOptions, CommandResult, CommandRunner } from '../../infra/command-runner.js';
+import { AgyHarness } from './agy-harness.js';
 import { FugueCcHarness } from './fugue-cc-harness.js';
 import { CodexHarness } from './codex-harness.js';
 import { OpencodeHarness } from './opencode-harness.js';
@@ -203,5 +204,48 @@ describe('OpencodeHarness', () => {
     });
 
     expect(isOk(result) && result.value.output).toBe('OPENCODE_OK\n');
+  });
+});
+
+describe('AgyHarness', () => {
+  it('dispatch builds `agy --prompt <prompt>` for the default configured model', async () => {
+    const runner = new FakeRunner(res({ stdout: 'ok' }));
+    await new AgyHarness(runner).dispatch({ agent: 'default', prompt: 'go' });
+    expect(runner.calls[0]?.args).toEqual(['--prompt', 'go']);
+  });
+
+  it('dispatch builds `agy --prompt <prompt> --model <model>` when a model is requested', async () => {
+    const runner = new FakeRunner(res({ stdout: 'ok' }));
+    await new AgyHarness(runner).dispatch({ agent: 'Gemini 3.5 Flash (Medium)', prompt: 'go' });
+    expect(runner.calls[0]?.args).toEqual([
+      '--prompt',
+      'go',
+      '--model',
+      'Gemini 3.5 Flash (Medium)',
+    ]);
+  });
+
+  it('splices extra args after prompt/model args', async () => {
+    const runner = new FakeRunner(res({ stdout: 'ok' }));
+    await new AgyHarness(runner, { args: ['--new-project', '--print-timeout', '1m'] }).dispatch({
+      agent: 'default',
+      prompt: 'go',
+    });
+    expect(runner.calls[0]?.args).toEqual([
+      '--prompt',
+      'go',
+      '--new-project',
+      '--print-timeout',
+      '1m',
+    ]);
+  });
+
+  it('passes timeout options to the runner', async () => {
+    const runner = new FakeRunner(res({ stdout: 'ok' }));
+    await new AgyHarness(runner, { timeoutMs: 111 }).dispatch({
+      agent: 'default',
+      prompt: 'go',
+    });
+    expect(runner.calls[0]?.options?.timeoutMs).toBe(111);
   });
 });

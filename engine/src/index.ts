@@ -181,6 +181,7 @@ export { BetaBernoulliAllocator } from './adapters/allocation/beta-bernoulli-all
 export { FugueCcHarness } from './adapters/harness/fugue-cc-harness.js';
 export { CodexHarness } from './adapters/harness/codex-harness.js';
 export { OpencodeHarness } from './adapters/harness/opencode-harness.js';
+export { AgyHarness } from './adapters/harness/agy-harness.js';
 export type { HarnessExecOptions } from './adapters/harness/exec-helpers.js';
 export {
   HarnessBackedProposer,

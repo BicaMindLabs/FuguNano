@@ -138,6 +138,7 @@ export class InitCommand extends Command {
     const gitignoreReady = await hasFugueCcIgnore(project);
     const codexReady = await commandExists(runner, 'codex');
     const opencodeReady = await commandExists(runner, 'opencode');
+    const agyReady = await commandExists(runner, 'agy');
     const fugueCcReady = await commandExists(runner, 'fugue-cc');
 
     const lines = [
@@ -149,6 +150,7 @@ export class InitCommand extends Command {
       'readiness:',
       statusLine(codexReady, 'Codex CLI detected', 'Codex CLI missing'),
       statusLine(opencodeReady, 'OpenCode CLI detected', 'OpenCode CLI missing'),
+      statusLine(agyReady, 'Antigravity CLI detected', 'Antigravity CLI missing'),
       statusLine(
         fugueCcReady,
         'fugue-cc fleet CLI detected',
@@ -170,8 +172,9 @@ export class InitCommand extends Command {
       '',
       'next:',
       '  1. fuguectl preflight --harness codex',
-      '  2. fuguectl plan "your goal" --harness codex --out /tmp/fugunano-plan',
-      '  3. fuguectl preflight --harness fugue-cc   # optional full worktree fleet',
+      '  2. fuguectl preflight --harness agy',
+      '  3. fuguectl plan "your goal" --harness codex --out /tmp/fugunano-plan',
+      '  4. fuguectl preflight --harness fugue-cc   # optional full worktree fleet',
     ];
 
     if (!willWrite) lines.push('', 'pass --write to create missing local templates');

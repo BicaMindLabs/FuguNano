@@ -5,8 +5,8 @@ runSimpleBridge({
   argv: process.argv.slice(2),
   command: "plan",
   helpOnEmpty: false,
-  help: `fuguectl-plan "<goal>" [--harness fugue-cc|codex|opencode] [--models m1,m2,..] [--out <dir>]
-default models = fugue-cc: cc-deepseek,cc-kimi,coder · codex: gpt-5.5 · opencode: opencode/deepseek-v4-flash-free
+  help: `fuguectl-plan "<goal>" [--harness fugue-cc|codex|opencode|agy] [--models m1,m2,..] [--out <dir>]
+default models = fugue-cc: cc-deepseek,cc-kimi,coder · codex: gpt-5.5 · opencode: opencode/deepseek-v4-flash-free · agy: default
 default out    = <cache_root>/plans
 `,
 });

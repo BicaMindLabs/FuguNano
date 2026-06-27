@@ -5,6 +5,7 @@ import { Command, Option } from 'clipanion';
 
 import { CodexHarness } from '../../adapters/harness/codex-harness.js';
 import { FugueCcHarness } from '../../adapters/harness/fugue-cc-harness.js';
+import { AgyHarness } from '../../adapters/harness/agy-harness.js';
 import { OpencodeHarness } from '../../adapters/harness/opencode-harness.js';
 import { DEFAULT_PLAN_AGENTS } from '../../domain/plan.js';
 import { HARNESS_NAMES, type Harness, type HarnessName } from '../../domain/ports/harness.js';
@@ -22,6 +23,7 @@ const defaultPlanOut = (): string => joinPath(defaultCacheRoot(import.meta.url),
 
 const DEFAULT_CODEX_PLAN_AGENTS = ['gpt-5.5'] as const;
 const DEFAULT_OPENCODE_PLAN_AGENTS = ['opencode/deepseek-v4-flash-free'] as const;
+const DEFAULT_AGY_PLAN_AGENTS = ['default'] as const;
 
 const isHarnessName = (value: string): value is HarnessName =>
   (HARNESS_NAMES as readonly string[]).includes(value);
@@ -54,6 +56,8 @@ const defaultAgentsFor = (harness: HarnessName): readonly string[] => {
       return DEFAULT_CODEX_PLAN_AGENTS;
     case 'opencode':
       return DEFAULT_OPENCODE_PLAN_AGENTS;
+    case 'agy':
+      return DEFAULT_AGY_PLAN_AGENTS;
   }
 };
 
@@ -68,7 +72,7 @@ export class PlanCommand extends Command {
 
   override async execute(): Promise<number> {
     if (!isHarnessName(this.harness)) {
-      this.context.stderr.write(`unknown harness '${this.harness}' (fugue-cc|codex|opencode)\n`);
+      this.context.stderr.write(`unknown harness '${this.harness}' (${HARNESS_NAMES.join('|')})\n`);
       return 2;
     }
     const agents = parseModels(this.models ?? defaultAgentsFor(this.harness).join(','));
@@ -123,6 +127,8 @@ export class PlanCommand extends Command {
         return new CodexHarness(runner, { bin: process.env.FUGUE_CODEX ?? 'codex' });
       case 'opencode':
         return new OpencodeHarness(runner, { bin: process.env.FUGUE_OPENCODE ?? 'opencode' });
+      case 'agy':
+        return new AgyHarness(runner, { bin: process.env.FUGUE_AGY ?? 'agy' });
     }
   }
 }

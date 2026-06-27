@@ -112,8 +112,8 @@ make install-skill
 
 This installs `/fugunano` to `~/.claude/skills/fugunano` as a convenience operator
 entry for Claude Code. The workflow itself is not Claude Code-specific: Codex,
-OpenCode, and other agents can follow [AGENTS.md](AGENTS.md) and dispatch through
-the same agent profiles. Smoke-test the installed bundle:
+OpenCode, Antigravity, and other agents can follow [AGENTS.md](AGENTS.md) and
+dispatch through the same agent profiles. Smoke-test the installed bundle:
 
 ```bash
 ~/.claude/skills/fugunano/fuguectl selftest
@@ -123,6 +123,7 @@ the same agent profiles. Smoke-test the installed bundle:
 
 ```bash
 fuguectl preflight --harness codex        # lite reviewer path
+fuguectl preflight --harness agy
 fuguectl preflight --harness fugue-cc     # full worktree fleet path
 fuguectl task new "implement feature"
 fuguectl dispatch cc-deepseek --template impl --task TASK.md --task-type backend
@@ -171,7 +172,7 @@ improvement first, then decide whether a learned conductor is worth the cost.
 
 | Area                   | Commands                                                                                                                                                                                              |
 | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Setup and recon        | `fuguectl doctor`, `fuguectl init --dry-run\|--write`, `fuguectl preflight --harness fugue-cc\|codex\|opencode\|all`, `fuguectl fleet status\|up\|down`                                               |
+| Setup and recon        | `fuguectl doctor`, `fuguectl init --dry-run\|--write`, `fuguectl preflight --harness fugue-cc\|codex\|opencode\|agy\|all`, `fuguectl fleet status\|up\|down`                                          |
 | Planning               | `fuguectl task new\|log\|done`, `fuguectl template <name>`, `fuguectl plan "<goal>" [--harness h]`, `fuguectl goal template\|show\|check`                                                             |
 | Routing and context    | `fuguectl allocate <type>`, `fuguectl workspace list\|show\|model\|context`, `fuguectl agents template\|validate\|list\|resolve`, `fuguectl skills index\|list\|match\|show\|inject\|validate\|forge` |
 | Dispatch and gather    | `fuguectl dispatch <target>`, `fuguectl cache init\|put\|fail\|barrier\|collect\|resume`                                                                                                              |
@@ -201,12 +202,12 @@ fugue doctor
 fugue init [--dry-run|--write]
 fugue fleet status|up|down
 fugue allocate <task-type>|list|record|feed|stats|reset|decay
-fugue dispatch <target> --harness fugue-cc|codex|opencode [--timeout-ms n] [--codex-clean] [--harness-arg x] [--out <file>] [--require-output] --template <name>|--prompt-file <file>|--prompt <text>
+fugue dispatch <target> --harness fugue-cc|codex|opencode|agy [--timeout-ms n] [--codex-clean] [--harness-arg x] [--out <file>] [--require-output] --template <name>|--prompt-file <file>|--prompt <text>
 fugue integrate --work <repo> --agents "a b" [--ownership file] [--dry]
 fugue skills index|list|match|show|inject|validate|forge
-fugue preflight [--harness fugue-cc|codex|opencode|all] [--model provider/model|--target provider/model] [--config-only] [provider.config]
+fugue preflight [--harness fugue-cc|codex|opencode|agy|all] [--model provider/model|--target provider/model] [--config-only] [provider.config]
 fugue cache init|put|fail|status|barrier|collect|list|resume --cache <dir>
-fugue plan "<goal>" --harness fugue-cc|codex|opencode --out <dir> [--models m1,m2]
+fugue plan "<goal>" --harness fugue-cc|codex|opencode|agy --out <dir> [--models m1,m2]
 fugue task new|log|done
 fugue template <name> --dir <templates> [--set KEY=VALUE ...]
 fugue workspace list|show|model|context
@@ -223,6 +224,9 @@ fugue self-harness template|run
 For OpenCode, `preflight --target <provider/model>` checks the local
 `opencode models` registry before dispatch, so a stale or unavailable model is
 caught before the run starts.
+For Antigravity, `--harness agy` dispatches through `agy --prompt`; target
+`default` uses the current Antigravity settings, while any other target is passed
+as `--model`.
 
 `runtime check` also compares the repo's `orchestration/fuguectl/` bundle with
 the installed workflow bundle. `runtime adapt --apply` syncs it, so local agent

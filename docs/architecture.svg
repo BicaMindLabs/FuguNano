@@ -35,7 +35,7 @@
   <rect x="306" y="262" width="158" height="90" rx="9" fill="#fef9f3" stroke="#b08968" stroke-dasharray="5 4"/>
   <text x="385" y="282" text-anchor="middle" font-weight="700" fill="#8a5a2b">Frontend (opt-in)</text>
   <text x="385" y="300" text-anchor="middle" font-size="10.5" fill="#9a6a3a">agy · Antigravity</text>
-  <text x="385" y="315" text-anchor="middle" font-size="10.5" fill="#9a6a3a">manual / agy --print</text>
+  <text x="385" y="315" text-anchor="middle" font-size="10.5" fill="#9a6a3a">manual / agy --prompt</text>
   <text x="385" y="333" text-anchor="middle" font-size="9.5" fill="#b45309">frontend-only · never reviews</text>
   <text x="385" y="346" text-anchor="middle" font-size="9.5" fill="#b45309">(supported implementer · review stays independent)</text>
 

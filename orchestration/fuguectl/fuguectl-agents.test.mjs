@@ -40,7 +40,7 @@ writeFileSync(
     "    process.exit(1);",
     "  }",
     "  if (text.includes('\"claude-code\"')) {",
-    "    console.error('agents[0].harness must be one of fugue-cc, codex, opencode');",
+    "    console.error('agents[0].harness must be one of fugue-cc, codex, opencode, agy');",
     "    process.exit(1);",
     "  }",
     "  process.stdout.write('OK agent registry valid: 3 agents\\n');",

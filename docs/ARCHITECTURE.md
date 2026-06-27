@@ -110,7 +110,7 @@ type Run = {
 type Policy = { id: string; evaluate(sel: Selection): PolicyResult }; // legacy CLI guard, gen≠review
 type AgentProfile = {
   id: string;
-  harness: "fugue-cc" | "codex" | "opencode";
+  harness: "fugue-cc" | "codex" | "opencode" | "agy";
   target?: string; // harness-native agent/model; defaults to id
   modelFamily?: string; // policy label
   roles?: ("planner" | "implementer" | "reviewer" | "fixer")[];
@@ -122,14 +122,14 @@ type AgentProfile = {
 `async` at the world's edge, pure otherwise. No `any`; expected failure is a typed `Result<T,E>`, exceptions only for programmer error.
 
 ```ts
-// dispatch work to an agent over a fleet (fugue-cc/codex/opencode). NOT "returns a Verdict".
+// dispatch work to an agent over a fleet (fugue-cc/codex/opencode/agy). NOT "returns a Verdict".
 // Revised from the iter0 submit/status/collect/cancel job model (iter5): every
-// harness we target is a blocking CLI (`fugue-cc`, `codex exec`, `opencode run`),
+// harness we target is a blocking CLI (`fugue-cc`, `codex exec`, `opencode run`, `agy --prompt`),
 // so one async dispatch + Result is exact; an async job machine over a synchronous
 // tool was unjustified. Parallel dispatch parallelism + resume live in Barrier/ResultStore,
 // not here. A future remote-queue harness can poll internally and still resolve one Promise.
 interface Harness {
-  readonly name: "fugue-cc" | "codex" | "opencode";
+  readonly name: "fugue-cc" | "codex" | "opencode" | "agy";
   dispatch(
     req: DispatchRequest,
   ): Promise<Result<DispatchResult, DispatchError>>;

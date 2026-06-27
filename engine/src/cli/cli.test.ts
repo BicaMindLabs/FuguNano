@@ -85,6 +85,7 @@ describe('fugue CLI', () => {
       expect(out).toContain('would create secrets template');
       expect(out).toContain('would copy provider config example');
       expect(out).toContain('fuguectl preflight --harness codex');
+      expect(out).toContain('fuguectl preflight --harness agy');
       await expect(readFile(secrets, 'utf8')).rejects.toThrow();
       await expect(readFile(providerConfig, 'utf8')).rejects.toThrow();
     });
@@ -273,6 +274,7 @@ describe('fugue CLI', () => {
     let fugueCcCalled: string;
     let codexCalled: string;
     let opencodeCalled: string;
+    let agyCalled: string;
 
     beforeEach(async () => {
       dir = await mkdtemp(join(tmpdir(), 'fugue-dispatch-'));
@@ -286,6 +288,7 @@ describe('fugue CLI', () => {
       fugueCcCalled = join(dir, 'fugue-cc.called');
       codexCalled = join(dir, 'codex.called');
       opencodeCalled = join(dir, 'opencode.called');
+      agyCalled = join(dir, 'agy.called');
       await mkdir(templates, { recursive: true });
       await mkdir(workspaces, { recursive: true });
       await writeFile(join(templates, 'impl.md'), 'Role={{ROLE}}\nScope={{SCOPE}}\n', 'utf8');
@@ -308,6 +311,7 @@ describe('fugue CLI', () => {
       const fugueCc = join(dir, 'fugue-cc');
       const codex = join(dir, 'codex');
       const opencode = join(dir, 'opencode');
+      const agy = join(dir, 'agy');
       codexBin = codex;
       opencodeBin = opencode;
       await writeFile(
@@ -330,18 +334,26 @@ describe('fugue CLI', () => {
         ['#!/usr/bin/env bash', `echo "ARGV: $*" > "${opencodeCalled}"`, ''].join('\n'),
         'utf8',
       );
+      await writeFile(
+        agy,
+        ['#!/usr/bin/env bash', `echo "ARGV: $*" > "${agyCalled}"`, ''].join('\n'),
+        'utf8',
+      );
       await chmod(fugueCc, 0o755);
       await chmod(codex, 0o755);
       await chmod(opencode, 0o755);
+      await chmod(agy, 0o755);
       process.env.FUGUE_CC_BIN = fugueCc;
       process.env.FUGUE_CODEX = codex;
       process.env.FUGUE_OPENCODE = opencode;
+      process.env.FUGUE_AGY = agy;
     });
 
     afterEach(async () => {
       delete process.env.FUGUE_CC_BIN;
       delete process.env.FUGUE_CODEX;
       delete process.env.FUGUE_OPENCODE;
+      delete process.env.FUGUE_AGY;
       delete process.env.FUGUE_SKILLS_ROOT;
       delete process.env.FUGUE_PLUGINS_ROOT;
       delete process.env.FUGUE_TEMPLATES;
@@ -434,22 +446,29 @@ describe('fugue CLI', () => {
       expect(ledgerLog).toContain('code\tcc-env');
     });
 
-    it('dispatches prompt files through codex and opencode harnesses', async () => {
+    it('dispatches prompt files through codex, opencode, and agy harnesses', async () => {
       const codexDispatch = await run(
         args('gpt-5.5', '--harness', 'codex', '--prompt-file', promptFile),
       );
       const opencodeDispatch = await run(
         args('doubao/doubao-code', '--harness', 'opencode', '--prompt-file', promptFile),
       );
+      const agyDispatch = await run(
+        args('default', '--harness', 'agy', '--prompt-file', promptFile),
+      );
       const codexCall = await readFile(codexCalled, 'utf8');
       const opencodeCall = await readFile(opencodeCalled, 'utf8');
+      const agyCall = await readFile(agyCalled, 'utf8');
 
       expect(codexDispatch.code).toBe(0);
       expect(opencodeDispatch.code).toBe(0);
+      expect(agyDispatch.code).toBe(0);
       expect(codexCall).toContain('ARGV: exec --model gpt-5.5');
       expect(codexCall).toContain('custom prompt content');
       expect(opencodeCall).toContain('ARGV: run -m doubao/doubao-code');
       expect(opencodeCall).toContain('custom prompt content');
+      expect(agyCall).toContain('ARGV: --prompt custom prompt content');
+      expect(agyCall).not.toContain('--model');
     });
 
     it('passes harness args through to lite harnesses', async () => {
@@ -475,13 +494,28 @@ describe('fugue CLI', () => {
           promptFile,
         ),
       );
+      const agyDispatch = await run(
+        args(
+          'Gemini 3.5 Flash (Medium)',
+          '--harness',
+          'agy',
+          '--harness-arg=--new-project',
+          '--prompt-file',
+          promptFile,
+        ),
+      );
       const codexCall = await readFile(codexCalled, 'utf8');
       const opencodeCall = await readFile(opencodeCalled, 'utf8');
+      const agyCall = await readFile(agyCalled, 'utf8');
 
       expect(codexDispatch.code).toBe(0);
       expect(opencodeDispatch.code).toBe(0);
+      expect(agyDispatch.code).toBe(0);
       expect(codexCall).toContain('ARGV: exec -c mcp_servers={} --model gpt-5.5');
       expect(opencodeCall).toContain('ARGV: run --agent review -m doubao/doubao-code');
+      expect(agyCall).toContain(
+        'ARGV: --prompt custom prompt content --model Gemini 3.5 Flash (Medium) --new-project',
+      );
     });
 
     it('uses clean Codex exec flags for non-interactive reviewer dispatch', async () => {
@@ -1600,6 +1634,7 @@ describe('fugue CLI', () => {
     let bin: string;
     let codexBin: string;
     let opencodeBin: string;
+    let agyBin: string;
     let out: string;
     let calls: string;
     let prompts: string;
@@ -1609,6 +1644,7 @@ describe('fugue CLI', () => {
       bin = join(dir, 'fugue-cc');
       codexBin = join(dir, 'codex');
       opencodeBin = join(dir, 'opencode');
+      agyBin = join(dir, 'agy');
       out = join(dir, 'plans');
       calls = join(dir, 'calls.txt');
       prompts = join(dir, 'prompts.txt');
@@ -1640,6 +1676,17 @@ describe('fugue CLI', () => {
         'utf8',
       );
       await chmod(opencodeBin, 0o755);
+      await writeFile(
+        agyBin,
+        [
+          '#!/usr/bin/env bash',
+          `printf 'agy:%s\\n' "$1" >> "${calls}"`,
+          `printf '%s\\n' "$2" >> "${prompts}"`,
+          '',
+        ].join('\n'),
+        'utf8',
+      );
+      await chmod(agyBin, 0o755);
     });
 
     afterEach(async () => {
@@ -1757,6 +1804,22 @@ describe('fugue CLI', () => {
         expect(planned.out).toContain('opencode_deepseek-v4-flash-free.plan.md');
       } finally {
         delete process.env.FUGUE_OPENCODE;
+      }
+    });
+
+    it('uses the current Antigravity model by default for agy planning', async () => {
+      process.env.FUGUE_AGY = agyBin;
+      try {
+        const planned = await run(['plan', 'default agy plan', '--harness', 'agy', '--out', out]);
+        const called = await readFile(calls, 'utf8');
+        const prompt = await readFile(prompts, 'utf8');
+
+        expect(planned.code).toBe(0);
+        expect(called).toContain('agy:--prompt');
+        expect(planned.out).toContain('default.plan.md');
+        expect(prompt).toContain('default agy plan');
+      } finally {
+        delete process.env.FUGUE_AGY;
       }
     });
 
@@ -1969,6 +2032,81 @@ describe('fugue CLI', () => {
       expect(result.out).toContain('opencode model not found');
       expect(result.out).toContain('opencode/gpt-5.1-codex-mini');
       expect(result.out).toContain('opencode models');
+    });
+
+    it('validates an agy target against the local model registry', async () => {
+      const codex = join(dir, 'codex');
+      const agy = join(dir, 'agy');
+      await writeFile(codex, '#!/usr/bin/env bash\nexit 0\n', 'utf8');
+      await writeFile(
+        agy,
+        [
+          '#!/usr/bin/env bash',
+          'if [ "$1" = "models" ]; then',
+          '  printf "Gemini 3.5 Flash (Medium)\\nClaude Opus 4.6 (Thinking)\\n"',
+          '  exit 0',
+          'fi',
+          'exit 2',
+          '',
+        ].join('\n'),
+        'utf8',
+      );
+      await chmod(codex, 0o755);
+      await chmod(agy, 0o755);
+
+      const result = await run([
+        'preflight',
+        '--harness',
+        'agy',
+        '--codex-bin',
+        codex,
+        '--agy-bin',
+        agy,
+        '--target',
+        'Gemini 3.5 Flash (Medium)',
+      ]);
+
+      expect(result.code).toBe(0);
+      expect(result.out).toContain('agy model available');
+      expect(result.out).toContain('Gemini 3.5 Flash (Medium)');
+    });
+
+    it('fails agy preflight when the requested model is not listed locally', async () => {
+      const codex = join(dir, 'codex');
+      const agy = join(dir, 'agy');
+      await writeFile(codex, '#!/usr/bin/env bash\nexit 0\n', 'utf8');
+      await writeFile(
+        agy,
+        [
+          '#!/usr/bin/env bash',
+          'if [ "$1" = "models" ]; then',
+          '  printf "Gemini 3.5 Flash (Medium)\\n"',
+          '  exit 0',
+          'fi',
+          'exit 2',
+          '',
+        ].join('\n'),
+        'utf8',
+      );
+      await chmod(codex, 0o755);
+      await chmod(agy, 0o755);
+
+      const result = await run([
+        'preflight',
+        '--harness',
+        'agy',
+        '--codex-bin',
+        codex,
+        '--agy-bin',
+        agy,
+        '--target',
+        'Missing Model',
+      ]);
+
+      expect(result.code).toBe(1);
+      expect(result.out).toContain('agy model not found');
+      expect(result.out).toContain('Missing Model');
+      expect(result.out).toContain('agy models');
     });
 
     it('rejects conflicting preflight --model and --target values', async () => {

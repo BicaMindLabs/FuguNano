@@ -59,7 +59,7 @@ suite.ok("help lists required dispatch output", () =>
   helpOut.includes("--require-output"),
 );
 suite.ok("help lists planning harness", () =>
-  helpOut.includes('plan "<goal>" [--harness h]'),
+  helpOut.includes('plan "<goal>" [--harness fugue-cc|codex|opencode|agy]'),
 );
 suite.ok(
   "help does not leak script body",

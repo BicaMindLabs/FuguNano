@@ -7,6 +7,7 @@ import type { Readable } from 'node:stream';
 import { Command, Option } from 'clipanion';
 
 import { FsExperienceStore } from '../../adapters/experience/fs-experience-store.js';
+import { AgyHarness } from '../../adapters/harness/agy-harness.js';
 import { CodexHarness } from '../../adapters/harness/codex-harness.js';
 import { FugueCcHarness } from '../../adapters/harness/fugue-cc-harness.js';
 import { OpencodeHarness } from '../../adapters/harness/opencode-harness.js';
@@ -608,6 +609,8 @@ export class SkillsCommand extends Command {
         return new CodexHarness(runner, { bin: process.env.FUGUE_CODEX ?? 'codex' });
       case 'opencode':
         return new OpencodeHarness(runner, { bin: process.env.FUGUE_OPENCODE ?? 'opencode' });
+      case 'agy':
+        return new AgyHarness(runner, { bin: process.env.FUGUE_AGY ?? 'agy' });
     }
   }
 
