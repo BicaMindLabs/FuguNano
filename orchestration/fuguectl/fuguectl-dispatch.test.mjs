@@ -150,6 +150,8 @@ suite.ok("clean Codex mode is preserved through wrapper", () =>
   ),
 );
 const dispatchOut = join(tmp, "artifacts", "review.txt");
+const dispatchOutTask = join(tmp, "dispatch-out-task.md");
+writeFileSync(dispatchOutTask, "## Execution log\n");
 run(dispatch, [
   "gpt-5.5",
   "--harness",
@@ -158,10 +160,16 @@ run(dispatch, [
   promptFile,
   "--out",
   dispatchOut,
+  "--task",
+  dispatchOutTask,
 ]);
-suite.ok("--out writes successful dispatch output", () =>
-  readFileSync(dispatchOut, "utf8").includes("VERDICT: ACCEPTED"),
-);
+suite.ok("--out writes successful dispatch output", () => {
+  const log = readFileSync(dispatchOutTask, "utf8");
+  return (
+    readFileSync(dispatchOut, "utf8").includes("VERDICT: ACCEPTED") &&
+    log.includes(`out=${dispatchOut}`)
+  );
+});
 const verboseDispatch = run(dispatch, [
   "gpt-5.5",
   "--harness",

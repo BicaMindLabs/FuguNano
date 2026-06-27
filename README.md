@@ -167,8 +167,9 @@ improvement first, then decide whether a learned conductor is worth the cost.
 
 The planning panel prints per-agent dispatch duration. `dispatch --verbose`
 prints an obs line to stderr, and dispatches with `--task` persist duration /
-output size in the TASK log, so live Codex/OpenCode/AGY runs leave an observable
-trace without contaminating model stdout or durable artifacts.
+output size / optional `--out` artifact path in the TASK log, so live
+Codex/OpenCode/AGY runs leave an observable trace without contaminating model
+stdout or durable artifacts.
 
 ## Command Surface
 

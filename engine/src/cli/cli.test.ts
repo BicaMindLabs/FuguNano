@@ -604,6 +604,7 @@ describe('fugue CLI', () => {
 
     it('writes successful dispatch output to a durable artifact', async () => {
       const outFile = join(dir, 'artifacts', 'review.txt');
+      const task = join(dir, 'TASK-out.md');
       await writeFile(
         codexBin,
         [
@@ -615,15 +616,28 @@ describe('fugue CLI', () => {
         'utf8',
       );
       await chmod(codexBin, 0o755);
+      await writeFile(task, '## Execution log\n', 'utf8');
 
       const dispatched = await run(
-        args('gpt-5.5', '--harness', 'codex', '--prompt', 'review this change', '--out', outFile),
+        args(
+          'gpt-5.5',
+          '--harness',
+          'codex',
+          '--prompt',
+          'review this change',
+          '--out',
+          outFile,
+          '--task',
+          task,
+        ),
       );
       const artifact = await readFile(outFile, 'utf8');
+      const taskLog = await readFile(task, 'utf8');
 
       expect(dispatched.code).toBe(0);
       expect(dispatched.out).toBe('VERDICT: ACCEPTED\n');
       expect(artifact).toBe('VERDICT: ACCEPTED\n');
+      expect(taskLog).toContain(`out=${outFile}`);
     });
 
     it('prints verbose dispatch observability to stderr without changing stdout', async () => {
