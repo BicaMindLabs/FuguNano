@@ -58,6 +58,9 @@ suite.ok("help lists dispatch output file", () =>
 suite.ok("help lists required dispatch output", () =>
   helpOut.includes("--require-output"),
 );
+suite.ok("help lists verbose dispatch observability", () =>
+  helpOut.includes("--verbose"),
+);
 suite.ok("help lists planning harness", () =>
   helpOut.includes('plan "<goal>" [--harness fugue-cc|codex|opencode|agy]'),
 );

@@ -10,7 +10,7 @@
   <img src="https://img.shields.io/badge/Runtime-Node%20%E2%89%A518.18-339933?style=for-the-badge&logo=node.js&logoColor=white" alt="Node.js >= 18.18" />
   <img src="https://img.shields.io/badge/Engine-TypeScript-3178c6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript engine" />
   <img src="https://img.shields.io/badge/fuguectl-22%20%E5%A5%97%E6%B5%8B%E8%AF%95-7c3aed?style=for-the-badge" alt="22 套 fuguectl 测试" />
-  <img src="https://img.shields.io/badge/assertions-302-brightgreen?style=for-the-badge" alt="302 个 fuguectl 断言" />
+  <img src="https://img.shields.io/badge/assertions-307-brightgreen?style=for-the-badge" alt="307 个 fuguectl 断言" />
   <a href="https://github.com/BicaMindLabs/FuguNano/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/BicaMindLabs/FuguNano/ci.yml?branch=main&style=for-the-badge&label=CI" alt="CI status" /></a>
   <img src="https://img.shields.io/badge/license-Apache--2.0-yellowgreen?style=for-the-badge" alt="Apache-2.0 license" />
 </p>
@@ -143,8 +143,9 @@ Fugu、OpenFugu 和 FuguNano 在同一条路线上：当单一前沿模型或硬
 FuguNano 不是要替代 Fugu / OpenFugu，而是把同一方向落到更轻的开放入口上：
 先用策略、端口、审查门和 harness 自改进打开协作，再判断是否值得训练一个 conductor。
 
-Planning panel 会打印每个 agent 的 dispatch 耗时，所以真实 Codex/OpenCode/AGY
-规划不会只剩一段安静等待，而是留下可观察的运行痕迹。
+Planning panel 会打印每个 agent 的 dispatch 耗时，`dispatch --verbose` 会把
+obs 行写到 stderr，所以真实 Codex/OpenCode/AGY 运行会留下可观察痕迹，同时不污染
+模型 stdout 或 durable artifact。
 
 ## 命令面
 
@@ -178,7 +179,7 @@ fugue doctor
 fugue init [--dry-run|--write]
 fugue fleet status|up|down
 fugue allocate <task-type>|list|record|feed|stats|reset|decay
-fugue dispatch <target> --harness fugue-cc|codex|opencode|agy [--timeout-ms n] [--codex-clean] [--harness-arg x] [--out <file>] [--require-output] --template <name>|--prompt-file <file>|--prompt <text>
+fugue dispatch <target> --harness fugue-cc|codex|opencode|agy [--timeout-ms n] [--codex-clean] [--harness-arg x] [--out <file>] [--require-output] [--verbose] --template <name>|--prompt-file <file>|--prompt <text>
 fugue integrate --work <repo> --agents "a b" [--ownership file] [--dry]
 fugue skills index|list|match|show|inject|validate|forge
 fugue preflight [--harness fugue-cc|codex|opencode|agy|all] [--model provider/model|--target provider/model] [--config-only] [provider.config]

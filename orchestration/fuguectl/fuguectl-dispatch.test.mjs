@@ -36,6 +36,9 @@ suite.ok("help lists dispatch output file", () =>
 suite.ok("help lists required dispatch output", () =>
   help.includes("--require-output"),
 );
+suite.ok("help lists verbose dispatch observability", () =>
+  help.includes("--verbose"),
+);
 
 writeExecutable(join(tmp, "fugue-cc"), [
   "#!/usr/bin/env node",
@@ -153,6 +156,25 @@ run(dispatch, [
 ]);
 suite.ok("--out writes successful dispatch output", () =>
   readFileSync(dispatchOut, "utf8").includes("VERDICT: ACCEPTED"),
+);
+const verboseDispatch = run(dispatch, [
+  "gpt-5.5",
+  "--harness",
+  "codex",
+  "--prompt-file",
+  promptFile,
+  "--verbose",
+]);
+suite.ok("verbose dispatch keeps model output on stdout", () =>
+  verboseDispatch.stdout.includes("VERDICT: ACCEPTED"),
+);
+suite.ok("verbose dispatch prints obs to stderr", () =>
+  verboseDispatch.stderr.includes(
+    "[obs] dispatch harness=codex agent=gpt-5.5 rc=0 took=",
+  ),
+);
+suite.ok("verbose dispatch reports output chars", () =>
+  verboseDispatch.stderr.includes("output_chars=18"),
 );
 
 const opencodeCalled = join(tmp, "oc.called");

@@ -624,6 +624,29 @@ describe('fugue CLI', () => {
       expect(artifact).toBe('VERDICT: ACCEPTED\n');
     });
 
+    it('prints verbose dispatch observability to stderr without changing stdout', async () => {
+      await writeFile(
+        codexBin,
+        [
+          '#!/usr/bin/env bash',
+          `echo "ARGV: $*" > "${codexCalled}"`,
+          'printf "VERDICT: ACCEPTED\\n"',
+          '',
+        ].join('\n'),
+        'utf8',
+      );
+      await chmod(codexBin, 0o755);
+
+      const dispatched = await run(
+        args('gpt-5.5', '--harness', 'codex', '--prompt', 'review this change', '--verbose'),
+      );
+
+      expect(dispatched.code).toBe(0);
+      expect(dispatched.out).toBe('VERDICT: ACCEPTED\n');
+      expect(dispatched.err).toContain('[obs] dispatch harness=codex agent=gpt-5.5 rc=0 took=');
+      expect(dispatched.err).toContain('output_chars=18');
+    });
+
     it('rejects invalid dispatch timeouts', async () => {
       const dispatched = await run(
         args('gpt-5.5', '--harness', 'codex', '--prompt', 'x', '--timeout-ms', 'abc'),

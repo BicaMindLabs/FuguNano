@@ -2,6 +2,7 @@ import { readdir } from 'node:fs/promises';
 import type { Dirent } from 'node:fs';
 import { homedir } from 'node:os';
 import { basename, dirname, join as joinPath } from 'node:path';
+import { performance } from 'node:perf_hooks';
 
 import { Command, Option, UsageError } from 'clipanion';
 
@@ -85,6 +86,11 @@ const parseTimeoutMs = (raw: string): number | null | undefined => {
   const parsed = Number(value);
   if (!Number.isInteger(parsed) || parsed < 1) return null;
   return parsed;
+};
+
+const formatDurationMs = (ms: number): string => {
+  if (ms < 1000) return `${String(Math.max(0, Math.round(ms)))}ms`;
+  return `${(ms / 1000).toFixed(1)}s`;
 };
 
 const parseStats = (content: string): StrategyState => {
@@ -198,6 +204,7 @@ export class DispatchCommand extends Command {
   timeoutMs = Option.String('--timeout-ms', process.env.FUGUE_DISPATCH_TIMEOUT_MS ?? '0');
   out = Option.String('--out');
   requireOutput = Option.Boolean('--require-output', false);
+  verbose = Option.Boolean('--verbose', false);
   harnessArgs = Option.Array('--harness-arg', []);
   codexClean = Option.Boolean('--codex-clean', process.env.FUGUE_CODEX_CLEAN === '1');
 
@@ -223,16 +230,20 @@ export class DispatchCommand extends Command {
       return 2;
     }
 
+    const startedAt = performance.now();
     const result = await this.harnessFor(this.harness, timeoutMs).dispatch({
       agent: this.target,
       prompt,
       ...(this.workspace !== undefined ? { workspace: this.workspace } : {}),
       ...(this.taskType !== undefined ? { taskType: this.taskType } : {}),
     });
+    const elapsedMs = performance.now() - startedAt;
     const rc = isOk(result) ? result.value.exitCode : (result.error.exitCode ?? 1);
     let finalRc = rc;
+    let outputChars = 0;
     if (isOk(result)) {
       const output = result.value.output;
+      outputChars = output.length;
       if (this.requireOutput && output.trim().length === 0) {
         this.context.stderr.write('empty dispatch output (--require-output)\n');
         finalRc = 1;
@@ -248,6 +259,14 @@ export class DispatchCommand extends Command {
       if (output.length > 0) this.context.stdout.write(output);
     } else {
       this.context.stderr.write(`${result.error.detail}\n`);
+    }
+
+    if (this.verbose) {
+      this.context.stderr.write(
+        `[obs] dispatch harness=${this.harness} agent=${this.target} rc=${String(
+          finalRc,
+        )} took=${formatDurationMs(elapsedMs)} output_chars=${String(outputChars)}\n`,
+      );
     }
 
     await this.appendTaskLog(finalRc);

@@ -78,7 +78,7 @@ First public release — the provider-backed multi-agent coding workflow plus it
 - `fuguectl-cache` — result cache + **join barrier** (dispatch N ⇒ return N) + timing + resume.
 - `fuguectl-task` — TASK scaffolder (new/log/done, cross GNU/BSD sed).
 - `fuguectl-template` + `templates/` — externalized prompt templates (impl/analysis/review).
-- `fuguectl-dispatch` — wraps `fugue-cc ask` (render → dispatch → log; `--workspace`).
+- `fuguectl-dispatch` — wraps `fugue-cc ask` (render → dispatch → log; `--workspace`), with `--verbose` stderr observability for harness/agent/rc/duration/output chars.
 - `fuguectl-summary` — round observability summary (status + elapsed).
 - `fuguectl-allocate` + `allocation.tsv` — bench-driven task-type → model allocation.
 - `fuguectl-workspace` + `workspaces/` — per-task **context isolation** (`System + Workspace + Tools + Memory + History`), inspired by Zleap-Agent.

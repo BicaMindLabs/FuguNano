@@ -10,7 +10,7 @@
   <img src="https://img.shields.io/badge/Runtime-Node%20%E2%89%A518.18-339933?style=for-the-badge&logo=node.js&logoColor=white" alt="Node.js >= 18.18" />
   <img src="https://img.shields.io/badge/Engine-TypeScript-3178c6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript engine" />
   <img src="https://img.shields.io/badge/fuguectl-22%20suites-7c3aed?style=for-the-badge" alt="22 fuguectl test suites" />
-  <img src="https://img.shields.io/badge/assertions-302-brightgreen?style=for-the-badge" alt="302 fuguectl assertions" />
+  <img src="https://img.shields.io/badge/assertions-307-brightgreen?style=for-the-badge" alt="307 fuguectl assertions" />
   <a href="https://github.com/BicaMindLabs/FuguNano/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/BicaMindLabs/FuguNano/ci.yml?branch=main&style=for-the-badge&label=CI" alt="CI status" /></a>
   <img src="https://img.shields.io/badge/license-Apache--2.0-yellowgreen?style=for-the-badge" alt="Apache-2.0 license" />
 </p>
@@ -165,8 +165,9 @@ FuguNano is not a replacement for Fugu or OpenFugu. It is the lightest open
 entry point on the same road: use policies, ports, review gates, and harness
 improvement first, then decide whether a learned conductor is worth the cost.
 
-The planning panel prints per-agent dispatch duration, so live Codex/OpenCode/AGY
-planning runs leave an observable trace instead of a silent wait.
+The planning panel prints per-agent dispatch duration, and `dispatch --verbose`
+prints an obs line to stderr, so live Codex/OpenCode/AGY runs leave an
+observable trace without contaminating model stdout or durable artifacts.
 
 ## Command Surface
 
@@ -205,7 +206,7 @@ fugue doctor
 fugue init [--dry-run|--write]
 fugue fleet status|up|down
 fugue allocate <task-type>|list|record|feed|stats|reset|decay
-fugue dispatch <target> --harness fugue-cc|codex|opencode|agy [--timeout-ms n] [--codex-clean] [--harness-arg x] [--out <file>] [--require-output] --template <name>|--prompt-file <file>|--prompt <text>
+fugue dispatch <target> --harness fugue-cc|codex|opencode|agy [--timeout-ms n] [--codex-clean] [--harness-arg x] [--out <file>] [--require-output] [--verbose] --template <name>|--prompt-file <file>|--prompt <text>
 fugue integrate --work <repo> --agents "a b" [--ownership file] [--dry]
 fugue skills index|list|match|show|inject|validate|forge
 fugue preflight [--harness fugue-cc|codex|opencode|agy|all] [--model provider/model|--target provider/model] [--config-only] [provider.config]
