@@ -167,7 +167,8 @@ improvement first, then decide whether a learned conductor is worth the cost.
 
 The planning panel prints per-agent dispatch duration and, with `--task`,
 persists planner status, output size or error kind/exit code, plus artifact
-paths in the TASK log. `dispatch
+paths in the TASK log through append-safe writes, so concurrent planners do not
+overwrite each other's audit lines. `dispatch
 --verbose` prints an obs line to stderr, and dispatches with `--task` persist
 start status plus terminal status, duration, output size, error kind on failure,
 and optional `--out` artifact path in the TASK log, so live Codex/OpenCode/AGY

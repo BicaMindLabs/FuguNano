@@ -2117,6 +2117,38 @@ describe('fugue CLI', () => {
       await expect(readFile(join(out, 'cc-silent.plan.md'), 'utf8')).rejects.toThrow();
     });
 
+    it('preserves task audit lines from concurrent plan commands', async () => {
+      const task = join(dir, 'TASK-plan-concurrent.md');
+      const agents = Array.from({ length: 8 }, (_, index) => `cc-audit-${String(index + 1)}`);
+      await writeFile(task, '## Log\n', 'utf8');
+
+      const results = await Promise.all(
+        agents.map((agent) =>
+          run([
+            'plan',
+            `audit ${agent}`,
+            '--models',
+            agent,
+            '--out',
+            join(out, agent),
+            '--bin',
+            bin,
+            '--task',
+            task,
+          ]),
+        ),
+      );
+      const taskLog = await readFile(task, 'utf8');
+
+      expect(results.every((result) => result.code === 0)).toBe(true);
+      expect(taskLog.match(/status=started/gu)?.length).toBe(agents.length);
+      expect(taskLog.match(/status=captured/gu)?.length).toBe(agents.length);
+      for (const agent of agents) {
+        expect(taskLog).toContain(`plan → ${agent} [fugue-cc] (status=started`);
+        expect(taskLog).toContain(`plan → ${agent} [fugue-cc] (status=captured`);
+      }
+    });
+
     it('rejects unknown planning harnesses', async () => {
       const planned = await run(['plan', 'bad harness', '--harness', 'bogus']);
 

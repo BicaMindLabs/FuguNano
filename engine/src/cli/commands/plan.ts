@@ -1,4 +1,4 @@
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { appendFile, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join as joinPath } from 'node:path';
 import { performance } from 'node:perf_hooks';
 
@@ -208,13 +208,12 @@ export class PlanCommand extends Command {
     if (this.task === undefined) return Promise.resolve();
     const write = async (): Promise<void> => {
       if (this.task === undefined) return;
-      let current: string;
       try {
-        current = await readFile(this.task, 'utf8');
+        await readFile(this.task, 'utf8');
       } catch {
         return;
       }
-      await writeFile(this.task, `${current}- [${shanghaiTimestamp()}] ${message}\n`, 'utf8');
+      await appendFile(this.task, `- [${shanghaiTimestamp()}] ${message}\n`, 'utf8');
     };
     this.taskLogQueue = this.taskLogQueue.then(write, write);
     return this.taskLogQueue;
