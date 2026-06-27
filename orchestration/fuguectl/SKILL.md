@@ -180,7 +180,7 @@ The barrier passes only when **every dispatched task has returned** (`done` or `
 
 ### Phase 3: Integrate (operator = Integrator)
 
-Only after the **join barrier passes** (all N returned). `"$FO" summary "$ROUND" --task "$F"` logs a round summary (per-task status). Read cached artifacts via `"$CACHE" collect "$ROUND"`, then **`fuguectl integrate`** cherry-picks each worktree onto `main` — a conflict is isolated to that single agent (`cherry-pick --abort` keeps `main` clean) and the rest still integrate, instead of a bare loop that `break`s on the first conflict:
+Only after the **join barrier passes** (all N returned). `"$FO" summary "$ROUND" --task "$F"` logs a round summary (per-task status) through append-safe TASK writes. Read cached artifacts via `"$CACHE" collect "$ROUND"`, then **`fuguectl integrate`** cherry-picks each worktree onto `main` — a conflict is isolated to that single agent (`cherry-pick --abort` keeps `main` clean) and the rest still integrate, instead of a bare loop that `break`s on the first conflict:
 
 ```bash
 "$FO" integrate --work "$FUGUE_CC_WORK" --agents "cc-deepseek cc-glm cc-doubao" --task "$F"
@@ -193,7 +193,7 @@ pytest tests/ -q   # or the project's own deterministic sanity command
 
 > **Prereq**: the work repo must **gitignore `.fugue-cc/`** — current provider-managed worktrees live under `$FUGUE_CC_WORK/.fugue-cc/workspaces/`, _inside_ the main worktree; without the ignore a `git add -A` swallows them as embedded repos and poisons `status`. `fuguectl integrate` only `add`s inside each worktree (never `add -A` on `main`) and passes an explicit committer identity to `cherry-pick` (so it works on machines/CI with no global git config), but the project itself must ignore `.fugue-cc/`.
 
-Each agent edits _different_ files (Phase 1 split), so conflicts are rare; when one happens the report names the agent + SHA and you resolve it manually, the others already landed. **The integrate summary + sanity result go to the TASK log** (`--task`).
+Each agent edits _different_ files (Phase 1 split), so conflicts are rare; when one happens the report names the agent + SHA and you resolve it manually, the others already landed. **The integrate summary + sanity result go to the TASK log** (`--task`) with append-safe writes.
 
 **Enforce, don't trust** (borrowed from Lynn's orchestrator-side ownership): the file-split is only a _prompt_ — a weak model may stray. Pass `--ownership <file>` (TSV `agent⇥owned-globs⇥forbidden-globs`, comma-separated; owned empty/`*` = unrestricted) and `integrate` validates each worker's diff _before_ cherry-picking: a worker that touched files outside its `owned` set or matching a `forbidden` glob is flagged **`violation`** and held back whole (isolated like a conflict, exit non-zero), instead of blindly merged. Agents not in the manifest stay unrestricted.
 

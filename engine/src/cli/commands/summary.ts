@@ -93,7 +93,7 @@ export class SummaryCommand extends Command {
         this.context.stderr.write(`no TASK file ${this.task}\n`);
         return 2;
       }
-      await fileSystem.write(this.task, `${content}\n${summary}\n`);
+      await fileSystem.append(this.task, `\n${summary}\n`);
       this.context.stderr.write(`→ written to ${this.task}\n`);
     }
     return 0;

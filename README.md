@@ -173,7 +173,8 @@ overwrite each other's audit lines. `dispatch
 start status plus terminal status, duration, output size, error kind on failure,
 and optional `--out` artifact path in the TASK log, so live Codex/OpenCode/AGY
 runs leave an observable trace without contaminating model stdout or durable
-artifacts.
+artifacts. `summary --task` and `integrate --task` use the same append-safe
+audit style for Phase 3 records.
 
 ## Command Surface
 

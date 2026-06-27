@@ -920,6 +920,26 @@ describe('fugue CLI', () => {
       expect(integrated.out).toContain('1 picked');
       expect(await readFile(join(work, 'a.ts'), 'utf8')).toContain('export const a');
     });
+
+    it('preserves task audit lines from concurrent integrate summaries', async () => {
+      await git('-C', work, 'init', '-q');
+      const task = join(dir, 'TASK-integrate-concurrent.md');
+      const agents = Array.from({ length: 8 }, (_, index) => `cc-missing-${String(index + 1)}`);
+      await writeFile(task, '## Log\n', 'utf8');
+
+      const results = await Promise.all(
+        agents.map((agent) =>
+          run(['integrate', '--work', work, '--agents', agent, '--task', task]),
+        ),
+      );
+      const taskContent = await readFile(task, 'utf8');
+
+      expect(results.every((result) => result.code === 0)).toBe(true);
+      expect(taskContent.match(/### Integrate/gu)?.length).toBe(agents.length);
+      for (const agent of agents) {
+        expect(taskContent).toContain(`missing   ${agent}`);
+      }
+    });
   });
 
   describe('fleet command', () => {
@@ -1144,6 +1164,20 @@ describe('fugue CLI', () => {
       expect(summary.out).toContain('cc-glm');
       expect(summary.err).toContain('written to');
       expect(taskContent).toContain('Round 1 summary');
+    });
+
+    it('preserves task audit lines from concurrent summary commands', async () => {
+      const task = join(dir, 'TASK-summary-concurrent.md');
+      const runs = 8;
+      await writeFile(task, '## Log\n', 'utf8');
+
+      const results = await Promise.all(
+        Array.from({ length: runs }, () => run(['summary', '1', '--task', task])),
+      );
+      const taskContent = await readFile(task, 'utf8');
+
+      expect(results.every((result) => result.code === 0)).toBe(true);
+      expect(taskContent.match(/### Round 1 summary/gu)?.length).toBe(runs);
     });
 
     it('returns non-zero when the round was not initialized', async () => {

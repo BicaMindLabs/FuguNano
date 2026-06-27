@@ -260,11 +260,10 @@ export class IntegrateCommand extends Command {
     views: readonly IntegrationView[],
   ): Promise<void> {
     if (this.task === undefined) return;
-    const current = await fs.read(this.task);
-    if (current === null) return;
-    await fs.write(
+    if ((await fs.read(this.task)) === null) return;
+    await fs.append(
       this.task,
-      `${current}\n### Integrate — ${sum}\n${views.map((view) => view.line).join('\n')}\n`,
+      `\n### Integrate — ${sum}\n${views.map((view) => view.line).join('\n')}\n`,
     );
     this.context.stderr.write(`→ written to ${this.task}\n`);
   }

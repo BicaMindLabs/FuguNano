@@ -49,7 +49,7 @@ After the selected runtimes pass preflight (`fuguectl doctor`, `fuguectl preflig
 ### Phase 3 — Integration (fuguectl)
 
 Once the barrier passes (all N returned), the operator pulls outputs from the cache (`fuguectl cache collect <round>`) + cherry-picks each implementer's worktree changes onto the main working branch,
-resolves conflicts, unifies style, and runs a local sanity baseline (build/test/lint).
+resolves conflicts, unifies style, and runs a local sanity baseline (build/test/lint). `summary --task` and `integrate --task` append Phase 3 audit records, so overlapping operators do not overwrite each other's TASK entries.
 
 ### Phase 4 — Review (Reviewer)
 
