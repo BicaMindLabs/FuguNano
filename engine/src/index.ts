@@ -1,9 +1,8 @@
 /**
  * @bicamindlabs/fugunano-engine — public surface.
  *
- * The typed multi-agent orchestration engine (ports & adapters). During the
- * bash → TS migration this barrel grows capability by capability; see
- * docs/ARCHITECTURE.md and docs/PARITY.md.
+ * The typed multi-agent orchestration engine (ports & adapters).
+ * See docs/ARCHITECTURE.md and docs/PARITY.md.
  */
 export const VERSION = '0.0.0';
 

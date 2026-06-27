@@ -43,6 +43,7 @@ export class RuntimeSync {
   async check(): Promise<VersionDrift> {
     const current = await this.currentVersion();
     const last = (await this.fs.read(this.stampPath))?.trim() ?? null;
+    if (current.length === 0) return { current: last ?? '', last, drifted: false };
     return detectDrift(current, last);
   }
 

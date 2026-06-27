@@ -8,6 +8,9 @@ const isErrnoException = (error: unknown): error is NodeJS.ErrnoException =>
 
 const isNotFound = (error: unknown): boolean => isErrnoException(error) && error.code === 'ENOENT';
 
+const isMissing = (error: unknown): boolean =>
+  isNotFound(error) || (isErrnoException(error) && error.code === 'ENOTDIR');
+
 // Per-write counter so overlapping writes to the same path never share a temp file.
 let writeSeq = 0;
 
@@ -52,7 +55,7 @@ export class NodeFileSystem implements FileSystem {
     try {
       return await readdir(dir);
     } catch (error) {
-      if (isNotFound(error)) return [];
+      if (isMissing(error)) return [];
       throw error;
     }
   }

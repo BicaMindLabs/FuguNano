@@ -21,7 +21,7 @@ interface IntegrationView {
   readonly bucket: 'picked' | 'nochange' | 'conflict' | 'violation' | 'missing' | 'error';
 }
 
-const identityFor = (name: string): Identity => ({ name, email: 'fugue-cc@local' });
+const identityFor = (name: string): Identity => ({ name, email: 'fugunano@local' });
 
 const splitWords = (raw: string): readonly string[] =>
   raw

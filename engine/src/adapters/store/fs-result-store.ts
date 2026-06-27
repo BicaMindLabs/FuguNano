@@ -69,7 +69,11 @@ export class FsResultStore implements ResultStore {
       const path = joinPath(this.rootDir, name);
       const content = await this.fs.read(path);
       if (content === null) continue;
-      keys.push(parseStoredResult(content, path).key);
+      try {
+        keys.push(parseStoredResult(content, path).key);
+      } catch {
+        // corrupt or non-result file — skip
+      }
     }
 
     return keys;
