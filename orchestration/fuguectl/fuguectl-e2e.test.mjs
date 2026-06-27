@@ -55,6 +55,9 @@ suite.ok("help lists dispatch harness args", () =>
 suite.ok("help lists dispatch output file", () =>
   helpOut.includes("--out <file>"),
 );
+suite.ok("help lists required dispatch output", () =>
+  helpOut.includes("--require-output"),
+);
 suite.ok("help lists planning harness", () =>
   helpOut.includes('plan "<goal>" [--harness h]'),
 );

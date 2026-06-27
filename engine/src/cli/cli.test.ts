@@ -545,6 +545,27 @@ describe('fugue CLI', () => {
       expect(dispatched.err).toContain('ProviderModelNotFoundError');
     });
 
+    it('can require non-empty dispatch output before writing artifacts', async () => {
+      const outFile = join(dir, 'artifacts', 'empty-review.txt');
+
+      const dispatched = await run(
+        args(
+          'gpt-5.5',
+          '--harness',
+          'codex',
+          '--prompt',
+          'review this change',
+          '--require-output',
+          '--out',
+          outFile,
+        ),
+      );
+
+      await expect(readFile(outFile, 'utf8')).rejects.toHaveProperty('code', 'ENOENT');
+      expect(dispatched.code).toBe(1);
+      expect(dispatched.err).toContain('empty dispatch output');
+    });
+
     it('writes successful dispatch output to a durable artifact', async () => {
       const outFile = join(dir, 'artifacts', 'review.txt');
       await writeFile(

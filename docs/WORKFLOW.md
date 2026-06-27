@@ -52,7 +52,7 @@ resolves conflicts, unifies style, and runs a local sanity baseline (build/test/
 
 ### Phase 4 — Review (Reviewer)
 
-`fuguectl dispatch gpt-5.5 --harness codex --prompt-file <review-prompt>` or a registry-backed reviewer profile gives a `VERDICT` (ACCEPTED / NEEDS FIX) + `Findings`.
+`fuguectl dispatch gpt-5.5 --harness codex --prompt-file <review-prompt> --out <verdict-file> --require-output` or a registry-backed reviewer profile gives a `VERDICT` (ACCEPTED / NEEDS FIX) + `Findings`.
 Generation != review: implementation and review must resolve to independent model families / runtime paths. Antigravity (`agy`) is supported for implementation; legacy `gemini` CLI is retired.
 
 ### Phase 5 — Review-Fix Loop (bounded closed loop, upgraded per 2026-06 loop engineering research)

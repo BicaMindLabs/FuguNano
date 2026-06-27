@@ -33,6 +33,9 @@ suite.ok("help lists dispatch harness args", () =>
 suite.ok("help lists dispatch output file", () =>
   help.includes("--out <file>"),
 );
+suite.ok("help lists required dispatch output", () =>
+  help.includes("--require-output"),
+);
 
 writeExecutable(join(tmp, "fugue-cc"), [
   "#!/usr/bin/env node",
@@ -71,6 +74,12 @@ suite.ok("prompt-file content via stdin", () =>
 run(dispatch, ["cc-inline", "--prompt", "inline prompt content"]);
 suite.ok("inline prompt content via stdin", () =>
   readFileSync(called, "utf8").includes("inline prompt content"),
+);
+suite.ok(
+  "--require-output rejects empty harness output",
+  () =>
+    run(dispatch, ["cc-empty", "--prompt-file", promptFile, "--require-output"])
+      .status !== 0,
 );
 run(dispatch, [
   "cc-deepseek",

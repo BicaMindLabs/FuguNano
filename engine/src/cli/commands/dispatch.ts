@@ -196,6 +196,7 @@ export class DispatchCommand extends Command {
   ledger = Option.String('--ledger', defaultAllocationLedger());
   timeoutMs = Option.String('--timeout-ms', process.env.FUGUE_DISPATCH_TIMEOUT_MS ?? '0');
   out = Option.String('--out');
+  requireOutput = Option.Boolean('--require-output', false);
   harnessArgs = Option.Array('--harness-arg', []);
   codexClean = Option.Boolean('--codex-clean', process.env.FUGUE_CODEX_CLEAN === '1');
 
@@ -230,16 +231,20 @@ export class DispatchCommand extends Command {
     const rc = isOk(result) ? result.value.exitCode : (result.error.exitCode ?? 1);
     let finalRc = rc;
     if (isOk(result)) {
-      if (this.out !== undefined) {
+      const output = result.value.output;
+      if (this.requireOutput && output.trim().length === 0) {
+        this.context.stderr.write('empty dispatch output (--require-output)\n');
+        finalRc = 1;
+      } else if (this.out !== undefined) {
         try {
-          await this.fs.write(this.out, result.value.output);
+          await this.fs.write(this.out, output);
         } catch (error) {
           const message = error instanceof Error ? error.message : String(error);
           this.context.stderr.write(`failed to write --out ${this.out}: ${message}\n`);
           finalRc = 1;
         }
       }
-      if (result.value.output.length > 0) this.context.stdout.write(result.value.output);
+      if (output.length > 0) this.context.stdout.write(output);
     } else {
       this.context.stderr.write(`${result.error.detail}\n`);
     }
