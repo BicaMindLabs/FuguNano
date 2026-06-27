@@ -62,6 +62,36 @@ describe('recommend', () => {
     expect(recommend(r).some((x) => /independent backend/u.test(x))).toBe(true);
   });
 
+  it('recommends harness-scoped lite workflow when Codex and OpenCode are available without fugue-cc', () => {
+    const r = report(
+      [
+        ['claude', true],
+        ['codex', true],
+        ['opencode', true],
+        ['fugue-cc', false],
+      ],
+      [['a', true, true]],
+    );
+
+    expect(recommend(r)[0]).toContain('fuguectl preflight --harness codex');
+    expect(recommend(r)[0]).toContain('fuguectl preflight --harness opencode');
+    expect(recommend(r)[0]).not.toContain('codex|opencode');
+    expect(recommend(r)[0]).not.toContain('/cn:*');
+  });
+
+  it('recommends a lite Codex harness even before backend launchers are configured', () => {
+    const r = report(
+      [
+        ['claude', true],
+        ['codex', true],
+        ['fugue-cc', false],
+      ],
+      [['a', false, false]],
+    );
+
+    expect(recommend(r)[0]).toContain('--harness codex');
+  });
+
   it('flags when no backend is ready', () => {
     expect(recommend(report([['claude', true]], [['a', false, false]]))[0]).toContain(
       'no ready backend',

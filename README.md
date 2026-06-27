@@ -152,11 +152,11 @@ that coordination layer lives.
   <img src="docs/readme-fugu-comparison-en.svg" alt="Fugu, OpenFugu, and FuguNano comparison" width="920">
 </p>
 
-| System       | Coordination layer              | What it opens                                                                 | Adoption shape                                                          |
-| ------------ | ------------------------------- | ----------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| Sakana Fugu  | Learned conductor behind an API | Frontier-style multi-model synthesis without binding the user to one model    | Managed / closed service; conductor training and access live elsewhere  |
-| OpenFugu     | Open training and serving stack | A readable route to rebuild Fugu-style conductor training and OpenAI serving   | Best for teams that want to train, inspect, and serve the conductor path |
-| FuguNano     | Repo-native engineering loop    | Multi-agent coding, independent review, and Self-Harness without training one | Cloneable, auditable, and light enough to run before training a router   |
+| System      | Coordination layer              | What it opens                                                                 | Adoption shape                                                           |
+| ----------- | ------------------------------- | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| Sakana Fugu | Learned conductor behind an API | Frontier-style multi-model synthesis without binding the user to one model    | Managed / closed service; conductor training and access live elsewhere   |
+| OpenFugu    | Open training and serving stack | A readable route to rebuild Fugu-style conductor training and OpenAI serving  | Best for teams that want to train, inspect, and serve the conductor path |
+| FuguNano    | Repo-native engineering loop    | Multi-agent coding, independent review, and Self-Harness without training one | Cloneable, auditable, and light enough to run before training a router   |
 
 FuguNano is not a replacement for Fugu or OpenFugu. It is the lightest open
 entry point on the same road: use policies, ports, review gates, and harness
@@ -169,7 +169,7 @@ improvement first, then decide whether a learned conductor is worth the cost.
 
 | Area                   | Commands                                                                                                                                                                                              |
 | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Setup and recon        | `fuguectl doctor`, `fuguectl preflight --harness fugue-cc\|codex\|opencode\|all`, `fuguectl fleet status\|up\|down`                                                                                  |
+| Setup and recon        | `fuguectl doctor`, `fuguectl preflight --harness fugue-cc\|codex\|opencode\|all`, `fuguectl fleet status\|up\|down`                                                                                   |
 | Planning               | `fuguectl task new\|log\|done`, `fuguectl template <name>`, `fuguectl plan "<goal>"`, `fuguectl goal template\|show\|check`                                                                           |
 | Routing and context    | `fuguectl allocate <type>`, `fuguectl workspace list\|show\|model\|context`, `fuguectl agents template\|validate\|list\|resolve`, `fuguectl skills index\|list\|match\|show\|inject\|validate\|forge` |
 | Dispatch and gather    | `fuguectl dispatch <target>`, `fuguectl cache init\|put\|fail\|barrier\|collect\|resume`                                                                                                              |
@@ -198,7 +198,7 @@ fugue version
 fugue doctor
 fugue fleet status|up|down
 fugue allocate <task-type>|list|record|feed|stats|reset|decay
-fugue dispatch <target> --harness fugue-cc|codex|opencode --template <name>|--prompt-file <file>
+fugue dispatch <target> --harness fugue-cc|codex|opencode --template <name>|--prompt-file <file>|--prompt <text>
 fugue integrate --work <repo> --agents "a b" [--ownership file] [--dry]
 fugue skills index|list|match|show|inject|validate|forge
 fugue preflight [--harness fugue-cc|codex|opencode|all] [--config-only] [provider.config]

@@ -7,13 +7,13 @@ Four roles, seven phases — fully replayable, interruptible, and auditable.
 
 ## Roles
 
-| Layer                  | Who                                                                                            | Does                                                                     | Does not do                                                                                                |
-| ---------------------- | ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------- |
-| Strategy / Planner     | Human operator or a frontier planning agent                                                    | Write requirements, split tasks, set acceptance criteria                 | Does not enter a worker runtime pane, does not write bulk implementation code                              |
-| Execution + Supervisor | Any operator agent that can run fugue commands: Claude Code, Codex, OpenCode, or a human shell | Dispatch profiles, integrate, run the quality gate, run tests, log TASKs | Does not hand-write large blocks of implementation except focused Phase 5 patches                          |
-| Implementers           | Agent runtime profiles backed by `fugue-cc`, Codex, OpenCode, or future harnesses              | Write subtasks each in their own worktree or scoped runtime              | Do not read each other's code, do not touch the main branch                                                |
-| Frontend (opt-in)      | Frontend-capable implementer profile such as Antigravity (`agy` CLI), when policy permits      | Frontend/UI subtasks, manual IDE or headless `agy --print`               | **Does not enter the Phase 5 loop; normally never acts as reviewer**                                      |
-| Reviewer               | Independent review profile, usually Codex or another configured reviewer                       | Adversarial review, gives VERDICT + Findings                             | Does not write implementation (keeps generation != review independence)                                   |
+| Layer                  | Who                                                                                            | Does                                                                     | Does not do                                                                       |
+| ---------------------- | ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ | --------------------------------------------------------------------------------- |
+| Strategy / Planner     | Human operator or a frontier planning agent                                                    | Write requirements, split tasks, set acceptance criteria                 | Does not enter a worker runtime pane, does not write bulk implementation code     |
+| Execution + Supervisor | Any operator agent that can run fugue commands: Claude Code, Codex, OpenCode, or a human shell | Dispatch profiles, integrate, run the quality gate, run tests, log TASKs | Does not hand-write large blocks of implementation except focused Phase 5 patches |
+| Implementers           | Agent runtime profiles backed by `fugue-cc`, Codex, OpenCode, or future harnesses              | Write subtasks each in their own worktree or scoped runtime              | Do not read each other's code, do not touch the main branch                       |
+| Frontend (opt-in)      | Frontend-capable implementer profile such as Antigravity (`agy` CLI), when policy permits      | Frontend/UI subtasks, manual IDE or headless `agy --print`               | **Does not enter the Phase 5 loop; normally never acts as reviewer**              |
+| Reviewer               | Independent review profile, usually Codex or another configured reviewer                       | Adversarial review, gives VERDICT + Findings                             | Does not write implementation (keeps generation != review independence)           |
 
 > The maintenance layer **cc-sync** is not on the request path; it is a background launchd daemon: CC upgrade tracking + model refresh + monthly rebuild.
 
@@ -39,7 +39,7 @@ The operator reads the task, splits it into parallelizable subtasks, and picks l
 After the selected runtimes pass preflight (`fuguectl doctor`, `fuguectl preflight --harness <name>`, and `fuguectl fleet status` when using the `fugue-cc` worktree fleet):
 
 1. **Open this round's cache**: `fuguectl cache init <round> t1:cc-deepseek t2:cc-glm t3:agy ...` — declare the N tasks dispatched this round (the parallel dispatch manifest).
-2. **Dispatch**: `fuguectl dispatch <agent> --harness fugue-cc|codex|opencode --prompt-file <prompt>` or use an engine `AgentRegistry` so the coordinator resolves the harness from the logical profile; each implementer edits in its own worktree or scoped runtime.
+2. **Dispatch**: `fuguectl dispatch <agent> --harness fugue-cc|codex|opencode --prompt-file <prompt>` (or `--prompt <text>` for a quick smoke check) or use an engine `AgentRegistry` so the coordinator resolves the harness from the logical profile; each implementer edits in its own worktree or scoped runtime.
 3. **Results land in the cache first**: each agent's output goes to `fuguectl cache put <round> <task_id> <file>` (dead/timed-out -> `fail`, which also counts as "returned"). **Never read from volatile chat/scrollback.**
 4. **join barrier (hard gate)**: `fuguectl cache barrier <round> --wait 600` — **if N were dispatched, N must come back** (all terminal) for exit 0; otherwise Phase 3 is not allowed. Stuck tasks surface here and are never silently dropped.
 

@@ -19,16 +19,29 @@ export const readyBackends = (report: DoctorReport): number =>
 const hasRole = (report: DoctorReport, cli: string): boolean =>
   report.roles.find((r) => r.cli === cli)?.present ?? false;
 
+const liteHarnesses = (report: DoctorReport): readonly string[] => {
+  const harnesses: string[] = [];
+  if (hasRole(report, 'codex')) harnesses.push('codex');
+  if (hasRole(report, 'opencode')) harnesses.push('opencode');
+  return harnesses;
+};
+
 /** Recommended workflow given what's installed (pure port of the bash advisor). */
 export const recommend = (report: DoctorReport): readonly string[] => {
   const recs: string[] = [];
   const ready = readyBackends(report);
   const fugueCc = hasRole(report, 'fugue-cc');
   const codex = hasRole(report, 'codex');
+  const lite = liteHarnesses(report);
+  const litePreflight = lite.map((harness) => `fuguectl preflight --harness ${harness}`);
 
   if (fugueCc && ready >= 2 && codex) {
     recs.push(
       'full fleet workflow: fugue-cc fleet → backends implement in parallel → Codex reviews → bounded loop',
+    );
+  } else if (lite.length > 0) {
+    recs.push(
+      `lite harness workflow: ${litePreflight.join(' / ')} → dispatch on a passed harness; add fugue-cc only for isolated worktree fleets`,
     );
   } else if (ready >= 1 && !fugueCc) {
     recs.push(

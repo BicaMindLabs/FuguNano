@@ -56,6 +56,10 @@ run(dispatch, ["cc-glm", "--prompt-file", promptFile]);
 suite.ok("prompt-file content via stdin", () =>
   readFileSync(called, "utf8").includes("custom prompt content"),
 );
+run(dispatch, ["cc-inline", "--prompt", "inline prompt content"]);
+suite.ok("inline prompt content via stdin", () =>
+  readFileSync(called, "utf8").includes("inline prompt content"),
+);
 run(dispatch, [
   "cc-deepseek",
   "--harness",

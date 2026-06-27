@@ -385,6 +385,17 @@ describe('fugue CLI', () => {
       expect(opencodeCall).toContain('custom prompt content');
     });
 
+    it('dispatches an inline prompt for quick smoke checks', async () => {
+      const dispatched = await run(
+        args('gpt-5.5', '--harness', 'codex', '--prompt', 'inline smoke prompt'),
+      );
+      const codexCall = await readFile(codexCalled, 'utf8');
+
+      expect(dispatched.code).toBe(0);
+      expect(codexCall).toContain('ARGV: exec --model gpt-5.5');
+      expect(codexCall).toContain('inline smoke prompt');
+    });
+
     it('prefixes selected skills and workspace context before the prompt body', async () => {
       const skillsRoot = join(dir, 'skills');
       const pluginsRoot = join(dir, 'plugins');

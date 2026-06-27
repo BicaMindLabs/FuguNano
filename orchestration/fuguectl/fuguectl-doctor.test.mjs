@@ -24,7 +24,7 @@ writeFileSync(
     "  process.exit(9);",
     "}",
     "if (args.includes('--quiet')) {",
-    "  process.stdout.write('agents=3 backends_ready=2/9 fugue-cc=1 codex=1 agy=0\\n');",
+    "  process.stdout.write('agents=4 backends_ready=2/9 fugue-cc=1 codex=1 agy=0 opencode=1\\n');",
     "} else {",
     "  process.stdout.write('roles:\\n  ✓ codex\\nbackends:\\n  ✓ cc-deepseek (ready)\\n\\nrecommended:\\n  • full fleet workflow\\n');",
     "}",
@@ -38,8 +38,9 @@ suite.ok("doctor reports recommendation", () => out.includes("recommended:"));
 
 const quiet = run(doctor, ["--quiet"]).stdout;
 suite.ok("quiet summary survives", () =>
-  quiet.startsWith("agents=3 backends_ready=2/9"),
+  quiet.startsWith("agents=4 backends_ready=2/9"),
 );
+suite.ok("quiet summary includes opencode readiness", () => quiet.includes("opencode=1"));
 
 const top = run(fuguectl, ["doctor", "--quiet"]).stdout;
 suite.ok("top-level doctor entrypoint works", () => top.includes("fugue-cc=1"));

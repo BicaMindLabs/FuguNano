@@ -39,6 +39,9 @@ suite.ok("help lists runtime entrypoint", () =>
 suite.ok("help lists agents entrypoint", () =>
   helpOut.includes("fuguectl agents"),
 );
+suite.ok("help lists inline prompt dispatch", () =>
+  helpOut.includes("--prompt <text>"),
+);
 suite.ok(
   "help does not leak script body",
   () => !helpOut.includes("set -uo pipefail"),

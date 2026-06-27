@@ -43,7 +43,9 @@ export class DoctorCommand extends Command {
           present(report, 'fugue-cc') ? '1' : '0'
         } codex=${
           present(report, 'codex') ? '1' : '0'
-        } agy=${present(report, 'agy') ? '1' : '0'}\n`,
+        } agy=${present(report, 'agy') ? '1' : '0'} opencode=${
+          present(report, 'opencode') ? '1' : '0'
+        }\n`,
       );
       return;
     }

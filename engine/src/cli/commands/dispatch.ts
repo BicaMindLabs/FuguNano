@@ -167,6 +167,7 @@ export class DispatchCommand extends Command {
   template = Option.String('--template');
   sets = Option.Array('--set', []);
   promptFile = Option.String('--prompt-file');
+  inlinePrompt = Option.String('--prompt');
   workspace = Option.String('--workspace');
   task = Option.String('--task');
   taskType = Option.String('--task-type');
@@ -242,6 +243,7 @@ export class DispatchCommand extends Command {
       this.context.stderr.write(`no prompt file ${this.promptFile}\n`);
       return null;
     }
+    if (this.inlinePrompt !== undefined) return this.inlinePrompt;
     if (this.template !== undefined) {
       const file = joinPath(this.templates, `${this.template}.md`);
       const template = await this.fs.read(file);
@@ -250,7 +252,9 @@ export class DispatchCommand extends Command {
       return null;
     }
     if (this.workspace !== undefined && this.workspace.length > 0) return '';
-    this.context.stderr.write('need --template <name> / --prompt-file <f> / --workspace <name>\n');
+    this.context.stderr.write(
+      'need --template <name> / --prompt-file <f> / --prompt <text> / --workspace <name>\n',
+    );
     return null;
   }
 
