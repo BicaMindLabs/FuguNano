@@ -33,4 +33,15 @@ describe('NodeFileSystem', () => {
 
     expect(await fs.read(file)).toBeNull();
   });
+
+  it('treats a file used as a directory as an empty listing', async () => {
+    const tempDir = await mkdtemp(join(tmpdir(), 'fugue-engine-'));
+    tempDirs.push(tempDir);
+    const fs = new NodeFileSystem();
+    const file = join(tempDir, 'not-a-dir.txt');
+
+    await fs.write(file, 'hello');
+
+    expect(await fs.list(file)).toEqual([]);
+  });
 });

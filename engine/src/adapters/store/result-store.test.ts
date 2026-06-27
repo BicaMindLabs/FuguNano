@@ -69,3 +69,16 @@ describe.each(storeFactories)('%s', (_name, makeStore) => {
     );
   });
 });
+
+describe('FsResultStore', () => {
+  it('skips corrupt json files while listing keys', async () => {
+    const fs = new MemoryFileSystem(clock);
+    const store = new FsResultStore(fs, '/results');
+
+    await store.put('task-a', [artifact('a')]);
+    await fs.write('/results/corrupt.json', '{not json');
+    await fs.write('/results/not-a-result.json', JSON.stringify({ key: 'bad', artifacts: [{}] }));
+
+    expect(await store.keys()).toEqual(['task-a']);
+  });
+});

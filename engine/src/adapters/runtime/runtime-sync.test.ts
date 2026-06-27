@@ -42,4 +42,14 @@ describe('RuntimeSync', () => {
 
     expect(await sync.check()).toEqual({ current: '3.0', last: null, drifted: false });
   });
+
+  it('keeps the recorded baseline when the current version is unavailable', async () => {
+    const fs = new MemoryFileSystem(systemClock);
+    await fs.write('/state/runtime-version', '2.0\n');
+    const sync = new RuntimeSync(fs, new VersionRunner(''), {
+      stampPath: '/state/runtime-version',
+    });
+
+    expect(await sync.check()).toEqual({ current: '2.0', last: '2.0', drifted: false });
+  });
 });
