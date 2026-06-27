@@ -1752,6 +1752,49 @@ describe('fugue CLI', () => {
       }
     });
 
+    it('forwards planning runtime controls to the selected harness', async () => {
+      await writeFile(
+        codexBin,
+        [
+          '#!/usr/bin/env bash',
+          `printf 'codex-argv:%s\\n' "$*" >> "${calls}"`,
+          'prompt="${@: -1}"',
+          `printf '%s\\n' "$prompt" >> "${prompts}"`,
+          "printf '# arg plan\\n'",
+          '',
+        ].join('\n'),
+        'utf8',
+      );
+      await chmod(codexBin, 0o755);
+      process.env.FUGUE_CODEX = codexBin;
+      try {
+        const planned = await run([
+          'plan',
+          'plan with clean local codex args',
+          '--harness',
+          'codex',
+          '--models',
+          'gpt-5.5',
+          '--out',
+          out,
+          '--timeout-ms',
+          '5000',
+          '--harness-arg=-c',
+          '--harness-arg=mcp_servers={}',
+        ]);
+        const called = await readFile(calls, 'utf8');
+        const prompt = await readFile(prompts, 'utf8');
+        const captured = await readFile(join(out, 'gpt-5.5.plan.md'), 'utf8');
+
+        expect(planned.code).toBe(0);
+        expect(called).toContain('codex-argv:exec -c mcp_servers={} --model gpt-5.5');
+        expect(prompt).toContain('plan with clean local codex args');
+        expect(captured).toContain('# arg plan');
+      } finally {
+        delete process.env.FUGUE_CODEX;
+      }
+    });
+
     it('uses a codex default model for codex planning', async () => {
       process.env.FUGUE_CODEX = codexBin;
       try {
@@ -1875,6 +1918,13 @@ describe('fugue CLI', () => {
 
       expect(planned.code).toBe(2);
       expect(planned.err).toContain('unknown harness');
+    });
+
+    it('rejects invalid planning timeout values', async () => {
+      const planned = await run(['plan', 'bad timeout', '--timeout-ms', 'abc']);
+
+      expect(planned.code).toBe(2);
+      expect(planned.err).toContain("invalid --timeout-ms 'abc'");
     });
 
     it('uses the cross-family default model set and env-backed command defaults', async () => {

@@ -62,6 +62,16 @@ suite.ok("help lists planning harness", () =>
   helpOut.includes('plan "<goal>" [--harness fugue-cc|codex|opencode|agy]'),
 );
 suite.ok(
+  "help lists planning timeout",
+  () =>
+    helpOut.includes('plan "<goal>"') && helpOut.includes("[--timeout-ms n]"),
+);
+suite.ok(
+  "help lists planning harness args",
+  () =>
+    helpOut.includes('plan "<goal>"') && helpOut.includes("[--harness-arg x]"),
+);
+suite.ok(
   "help does not leak script body",
   () => !helpOut.includes("set -uo pipefail"),
 );

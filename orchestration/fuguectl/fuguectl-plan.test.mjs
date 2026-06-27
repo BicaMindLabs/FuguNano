@@ -90,6 +90,21 @@ suite.ok("wrapper preserves harness option", () =>
   ),
 );
 
+run(plan, [
+  "runtime controlled planning",
+  "--harness",
+  "codex",
+  "--timeout-ms",
+  "120000",
+  "--harness-arg=-c",
+  "--harness-arg=mcp_servers={}",
+]);
+suite.ok("wrapper preserves planning runtime controls", () =>
+  readFileSync(process.env.FUGUE_PLAN_CALLS, "utf8").includes(
+    "plan runtime controlled planning --harness codex --timeout-ms 120000 --harness-arg=-c --harness-arg=mcp_servers={}\n",
+  ),
+);
+
 writeFileSync(calls, "");
 run(plan, ["default models test"]);
 suite.ok(

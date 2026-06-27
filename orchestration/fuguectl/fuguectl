@@ -23,7 +23,7 @@ const help = `fuguectl — fugue workflow control-plane entrypoint.
   fuguectl workspace list|show|model|context <name>
   fuguectl agents template|validate [file]|list [file]|resolve [file] <id>
   fuguectl experience add|list|recall|show <ws>
-  fuguectl plan "<goal>" [--harness fugue-cc|codex|opencode|agy] [--models a,b,c]
+  fuguectl plan "<goal>" [--harness fugue-cc|codex|opencode|agy] [--models a,b,c] [--timeout-ms n] [--harness-arg x]
   fuguectl goal template|show|check <spec>
   fuguectl loop init|record|decide|status
   fuguectl run set|round|status|next|clear
@@ -43,7 +43,7 @@ const quickstartHelp = `fuguectl quickstart — safe first run
      fuguectl dispatch gpt-5.5 --harness codex --codex-clean --timeout-ms 60000 --prompt "Reply with OK"
 
   3. Create a durable planning artifact:
-     fuguectl plan "your goal" --harness codex --out /tmp/fugunano-plan
+     fuguectl plan "your goal" --harness codex --timeout-ms 120000 --out /tmp/fugunano-plan
 
   4. Optional full fleet setup:
      fuguectl init --write

@@ -19,6 +19,14 @@ const parseModels = (raw: string): readonly string[] =>
     .map((model) => model.trim())
     .filter((model) => model.length > 0);
 
+const parseTimeoutMs = (raw: string): number | null | undefined => {
+  const value = raw.trim();
+  if (value.length === 0 || value === '0') return undefined;
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed) || parsed < 1) return null;
+  return parsed;
+};
+
 const defaultPlanOut = (): string => joinPath(defaultCacheRoot(import.meta.url), 'plans');
 
 const DEFAULT_CODEX_PLAN_AGENTS = ['gpt-5.5'] as const;
@@ -86,6 +94,8 @@ export class PlanCommand extends Command {
   models = Option.String('--models');
   out = Option.String('--out');
   bin = Option.String('--bin', process.env.FUGUE_CC_BIN ?? 'fugue-cc');
+  timeoutMs = Option.String('--timeout-ms', process.env.FUGUE_PLAN_TIMEOUT_MS ?? '0');
+  harnessArgs = Option.Array('--harness-arg', []);
 
   override async execute(): Promise<number> {
     if (!isHarnessName(this.harness)) {
@@ -97,10 +107,17 @@ export class PlanCommand extends Command {
       this.context.stderr.write('no planning models specified\n');
       return 2;
     }
+    const timeoutMs = parseTimeoutMs(this.timeoutMs);
+    if (timeoutMs === null) {
+      this.context.stderr.write(
+        `invalid --timeout-ms '${this.timeoutMs}' (expected positive ms)\n`,
+      );
+      return 2;
+    }
     const outDir = this.out ?? defaultPlanOut();
     await mkdir(outDir, { recursive: true });
 
-    const harness = this.harnessFor(this.harness);
+    const harness = this.harnessFor(this.harness, timeoutMs);
     const requests = agents.map((agent) => ({
       agent,
       outfile: joinPath(outDir, planFilename(agent)),
@@ -142,17 +159,33 @@ export class PlanCommand extends Command {
     return results.every((entry) => isOk(entry.result) && entry.artifact !== null) ? 0 : 1;
   }
 
-  private harnessFor(name: HarnessName): Harness {
+  private harnessFor(name: HarnessName, timeoutMs: number | undefined): Harness {
     const runner = new NodeCommandRunner();
     switch (name) {
       case 'fugue-cc':
-        return new FugueCcHarness(runner, { bin: this.bin });
+        return new FugueCcHarness(runner, {
+          bin: this.bin,
+          ...(timeoutMs !== undefined ? { timeoutMs } : {}),
+          ...(this.harnessArgs.length > 0 ? { args: this.harnessArgs } : {}),
+        });
       case 'codex':
-        return new CodexHarness(runner, { bin: process.env.FUGUE_CODEX ?? 'codex' });
+        return new CodexHarness(runner, {
+          bin: process.env.FUGUE_CODEX ?? 'codex',
+          ...(timeoutMs !== undefined ? { timeoutMs } : {}),
+          ...(this.harnessArgs.length > 0 ? { args: this.harnessArgs } : {}),
+        });
       case 'opencode':
-        return new OpencodeHarness(runner, { bin: process.env.FUGUE_OPENCODE ?? 'opencode' });
+        return new OpencodeHarness(runner, {
+          bin: process.env.FUGUE_OPENCODE ?? 'opencode',
+          ...(timeoutMs !== undefined ? { timeoutMs } : {}),
+          ...(this.harnessArgs.length > 0 ? { args: this.harnessArgs } : {}),
+        });
       case 'agy':
-        return new AgyHarness(runner, { bin: process.env.FUGUE_AGY ?? 'agy' });
+        return new AgyHarness(runner, {
+          bin: process.env.FUGUE_AGY ?? 'agy',
+          ...(timeoutMs !== undefined ? { timeoutMs } : {}),
+          ...(this.harnessArgs.length > 0 ? { args: this.harnessArgs } : {}),
+        });
     }
   }
 }

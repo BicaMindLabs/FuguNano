@@ -173,7 +173,7 @@ export class InitCommand extends Command {
       'next:',
       '  1. fuguectl preflight --harness codex',
       '  2. fuguectl preflight --harness agy',
-      '  3. fuguectl plan "your goal" --harness codex --out /tmp/fugunano-plan',
+      '  3. fuguectl plan "your goal" --harness codex --timeout-ms 120000 --out /tmp/fugunano-plan',
       '  4. fuguectl preflight --harness fugue-cc   # optional full worktree fleet',
     ];
 
