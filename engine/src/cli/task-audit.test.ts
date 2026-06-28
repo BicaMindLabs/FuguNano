@@ -1,13 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-import type { Clock } from '../../infra/clock.js';
-import type { FileSystem } from '../../infra/file-system.js';
-import { MemoryFileSystem } from '../../infra/memory-file-system.js';
-import { FsTaskStore } from './fs-task-store.js';
+import { FsTaskStore } from '../adapters/task/fs-task-store.js';
+import type { Clock } from '../infra/clock.js';
+import type { FileSystem } from '../infra/file-system.js';
+import { MemoryFileSystem } from '../infra/memory-file-system.js';
+import { appendTaskAuditLine } from './task-audit.js';
 
-// Fixed instant → deterministic date in the store's timezone.
 const clock: Clock = { now: () => 1_718_000_000_000 };
-const make = (): FsTaskStore => new FsTaskStore(new MemoryFileSystem(clock), clock, '/tasks');
 
 const deferred = (): { readonly promise: Promise<void>; readonly resolve: () => void } => {
   let resolveFn: (() => void) | undefined;
@@ -65,41 +64,8 @@ class BlockingDoneWriteFileSystem implements FileSystem {
   }
 }
 
-describe('FsTaskStore', () => {
-  it('creates a TASK-<date>-NNN file with the template', async () => {
-    const ref = await make().create('build the thing', 'P0');
-    expect(ref.id).toMatch(/^TASK-\d{4}-\d{2}-\d{2}-001$/u);
-    expect(ref.path).toBe(`/tasks/${ref.id}.md`);
-  });
-
-  it('increments the sequence number', async () => {
-    const store = make();
-    const a = await store.create('one');
-    const b = await store.create('two');
-    expect(a.id.endsWith('-001')).toBe(true);
-    expect(b.id.endsWith('-002')).toBe(true);
-  });
-
-  it('appends a timestamped log line', async () => {
-    const fs = new MemoryFileSystem(clock);
-    const store = new FsTaskStore(fs, clock, '/tasks');
-    const ref = await store.create('x');
-    await store.log(ref.path, 'did a thing');
-    const content = await fs.read(ref.path);
-    expect(content).toMatch(/- \[\d{4}-\d{2}-\d{2} \d{2}:\d{2}\] did a thing/u);
-  });
-
-  it('marks the task DONE and stamps Completed', async () => {
-    const fs = new MemoryFileSystem(clock);
-    const store = new FsTaskStore(fs, clock, '/tasks');
-    const ref = await store.create('x');
-    await store.done(ref.path);
-    const content = (await fs.read(ref.path)) ?? '';
-    expect(content).toContain('Status: DONE');
-    expect(content).not.toContain('Completed: -');
-  });
-
-  it('serializes task done with concurrent task log entries', async () => {
+describe('task audit locking', () => {
+  it('serializes CLI audit appends with task closeout', async () => {
     const doneWriteStarted = deferred();
     const releaseDoneWrite = deferred();
     const fs = new BlockingDoneWriteFileSystem(doneWriteStarted.resolve, releaseDoneWrite.promise);
@@ -109,13 +75,22 @@ describe('FsTaskStore', () => {
     const done = store.done(ref.path);
     await doneWriteStarted.promise;
 
-    const log = store.log(ref.path, 'late note');
+    const audit = appendTaskAuditLine(fs, ref.path, 'dispatch audit survived');
     await Promise.resolve();
     releaseDoneWrite.resolve();
-    await Promise.all([done, log]);
+    await Promise.all([done, audit]);
 
     const content = (await fs.read(ref.path)) ?? '';
     expect(content).toContain('Status: DONE');
-    expect(content).toContain('late note');
+    expect(content).toContain('dispatch audit survived');
+  });
+
+  it('does not create missing TASK files while auditing', async () => {
+    const fs = new MemoryFileSystem(clock);
+
+    await expect(appendTaskAuditLine(fs, '/tasks/missing.md', 'note')).resolves.toBe(false);
+
+    await expect(fs.read('/tasks/missing.md')).resolves.toBeNull();
+    await expect(fs.read('/tasks/missing.md.lock')).resolves.toBeNull();
   });
 });

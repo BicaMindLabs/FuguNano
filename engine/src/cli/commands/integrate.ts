@@ -10,6 +10,7 @@ import type { Ownership } from '../../domain/ownership.js';
 import { checkOwnership } from '../../domain/ownership-check.js';
 import { NodeCommandRunner } from '../../infra/node-command-runner.js';
 import { NodeFileSystem } from '../../infra/node-file-system.js';
+import { appendTaskAudit } from '../task-audit.js';
 
 interface MissingIntegration {
   readonly agent: string;
@@ -260,11 +261,12 @@ export class IntegrateCommand extends Command {
     views: readonly IntegrationView[],
   ): Promise<void> {
     if (this.task === undefined) return;
-    if ((await fs.read(this.task)) === null) return;
-    await fs.append(
+    const wrote = await appendTaskAudit(
+      fs,
       this.task,
       `\n### Integrate — ${sum}\n${views.map((view) => view.line).join('\n')}\n`,
     );
+    if (!wrote) return;
     this.context.stderr.write(`→ written to ${this.task}\n`);
   }
 

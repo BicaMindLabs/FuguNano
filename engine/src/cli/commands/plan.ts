@@ -1,4 +1,4 @@
-import { appendFile, mkdir, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join as joinPath } from 'node:path';
 import { performance } from 'node:perf_hooks';
 
@@ -12,7 +12,9 @@ import { DEFAULT_PLAN_AGENTS } from '../../domain/plan.js';
 import { HARNESS_NAMES, type Harness, type HarnessName } from '../../domain/ports/harness.js';
 import { isOk } from '../../domain/result.js';
 import { NodeCommandRunner } from '../../infra/node-command-runner.js';
+import { NodeFileSystem } from '../../infra/node-file-system.js';
 import { defaultCacheRoot } from '../default-paths.js';
+import { appendTaskAuditLine } from '../task-audit.js';
 
 const parseModels = (raw: string): readonly string[] =>
   raw
@@ -35,20 +37,6 @@ const formatDurationMs = (ms: number): string => {
 
 const failureFields = (kind: string, exitCode: number | undefined): string =>
   `error=${kind} rc=${String(exitCode ?? 1)}`;
-
-const shanghaiTimestamp = (date = new Date()): string => {
-  const parts = new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'Asia/Shanghai',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  }).formatToParts(date);
-  const value = (type: string): string => parts.find((part) => part.type === type)?.value ?? '00';
-  return `${value('year')}-${value('month')}-${value('day')} ${value('hour')}:${value('minute')}`;
-};
 
 const defaultPlanOut = (): string => joinPath(defaultCacheRoot(import.meta.url), 'plans');
 
@@ -121,6 +109,7 @@ export class PlanCommand extends Command {
   timeoutMs = Option.String('--timeout-ms', process.env.FUGUE_PLAN_TIMEOUT_MS ?? '0');
   harnessArgs = Option.Array('--harness-arg', []);
 
+  private readonly taskFileSystem = new NodeFileSystem();
   private taskLogQueue: Promise<void> = Promise.resolve();
 
   override async execute(): Promise<number> {
@@ -208,12 +197,7 @@ export class PlanCommand extends Command {
     if (this.task === undefined) return Promise.resolve();
     const write = async (): Promise<void> => {
       if (this.task === undefined) return;
-      try {
-        await readFile(this.task, 'utf8');
-      } catch {
-        return;
-      }
-      await appendFile(this.task, `- [${shanghaiTimestamp()}] ${message}\n`, 'utf8');
+      await appendTaskAuditLine(this.taskFileSystem, this.task, message);
     };
     this.taskLogQueue = this.taskLogQueue.then(write, write);
     return this.taskLogQueue;

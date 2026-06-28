@@ -4,6 +4,7 @@ import { Command, Option } from 'clipanion';
 
 import { NodeFileSystem } from '../../infra/node-file-system.js';
 import { defaultCacheRoot } from '../default-paths.js';
+import { appendTaskAudit } from '../task-audit.js';
 
 interface SummaryRow {
   readonly id: string;
@@ -88,12 +89,11 @@ export class SummaryCommand extends Command {
 
     if (this.task !== undefined) {
       const fileSystem = fs();
-      const content = await fileSystem.read(this.task);
-      if (content === null) {
+      const wrote = await appendTaskAudit(fileSystem, this.task, `\n${summary}\n`);
+      if (!wrote) {
         this.context.stderr.write(`no TASK file ${this.task}\n`);
         return 2;
       }
-      await fileSystem.append(this.task, `\n${summary}\n`);
       this.context.stderr.write(`→ written to ${this.task}\n`);
     }
     return 0;

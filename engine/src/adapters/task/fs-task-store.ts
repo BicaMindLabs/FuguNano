@@ -3,6 +3,7 @@ import type { TaskPriority, TaskRef } from '../../domain/task-file.js';
 import { renderTaskFile } from '../../domain/task-file.js';
 import type { Clock } from '../../infra/clock.js';
 import type { FileSystem } from '../../infra/file-system.js';
+import { withFileLock } from '../../infra/file-lock.js';
 import { joinPath } from '../store/paths.js';
 
 const pad3 = (n: number): string => String(n).padStart(3, '0');
@@ -29,17 +30,25 @@ export class FsTaskStore implements TaskStore {
   }
 
   async log(path: string, message: string): Promise<void> {
-    const content = await this.read(path);
-    const line = `- [${this.stamp()}] ${message}`;
-    await this.fs.append(path, `${content.endsWith('\n') ? '' : '\n'}${line}\n`);
+    await this.withTaskLock(path, async () => {
+      const content = await this.read(path);
+      const line = `- [${this.stamp()}] ${message}`;
+      await this.fs.append(path, `${content.endsWith('\n') ? '' : '\n'}${line}\n`);
+    });
   }
 
   async done(path: string): Promise<void> {
-    const content = await this.read(path);
-    const next = content
-      .replace(/^Status:.*$/mu, 'Status: DONE')
-      .replace(/^Completed:.*$/mu, `Completed: ${this.stamp()}`);
-    await this.fs.write(path, next);
+    await this.withTaskLock(path, async () => {
+      const content = await this.read(path);
+      const next = content
+        .replace(/^Status:.*$/mu, 'Status: DONE')
+        .replace(/^Completed:.*$/mu, `Completed: ${this.stamp()}`);
+      await this.fs.write(path, next);
+    });
+  }
+
+  private async withTaskLock<T>(path: string, action: () => Promise<T>): Promise<T> {
+    return withFileLock(this.fs, `${path}.lock`, this.stamp(), action);
   }
 
   private async read(path: string): Promise<string> {

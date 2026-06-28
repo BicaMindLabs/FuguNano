@@ -36,6 +36,7 @@ import {
   defaultTemplatesDir,
   defaultWorkspacesDir,
 } from '../default-paths.js';
+import { appendTaskAuditLine } from '../task-audit.js';
 const defaultSkillsRoot = (): string =>
   process.env.FUGUE_SKILLS_ROOT ?? joinPath(joinPath(homedir(), '.claude'), 'skills');
 const defaultPluginsRoot = (): string =>
@@ -158,20 +159,6 @@ const skillSources = async (): Promise<readonly SkillSource[]> => {
     sources.push(...(await pluginSkillSources(defaultPluginsRoot())));
   }
   return sources;
-};
-
-const shanghaiTimestamp = (date = new Date()): string => {
-  const parts = new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'Asia/Shanghai',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  }).formatToParts(date);
-  const value = (type: string): string => parts.find((part) => part.type === type)?.value ?? '00';
-  return `${value('year')}-${value('month')}-${value('day')} ${value('hour')}:${value('minute')}`;
 };
 
 const isHarnessName = (value: string): value is HarnessName =>
@@ -414,8 +401,7 @@ export class DispatchCommand extends Command {
 
   private async appendTaskLine(message: string): Promise<void> {
     if (this.task === undefined) return;
-    if ((await this.fs.read(this.task)) === null) return;
-    await this.fs.append(this.task, `- [${shanghaiTimestamp()}] ${message}\n`);
+    await appendTaskAuditLine(this.fs, this.task, message);
   }
 
   private async appendAllocationLedger(): Promise<void> {

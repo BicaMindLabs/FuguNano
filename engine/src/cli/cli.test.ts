@@ -266,6 +266,22 @@ describe('fugue CLI', () => {
       expect(results.every((result) => result.code === 0)).toBe(true);
       for (const message of messages) expect(content).toContain(message);
     });
+
+    it('preserves logs written while task done is running', async () => {
+      const created = await run(['task', 'new', 'done log target']);
+      const file = created.out.trim();
+      const messages = Array.from({ length: 8 }, (_, index) => `done-race-${String(index + 1)}`);
+
+      const results = await Promise.all([
+        run(['task', 'done', file]),
+        ...messages.map((message) => run(['task', 'log', file, message])),
+      ]);
+      const content = await readFile(file, 'utf8');
+
+      expect(results.every((result) => result.code === 0)).toBe(true);
+      expect(content).toContain('Status: DONE');
+      for (const message of messages) expect(content).toContain(message);
+    });
   });
 
   describe('template rendering', () => {

@@ -174,8 +174,9 @@ start status plus terminal status, duration, output size, error kind on failure,
 and optional `--out` artifact path in the TASK log, so live Codex/OpenCode/AGY
 runs leave an observable trace without contaminating model stdout or durable
 artifacts. `task new` uses exclusive file creation for concurrent operators, and
-`task log`, `summary --task`, and `integrate --task` use the same append-safe
-audit style for operator notes and Phase 3 records.
+all TASK audit appenders (`task log`, `dispatch --task`, `plan --task`,
+`summary --task`, `integrate --task`) share a lightweight lock with `task done`
+so final status updates do not clobber concurrent audit lines.
 
 ## Command Surface
 

@@ -23,7 +23,7 @@ Four roles, seven phases — fully replayable, interruptible, and auditable.
 
 ### Phase 0 — Open the Task (Planner)
 
-The planner writes the requirement into a task file such as `~/.claude/tasks/TASK-YYYY-MM-DD-NNN.md`: requirements / subtasks (annotated with the logical agent profile) / acceptance criteria / output files. This is the single source of intent for the whole pipeline. `fuguectl task new` uses exclusive file creation for concurrent operators, and `fuguectl task log` appends operator notes so overlapping observers preserve each other's entries.
+The planner writes the requirement into a task file such as `~/.claude/tasks/TASK-YYYY-MM-DD-NNN.md`: requirements / subtasks (annotated with the logical agent profile) / acceptance criteria / output files. This is the single source of intent for the whole pipeline. `fuguectl task new` uses exclusive file creation for concurrent operators, and all TASK audit appenders (`task log`, `dispatch --task`, `plan --task`, `summary --task`, `integrate --task`) share a lightweight lock with `task done` so overlapping observers preserve their entries even while the task is being closed.
 When using the planning panel, pass `fuguectl plan "<goal>" --task <file>` so planner start/completion status, output size or error kind/exit code, and artifact paths are written into the same audit trail. TASK writes are append-safe, so concurrent planning commands preserve each other's audit lines.
 
 ### Phase 1 — Split and Assign (fuguectl)
