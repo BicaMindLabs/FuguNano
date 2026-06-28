@@ -65,7 +65,25 @@ interface SmokeResult {
   readonly ok: boolean;
   readonly elapsedMs: number;
   readonly outputChars: number;
+  readonly artifactPath?: string;
   readonly detail?: string;
+}
+
+interface SmokeSummaryEntry {
+  readonly harness: SmokeHarnessName;
+  readonly target: string;
+  readonly status: 'ok' | 'failed';
+  readonly durationMs: number;
+  readonly outputChars: number;
+  readonly artifactPath?: string;
+  readonly detail?: string;
+}
+
+interface SmokeSummary {
+  readonly schemaVersion: 1;
+  readonly generatedAt: string;
+  readonly harnesses: readonly SmokeHarnessName[];
+  readonly results: readonly SmokeSummaryEntry[];
 }
 
 /** `fugue smoke` — live smoke selected lite runtimes with exact single-line prompts. */
@@ -112,6 +130,10 @@ export class SmokeCommand extends Command {
     }
     const passed = results.filter((result) => result.ok).length;
     const failed = results.length - passed;
+    const summaryPath = await this.writeSummary(selection, results);
+    if (summaryPath !== undefined) {
+      this.context.stdout.write(`  → smoke summary written to ${summaryPath}\n`);
+    }
     this.context.stdout.write(
       failed === 0
         ? `✓ smoke GO (${String(passed)}/${String(results.length)})\n`
@@ -203,6 +225,7 @@ export class SmokeCommand extends Command {
         ok: false,
         elapsedMs,
         outputChars: 0,
+        ...(outputPath === undefined ? {} : { artifactPath: outputPath }),
         detail: result.error.detail,
       };
     }
@@ -225,8 +248,35 @@ export class SmokeCommand extends Command {
       ok: exact,
       elapsedMs,
       outputChars: output.length,
+      ...(outputPath === undefined ? {} : { artifactPath: outputPath }),
       ...(exact ? {} : { detail: `expected ${expected}, got ${quoteShort(output)}` }),
     };
+  }
+
+  private async writeSummary(
+    selection: readonly SmokeHarnessName[],
+    results: readonly SmokeResult[],
+  ): Promise<string | undefined> {
+    if (this.outDir === undefined) return undefined;
+    const summaryPath = joinPath(this.outDir, 'summary.json');
+    const summary: SmokeSummary = {
+      schemaVersion: 1,
+      generatedAt: new Date().toISOString(),
+      harnesses: selection,
+      results: results.map(
+        (result): SmokeSummaryEntry => ({
+          harness: result.harness,
+          target: result.agent,
+          status: result.ok ? 'ok' : 'failed',
+          durationMs: Math.round(result.elapsedMs),
+          outputChars: result.outputChars,
+          ...(result.artifactPath === undefined ? {} : { artifactPath: result.artifactPath }),
+          ...(result.detail === undefined ? {} : { detail: result.detail }),
+        }),
+      ),
+    };
+    await this.fs.write(summaryPath, `${JSON.stringify(summary, null, 2)}\n`);
+    return summaryPath;
   }
 
   private formatResult(result: SmokeResult): string {

@@ -178,10 +178,34 @@ describe('fugue CLI', () => {
 
       expect(result.code).toBe(0);
       expect(result.out).toContain('live runtime smoke (codex, opencode, agy)');
+      expect(result.out).toContain(`smoke summary written to ${join(outDir, 'summary.json')}`);
       expect(result.out).toContain('✓ smoke GO (3/3)');
       expect(await readFile(join(outDir, 'codex.txt'), 'utf8')).toContain(
         'FUGUNANO_CODEX_SMOKE_OK',
       );
+      const summary = JSON.parse(await readFile(join(outDir, 'summary.json'), 'utf8')) as {
+        readonly schemaVersion: number;
+        readonly harnesses: readonly string[];
+        readonly results: readonly {
+          readonly harness: string;
+          readonly target: string;
+          readonly status: string;
+          readonly durationMs: number;
+          readonly outputChars: number;
+          readonly artifactPath: string;
+        }[];
+      };
+      expect(summary.schemaVersion).toBe(1);
+      expect(summary.harnesses).toEqual(['codex', 'opencode', 'agy']);
+      expect(summary.results).toHaveLength(3);
+      expect(summary.results[0]).toMatchObject({
+        harness: 'codex',
+        target: 'gpt-5.5',
+        status: 'ok',
+        artifactPath: join(outDir, 'codex.txt'),
+      });
+      expect(summary.results[0]?.durationMs).toBeGreaterThanOrEqual(0);
+      expect(summary.results[0]?.outputChars).toBeGreaterThan(0);
       const taskLog = await readFile(task, 'utf8');
       expect(taskLog).toContain('smoke → codex [gpt-5.5] (status=started');
       expect(taskLog).toContain('smoke → opencode [opencode/deepseek-v4-flash-free]');
@@ -190,6 +214,7 @@ describe('fugue CLI', () => {
 
     it('returns nonzero when a smoke output has extra whitespace beyond one final newline', async () => {
       const task = join(dir, 'TASK.md');
+      const outDir = join(dir, 'bad-smoke-out');
       await writeFile(task, '## Log\n', 'utf8');
       await writeExecutable(agy, 'printf "FUGUNANO_AGY_SMOKE_OK \\n"');
 
@@ -201,14 +226,31 @@ describe('fugue CLI', () => {
         '5000',
         '--task',
         task,
+        '--out-dir',
+        outDir,
         '--agy-bin',
         agy,
       ]);
 
       expect(result.code).toBe(1);
       expect(result.out).toContain('✗ smoke NO-GO (1/1 failed)');
+      expect(result.out).toContain(`smoke summary written to ${join(outDir, 'summary.json')}`);
       expect(result.out).toContain('expected FUGUNANO_AGY_SMOKE_OK');
       expect(result.out).toContain('got "FUGUNANO_AGY_SMOKE_OK \\n"');
+      const summary = JSON.parse(await readFile(join(outDir, 'summary.json'), 'utf8')) as {
+        readonly results: readonly {
+          readonly harness: string;
+          readonly status: string;
+          readonly artifactPath: string;
+          readonly detail: string;
+        }[];
+      };
+      expect(summary.results[0]).toMatchObject({
+        harness: 'agy',
+        status: 'failed',
+        artifactPath: join(outDir, 'agy.txt'),
+      });
+      expect(summary.results[0]?.detail).toContain('expected FUGUNANO_AGY_SMOKE_OK');
       expect(await readFile(task, 'utf8')).toContain('error=output-mismatch');
     });
   });

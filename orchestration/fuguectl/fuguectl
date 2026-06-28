@@ -14,7 +14,7 @@ const help = `fuguectl — fugue workflow control-plane entrypoint.
   fuguectl version             print engine version
   fuguectl fleet status|up [--pty]|down  bring up/view/stop fugue-cc fleet
   fuguectl preflight [--harness fugue-cc|codex|opencode|agy|lite|all] [--model m|--target m] [cfg]  pre-run go/no-go gate
-  fuguectl smoke [--harness all|codex|opencode|agy] [--timeout-ms n] [--task <file>] [--out-dir <dir>]  live lite-runtime smoke
+  fuguectl smoke [--harness all|codex|opencode|agy] [--timeout-ms n] [--task <file>] [--out-dir <dir>]  live lite-runtime smoke (+ <out-dir>/summary.json)
   fuguectl task new|log|done   TASK file scaffold/log/finalize
   fuguectl template <n> [--set K=V]   render prompt template
   fuguectl dispatch <agent> [--harness fugue-cc|codex|opencode|agy] [--timeout-ms n] [--codex-clean] [--harness-arg x] [--out <file>] [--require-output] [--verbose] --template <n>|--prompt-file <f>|--prompt <text> [--task <file>]
@@ -43,7 +43,7 @@ const quickstartHelp = `fuguectl quickstart — safe first run
 
   2. Verify available lightweight runtimes:
      fuguectl preflight --harness lite
-     fuguectl smoke --harness all --codex-clean --timeout-ms 120000
+     fuguectl smoke --harness all --codex-clean --timeout-ms 120000 --out-dir /tmp/fugunano-smoke
 
   3. Create a durable planning artifact:
      fuguectl plan "your goal" --harness lite --timeout-ms 120000 --allow-partial --out /tmp/fugunano-plan --task TASK.md

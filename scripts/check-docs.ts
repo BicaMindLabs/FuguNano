@@ -449,6 +449,19 @@ for (const [file, content] of [
 
 for (const [file, content] of [
   [fuguectl, driver],
+  [readmeEn, en],
+  [readmeZh, zh],
+  [agentsDoc, agentsText],
+  [workflowDoc, workflowText],
+  [workflowSkill, workflowSkillText],
+]) {
+  if (content.includes("summary.json"))
+    ok(`${basename(file)}: documents smoke summary.json`);
+  else no(`${basename(file)}: missing smoke summary.json guidance`);
+}
+
+for (const [file, content] of [
+  [fuguectl, driver],
   [planWrapper, planWrapperText],
   [readmeEn, en],
   [readmeZh, zh],

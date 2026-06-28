@@ -246,6 +246,10 @@ fuguectl preflight --harness lite
 fuguectl smoke --harness all --codex-clean --timeout-ms 120000 --task TASK.md --out-dir /tmp/fugunano-smoke
 ```
 
+When `--out-dir` is set, smoke writes per-harness transcripts plus
+`summary.json`, a machine-readable result manifest with status, duration,
+output size, and artifact path for each lite runtime.
+
 For OpenCode, `preflight --target <provider/model>` checks the local
 `opencode models` registry before dispatch, so a stale or unavailable model is
 caught before the run starts.

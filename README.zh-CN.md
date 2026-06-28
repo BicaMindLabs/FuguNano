@@ -215,6 +215,9 @@ fuguectl preflight --harness lite
 fuguectl smoke --harness all --codex-clean --timeout-ms 120000 --task TASK.md --out-dir /tmp/fugunano-smoke
 ```
 
+设置 `--out-dir` 时，smoke 会写每个 harness 的 transcript，并额外写入
+`summary.json`，里面包含每个 lite runtime 的状态、耗时、输出长度和 artifact 路径，方便 CI 或后续循环直接解析。
+
 OpenCode 场景下，`preflight --target <provider/model>` 会先检查本机
 `opencode models` registry，过期或不可用的模型会在 dispatch 前被拦住。
 Antigravity 场景下，`--harness agy` 会走 `agy --prompt`；target 为

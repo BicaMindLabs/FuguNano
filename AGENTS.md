@@ -49,7 +49,7 @@ fuguectl preflight --harness codex                         # selected runtime pa
 fuguectl preflight --harness opencode --target opencode/deepseek-v4-flash-free
 fuguectl preflight --harness agy
 fuguectl preflight --harness lite                          # all lite runtimes: codex + opencode + agy
-fuguectl smoke --harness all --codex-clean --timeout-ms 120000 --task TASK.md --out-dir /tmp/fugunano-smoke
+fuguectl smoke --harness all --codex-clean --timeout-ms 120000 --task TASK.md --out-dir /tmp/fugunano-smoke  # also writes summary.json
 fuguectl preflight --harness fugue-cc                      # full worktree fleet path
 fuguectl plan "<goal>" --harness fugue-cc|codex|opencode|agy|lite [--models a,b] [--out <dir>] [--timeout-ms n] [--allow-partial] [--harness-arg x] [--codex-arg x] [--opencode-arg x] [--agy-arg x] --task TASK.md
 fuguectl fleet status     # is the backend fleet up? (if down → fuguectl fleet up)
