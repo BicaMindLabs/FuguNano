@@ -348,7 +348,7 @@ export class PlanCommand extends Command {
         partialAccepted &&
         results.some((entry) => !isOk(entry.result) || entry.artifact === 'missing')
       ) {
-        lines.push('partial: --allow-partial accepted available artifacts despite failures');
+        lines.push('partial: --allow-partial accepted successful artifacts despite failures');
       }
     } else {
       lines.push(

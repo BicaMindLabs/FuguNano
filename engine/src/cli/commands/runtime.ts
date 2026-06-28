@@ -104,6 +104,7 @@ interface WorkflowSkillStatus {
   readonly legacyShellFiles: readonly string[];
   readonly repoRootPointerOk: boolean;
   readonly bundleFilesMatch: boolean;
+  readonly mismatchedFiles: readonly string[];
   readonly targetOnlyFiles: readonly string[];
   readonly upToDate: boolean;
 }
@@ -168,6 +169,7 @@ const ignoredTargetOnlyFile = (file: string): boolean =>
 
 interface BundleFileComparison {
   readonly matches: boolean;
+  readonly mismatchedFiles: readonly string[];
   readonly targetOnlyFiles: readonly string[];
 }
 
@@ -183,15 +185,20 @@ const compareBundleFiles = async (
   const targetOnlyFiles = targetFiles.filter(
     (file) => !sourceSet.has(file) && !ignoredTargetOnlyFile(file),
   );
-  if (sourceFiles.length === 0 || targetOnlyFiles.length > 0) {
-    return { matches: false, targetOnlyFiles };
-  }
-  const matches = await Promise.all(
-    sourceFiles.map(async (file) =>
-      filesEqual(joinPath(sourceDir, file), joinPath(targetDir, file)),
-    ),
+  const comparisons = await Promise.all(
+    sourceFiles.map(async (file) => ({
+      file,
+      matches: await filesEqual(joinPath(sourceDir, file), joinPath(targetDir, file)),
+    })),
   );
-  return { matches: matches.every(Boolean), targetOnlyFiles };
+  const mismatchedFiles = comparisons
+    .filter((comparison) => !comparison.matches)
+    .map((comparison) => comparison.file);
+  return {
+    matches: sourceFiles.length > 0 && mismatchedFiles.length === 0 && targetOnlyFiles.length === 0,
+    mismatchedFiles,
+    targetOnlyFiles,
+  };
 };
 
 const syncWorkflowBundle = async (repoSkill: string, installedSkill: string): Promise<void> => {
@@ -244,6 +251,7 @@ const workflowSkillStatus = async (
     legacyShellFiles,
     repoRootPointerOk,
     bundleFilesMatch: bundleComparison.matches,
+    mismatchedFiles: bundleComparison.mismatchedFiles,
     targetOnlyFiles: bundleComparison.targetOnlyFiles,
     upToDate:
       repo !== null &&
@@ -253,6 +261,13 @@ const workflowSkillStatus = async (
       repoRootPointerOk &&
       legacyShellFiles.length === 0,
   };
+};
+
+const formatFileList = (files: readonly string[]): string => {
+  const maxFiles = 5;
+  const shown = files.slice(0, maxFiles).join(', ');
+  const remaining = files.length - maxFiles;
+  return remaining > 0 ? `${shown}, +${String(remaining)} more` : shown;
 };
 
 const workflowSkillCheckLinesForStatus = (
@@ -283,12 +298,16 @@ const workflowSkillCheckLinesForStatus = (
   }
   if (status.targetOnlyFiles.length > 0) {
     return [
-      `  → workflow bundle drift (${skillDir(installedSkill)}; target-only files present (${String(status.targetOnlyFiles.length)})): run '${driverName} runtime adapt --apply' to sync`,
+      `  → workflow bundle drift (${skillDir(installedSkill)}; target-only files present (${String(status.targetOnlyFiles.length)}: ${formatFileList(status.targetOnlyFiles)})): run '${driverName} runtime adapt --apply' to sync`,
     ];
   }
   if (!status.bundleFilesMatch) {
+    const reason =
+      status.mismatchedFiles.length > 0
+        ? `bundle file mismatch (${formatFileList(status.mismatchedFiles)})`
+        : 'bundle file mismatch';
     return [
-      `  → workflow bundle drift (${skillDir(installedSkill)}; bundle file mismatch): run '${driverName} runtime adapt --apply' to sync`,
+      `  → workflow bundle drift (${skillDir(installedSkill)}; ${reason}): run '${driverName} runtime adapt --apply' to sync`,
     ];
   }
   return [

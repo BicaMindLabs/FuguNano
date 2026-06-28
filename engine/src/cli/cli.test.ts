@@ -2389,7 +2389,7 @@ describe('fugue CLI', () => {
         expect(planned.code).toBe(0);
         expect(planned.out).toContain('codex:gpt-5.5');
         expect(planned.out).toContain('opencode:opencode/deepseek-v4-flash-free dispatch failed');
-        expect(planned.out).toContain('partial: --allow-partial accepted available artifacts');
+        expect(planned.out).toContain('partial: --allow-partial accepted successful artifacts');
         expect(planned.out).toContain(`summary: ${join(out, 'summary.json')}`);
         const summary = JSON.parse(await readFile(join(out, 'summary.json'), 'utf8')) as {
           readonly status: string;
@@ -2464,7 +2464,7 @@ describe('fugue CLI', () => {
 
         expect(planned.code).toBe(1);
         expect(planned.out).toContain('dispatch failed but left written artifact');
-        expect(planned.out).not.toContain('partial: --allow-partial accepted available artifacts');
+        expect(planned.out).not.toContain('partial: --allow-partial accepted successful artifacts');
         const summary = JSON.parse(await readFile(join(out, 'summary.json'), 'utf8')) as {
           readonly status: string;
           readonly exitCode: number;
@@ -3570,7 +3570,7 @@ describe('fugue CLI', () => {
       ]);
       const syncedHelper = await readFile(join(dir, 'installed-skill', 'fuguectl-runtime'), 'utf8');
 
-      expect(check.out).toContain('bundle file mismatch');
+      expect(check.out).toContain('bundle file mismatch (fuguectl-runtime)');
       expect(apply.out).toContain('synced workflow bundle');
       expect(syncedHelper).toBe('repo helper\n');
     });
@@ -3616,7 +3616,7 @@ describe('fugue CLI', () => {
         .then(() => false)
         .catch(() => true);
 
-      expect(check.out).toContain('target-only files present');
+      expect(check.out).toContain('target-only files present (1: removed-helper)');
       expect(apply.out).toContain('synced workflow bundle');
       expect(targetOnlyMissing).toBe(true);
     });
