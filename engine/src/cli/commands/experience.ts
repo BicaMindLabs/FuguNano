@@ -3,8 +3,8 @@ import { join as joinPath } from 'node:path';
 import { Command, Option } from 'clipanion';
 
 import { FsExperienceStore } from '../../adapters/experience/fs-experience-store.js';
-import { FAILURE_CAUSES, isFailureCause } from '../../domain/experience.js';
-import type { FailureCause, RecallOptions } from '../../domain/experience.js';
+import { FAILURE_CAUSES, explainRecallMatch, isFailureCause } from '../../domain/experience.js';
+import type { FailureCause, Method, RecallOptions } from '../../domain/experience.js';
 import { isOk } from '../../domain/result.js';
 import { systemClock } from '../../infra/clock.js';
 import { NodeFileSystem } from '../../infra/node-file-system.js';
@@ -21,6 +21,17 @@ const readStream = async (stream: NodeJS.ReadableStream): Promise<string> => {
 };
 
 const renderRecall = (title: string, body: string): string => `[experience] ${title}\n${body}\n\n`;
+
+const renderRecallExplanation = (
+  method: Pick<Method, 'title' | 'body'>,
+  options: RecallOptions,
+): string => {
+  const explanation = explainRecallMatch(method, options);
+  const matched = explanation.matchedTerms.length === 0 ? '-' : explanation.matchedTerms.join(',');
+  const failureCause = explanation.failureCause ?? '-';
+  const filter = options.failureCause ?? '-';
+  return `[experience:explain] score=${explanation.score} matched=${matched} failureCause=${failureCause} filter=${filter}\n`;
+};
 
 const parseLimit = (raw: string): number => {
   const limit = Number.parseInt(raw, 10);
@@ -265,6 +276,7 @@ export class ExperienceRecallCommand extends ExperienceCommand {
   query = Option.String('--query');
   limit = Option.String('--limit', '3');
   failureCause = Option.String('--failure-cause');
+  explain = Option.Boolean('--explain', false);
 
   override async execute(): Promise<number> {
     const cause = normalizeFailureCause(this.failureCause);
@@ -285,6 +297,9 @@ export class ExperienceRecallCommand extends ExperienceCommand {
     }
     const methods = await this.experienceStore().recall(this.workspace, options);
     for (const method of methods) {
+      if (this.explain) {
+        this.context.stdout.write(renderRecallExplanation(method, options));
+      }
       this.context.stdout.write(renderRecall(method.title, method.body));
     }
     return 0;

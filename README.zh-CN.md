@@ -171,6 +171,7 @@ stdout 或 durable artifact。`task new` 使用独占创建避免并发 operator
 ## Experience Memory
 
 FuguNano 现在把 memory 当成一个小型的 write-manage-read loop，而不是把日志原样塞回上下文。完成的 TASK 可以蒸馏成 reusable method；终态失败或 blocked 的 TASK 默认仍会被拒绝，只有 operator 明确提供 `--allow-failure --lesson` 时才会作为“重标注失败经验”进入 memory。重标注失败还可以携带受控的 `--failure-cause` 标签（`planning`、`context`、`retrieval`、`tooling`、`implementation`、`verification`、`integration`、`runtime`、`policy`、`other`），recall 时可以先按失败原因过滤，再做 query ranking。
+需要审计“为什么选中这条经验”时，加 `--explain`；输出会给出分数、命中的 query 词、存储的 failure cause，以及当前启用的 cause filter。
 
 ```bash
 fuguectl experience learn code "failed-query retro" \
@@ -179,10 +180,10 @@ fuguectl experience learn code "failed-query retro" \
   --lesson "Score relevance on title/body tokens only" \
   --failure-cause retrieval
 
-fuguectl experience recall code --failure-cause retrieval --query "dispatch output"
+fuguectl experience recall code --failure-cause retrieval --query "dispatch output" --explain
 ```
 
-这个方向借鉴的是 Agent Workflow Memory、AgentHER、MemRL 和 memory-management 研究里的共同结论：不要回放所有 trace，而是选择角色、任务和失败模式都匹配当前问题的经验。
+这个方向借鉴的是 Agent Workflow Memory、AgentHER、MemRL 和最新 agent-native memory 研究里的共同结论：不要回放所有 trace，而是选择角色、失败模式和检索证据都匹配当前问题的经验。
 
 ## TypeScript Engine
 
@@ -214,7 +215,8 @@ fugue task new|log|done
 fugue template <name> --dir <templates> [--set KEY=VALUE ...]
 fugue workspace list|show|model|context
 fugue experience add|list|show --store <dir>
-fugue experience learn|recall --store <dir> [--failure-cause cause]
+fugue experience learn --store <dir> [--failure-cause cause]
+fugue experience recall --store <dir> [--failure-cause cause] [--explain]
 fugue summary <round> --cache <dir> [--task <file>]
 fugue runtime check [--strict] --state <dir> [--skill <installed SKILL.md>] [--alias-skill <legacy SKILL.md>] [--repo-skill <repo SKILL.md>]
 fugue runtime adapt --state <dir> [--skill <installed SKILL.md>] [--alias-skill <legacy SKILL.md>] [--repo-skill <repo SKILL.md>]
@@ -332,7 +334,7 @@ npm run test:engine
 - [Zleap-AI/Zleap-Agent](https://github.com/Zleap-AI/Zleap-Agent) 启发了 workspace isolation 和 experience memory。
 - [SeemSeam/claude_codex_bridge](https://github.com/SeemSeam/claude_codex_bridge) 作为 provider-runtime bridge 的参考。
 - 上海人工智能实验室的 [Self-Harness 论文](https://arxiv.org/abs/2606.09498) 启发了 `fuguectl self-harness` 的 harness-improvement loop。
-- [Agent Workflow Memory](https://arxiv.org/abs/2409.07429)、[AgentHER](https://arxiv.org/abs/2603.21357)、[MemRL](https://arxiv.org/abs/2601.03192) 以及 [arXiv 2505.16067](https://arxiv.org/abs/2505.16067) 等 memory-management 研究启发了按失败原因过滤的 experience replay。
+- [Agent Workflow Memory](https://arxiv.org/abs/2409.07429)、[AgentHER](https://arxiv.org/abs/2603.21357)、[MemRL](https://arxiv.org/abs/2601.03192)、[How Memory Management Impacts LLM Agents](https://arxiv.org/abs/2505.16067)、[Agent-Native Memory Systems](https://arxiv.org/abs/2606.24775) 和 [Graph Memory for LLM Agents](https://arxiv.org/abs/2606.06036) 启发了按失败原因过滤、可解释的 experience replay。
 - [kunchenguid/no-mistakes](https://github.com/kunchenguid/no-mistakes) 与 [lavish-axi](https://github.com/kunchenguid/lavish-axi) 启发了 loop-state 和 docs-drift 思路。
 - [merkyor/Lynn](https://gitee.com/merkyor/Lynn) 启发了编排器侧 ownership enforcement。
 - Anthropic 官方 `skill-creator` meta-skill 支撑了 skill authoring 和 validation flow。

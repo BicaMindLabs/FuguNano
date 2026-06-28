@@ -1,3 +1,8 @@
+import {
+  experienceFailureCause,
+  experienceQueryTerms,
+  experienceScore,
+} from '../../domain/experience.js';
 import type { AddMethod, ExperienceError, Method, RecallOptions } from '../../domain/experience.js';
 import { containsSecret, slugify } from '../../domain/experience-redact.js';
 import type { ExperienceStore } from '../../domain/ports/experience-store.js';
@@ -52,50 +57,6 @@ const byWorkspaceSlug = (a: Method, b: Method): number => {
   return a.slug < b.slug ? -1 : 1;
 };
 
-const QUERY_STOP_WORDS = new Set([
-  'a',
-  'an',
-  'and',
-  'are',
-  'as',
-  'at',
-  'be',
-  'by',
-  'for',
-  'from',
-  'in',
-  'into',
-  'is',
-  'it',
-  'of',
-  'on',
-  'or',
-  'should',
-  'that',
-  'the',
-  'this',
-  'to',
-  'use',
-  'with',
-]);
-
-const queryTerms = (query: string | undefined): readonly string[] => {
-  if (query === undefined) return [];
-  const terms = query.toLowerCase().match(/[\p{L}\p{N}]+/gu) ?? [];
-  return [...new Set(terms.filter((term) => !QUERY_STOP_WORDS.has(term)))];
-};
-
-const experienceScore = (method: Method, terms: readonly string[]): number => {
-  const methodTerms = new Set(queryTerms(`${method.title}\n${method.body}`));
-  return terms.filter((term) => methodTerms.has(term)).length;
-};
-
-const methodFailureCause = (method: Method): string | undefined => {
-  const lines = method.body.split(/\r?\n/u);
-  const index = lines.findIndex((line) => line === 'Failure cause:');
-  return index === -1 ? undefined : lines[index + 1]?.trim().toLowerCase();
-};
-
 /** Filesystem-backed experience store: `<root>/<workspace>/<slug>.md` (frontmatter + body). */
 export class FsExperienceStore implements ExperienceStore {
   constructor(
@@ -142,9 +103,9 @@ export class FsExperienceStore implements ExperienceStore {
     const limit = options.limit ?? 3;
     let methods = await this.methodsIn(workspace);
     if (options.failureCause !== undefined) {
-      methods = methods.filter((method) => methodFailureCause(method) === options.failureCause);
+      methods = methods.filter((method) => experienceFailureCause(method) === options.failureCause);
     }
-    const terms = queryTerms(options.query);
+    const terms = experienceQueryTerms(options.query);
     if (terms.length > 0) {
       methods = methods
         .map((method) => ({ method, score: experienceScore(method, terms) }))

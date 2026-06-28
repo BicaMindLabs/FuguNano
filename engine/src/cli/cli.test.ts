@@ -1700,6 +1700,7 @@ describe('fugue CLI', () => {
         'dispatch output',
         '--failure-cause',
         'retrieval',
+        '--explain',
       ]);
       const unknown = await run([
         'experience',
@@ -1721,6 +1722,9 @@ describe('fugue CLI', () => {
       ]);
 
       expect(recalled.code).toBe(0);
+      expect(recalled.out).toContain(
+        '[experience:explain] score=2 matched=dispatch,output failureCause=retrieval filter=retrieval',
+      );
       expect(recalled.out).toContain('[experience] retrieval relabel');
       expect(recalled.out).toContain('Failure cause:\nretrieval');
       expect(recalled.out).not.toContain('[experience] verification relabel');
