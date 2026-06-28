@@ -25,6 +25,7 @@ import {
   EXPERIENCE_TRUST_FILTERS,
   isExperienceSourceKind,
   isExperienceTrustFilter,
+  renderExperienceMethod,
 } from '../../domain/experience.js';
 import type {
   ExperienceSourceKind,
@@ -587,7 +588,7 @@ export class DispatchCommand extends Command {
           }),
         },
         system: await store.systemPrompt(),
-        experience: methods.map((method) => `[experience] ${method.title}\n${method.body}\n`),
+        experience: methods.map(renderExperienceMethod),
       }),
     );
   }

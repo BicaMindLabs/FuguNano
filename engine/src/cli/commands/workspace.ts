@@ -16,11 +16,11 @@ import {
   EXPERIENCE_TRUST_FILTERS,
   isExperienceSourceKind,
   isExperienceTrustFilter,
+  renderExperienceMethod,
 } from '../../domain/experience.js';
 import type {
   ExperienceSourceKind,
   ExperienceTrustFilter,
-  Method,
   RecallOptions,
 } from '../../domain/experience.js';
 import { assembleContext, renderBundle } from '../../domain/prompt-render.js';
@@ -102,9 +102,6 @@ const resolveModels = async (
 
 const loadWorkspace = async (dir: string, name: string): Promise<Workspace | null> =>
   await new FsWorkspaceStore(fs(), dir).get(name);
-
-const renderExperience = (methods: readonly Method[]): readonly string[] =>
-  methods.map((method) => `[experience] ${method.title}\n${method.body}\n`);
 
 const recallOptions = (
   query: string | undefined,
@@ -325,7 +322,7 @@ export class WorkspaceContextCommand extends WorkspaceCommandOptions {
         assembleContext({
           workspace: { ...workspace, models },
           system: await store.systemPrompt(),
-          experience: renderExperience(methods),
+          experience: methods.map(renderExperienceMethod),
           ...(this.task !== undefined ? { task: this.task } : {}),
         }),
       ),

@@ -1214,6 +1214,9 @@ describe('fugue CLI', () => {
 
       expect(dispatched.code).toBe(0);
       expect(called).toContain('[experience] Fresh redis');
+      expect(called).toContain(
+        '[experience:meta] {"slug":"fresh-redis","sourceKind":"manual","trustKind":"trusted"',
+      );
       expect(called).not.toContain('[experience] Stale redis');
       expect(badAge.code).toBe(2);
       expect(badAge.err).toContain('unknown --experience-max-age-days 0');
@@ -1351,6 +1354,9 @@ describe('fugue CLI', () => {
 
       expect(dispatched.code).toBe(0);
       expect(calledDefault).toContain('[experience] Task redis new');
+      expect(calledDefault).toContain(
+        '[experience:meta] {"slug":"task-redis-new","sourceKind":"task","sourceRef":"/tmp/TASK-new.md","trustKind":"trusted","created":3}',
+      );
       expect(calledDefault).not.toContain('[experience] Task redis old');
       expect(calledDefault).not.toContain('[experience] Manual redis');
       expect(calledDefault).not.toContain('[experience] Task redis untrusted');
@@ -1360,6 +1366,9 @@ describe('fugue CLI', () => {
       expect(calledSourceRef).not.toContain('[experience] Manual redis');
       expect(includeUntrusted.code).toBe(0);
       expect(calledAll).toContain('[experience] Task redis untrusted');
+      expect(calledAll).toContain(
+        '[experience:meta] {"slug":"task-redis-untrusted","sourceKind":"task","sourceRef":"/tmp/TASK-web.md","trustKind":"untrusted","created":4}',
+      );
       expect(calledAll).not.toContain('[experience] Task redis new');
       expect(invalid.code).toBe(2);
       expect(invalid.err).toContain('unknown --experience-source imported');
@@ -1416,6 +1425,9 @@ describe('fugue CLI', () => {
 
       expect(dispatched.code).toBe(0);
       expect(called).toContain('[experience] New redis route');
+      expect(called).toContain(
+        '[experience:meta] {"slug":"new-redis-route","sourceKind":"manual","trustKind":"trusted","created":3,"supersedes":["old-redis-route"]}',
+      );
       expect(called).not.toContain('[experience] Old redis route');
     });
 
@@ -5261,6 +5273,7 @@ describe('fugue CLI', () => {
       expect(context.code).toBe(0);
       expect(context.out).toContain('Keep review independent from implementation.');
       expect(context.out).toContain('[experience] Fast path');
+      expect(context.out).toContain('[experience:meta] {"slug":"fast-path","sourceKind":"manual"');
       expect(context.out).toContain('reuse fast path for X');
       expect(context.out).toContain('> suggested model(bench): minimax,doubao,glm');
     });
@@ -5377,6 +5390,9 @@ describe('fugue CLI', () => {
 
       expect(context.code).toBe(0);
       expect(context.out).toContain('[experience] Fresh redis');
+      expect(context.out).toContain(
+        '[experience:meta] {"slug":"fresh-redis","sourceKind":"manual","trustKind":"trusted"',
+      );
       expect(context.out).not.toContain('[experience] Stale redis');
       expect(invalid.code).toBe(2);
       expect(invalid.err).toContain('unknown --experience-max-age-days 0');
@@ -5545,11 +5561,17 @@ describe('fugue CLI', () => {
 
       expect(context.code).toBe(0);
       expect(context.out).toContain('[experience] Task redis new');
+      expect(context.out).toContain(
+        '[experience:meta] {"slug":"task-redis-new","sourceKind":"task","sourceRef":"/tmp/TASK-new.md","trustKind":"trusted","created":5}',
+      );
       expect(context.out).not.toContain('[experience] Task redis old');
       expect(context.out).not.toContain('[experience] Manual redis');
       expect(context.out).not.toContain('[experience] Task redis untrusted');
       expect(contextAll.code).toBe(0);
       expect(contextAll.out).toContain('[experience] Task redis untrusted');
+      expect(contextAll.out).toContain(
+        '[experience:meta] {"slug":"task-redis-untrusted","sourceKind":"task","sourceRef":"/tmp/TASK-web.md","trustKind":"untrusted","created":6}',
+      );
       expect(contextAll.out).not.toContain('[experience] Task redis new');
       expect(contextSourceRef.code).toBe(0);
       expect(contextSourceRef.out).toContain('[experience] Task redis old');
@@ -5608,6 +5630,9 @@ describe('fugue CLI', () => {
 
       expect(context.code).toBe(0);
       expect(context.out).toContain('[experience] New redis route');
+      expect(context.out).toContain(
+        '[experience:meta] {"slug":"new-redis-route","sourceKind":"manual","trustKind":"trusted","created":3,"supersedes":["old-redis-route"]}',
+      );
       expect(context.out).not.toContain('[experience] Old redis route');
     });
   });

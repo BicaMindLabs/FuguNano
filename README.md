@@ -241,6 +241,13 @@ intentionally want untrusted records in the prompt for inspection or sandboxed
 work. Add
 `--experience-max-age-days <n>` when automatic injection should prefer only
 recent experience after a model, dependency, API, or workflow change.
+Injected experience is provenance-bearing: `workspace context` and
+`dispatch --workspace` now render each recalled method as an evidence unit with
+`[experience:meta] {"slug":...,"sourceKind":...,"trustKind":...,"created":...}`,
+plus `sourceRef`, `failureCause`, or `supersedes` when present. The agent still
+receives the method body, but the prompt also carries enough parse-stable
+source/trust/freshness lineage for reviewers, logs, and later recovery tools to
+inspect why that memory was in the context.
 
 ```bash
 cat web-note.md | fuguectl experience add code "browser memory import" \
@@ -284,18 +291,24 @@ fuguectl workspace context code \
 This follows the same direction as Agent Workflow Memory, AgentHER, MemRL, and
 recent agent-native memory, conflict-aware memory, deterministic
 freshness/conflict-resolution, budget-tier routing, token-economics,
-store-routing, and provenance studies: do not replay every trace, and do not ask
-the model to guess which conflicting memory is current. FuguNano's current step
-is deliberately modest: select by workspace, source class, exact write-time
-source reference, trust mark, explicit supersession, failure mode, retrieval
-evidence, utility threshold, freshness window, and an explicit recall cap;
-learned budget-tier routing, semantic conflict adjudication, and formal
-authority elevation are future work. The newest references in this direction
-are [MemConflict](https://arxiv.org/abs/2605.20926),
+store-routing, execution-provenance, and evidence-tracing studies: do not replay
+every trace, do not ask the model to guess which conflicting memory is current,
+and do not hide the lineage of a recalled memory once it enters a prompt.
+FuguNano's current step is deliberately modest: select by workspace, source
+class, exact write-time source reference, trust mark, explicit supersession,
+failure mode, retrieval evidence, utility threshold, freshness window, and an
+explicit recall cap; then render injected memories with source/trust metadata.
+Learned budget-tier routing, semantic conflict adjudication, richer provenance
+graphs, and formal authority elevation are future work. The newest references in
+this direction are [MemConflict](https://arxiv.org/abs/2605.20926),
 [Don't Ask the LLM to Track Freshness](https://arxiv.org/abs/2606.01435),
 [Agent-Native Memory Systems](https://arxiv.org/abs/2606.24775),
 [Origin-Bound Memory Authority](https://arxiv.org/abs/2606.24322), and
-[From Untrusted Input to Trusted Memory](https://arxiv.org/abs/2606.04329).
+[From Untrusted Input to Trusted Memory](https://arxiv.org/abs/2606.04329),
+[From Agent Traces to Trust](https://arxiv.org/abs/2606.04990),
+[LLM Agents for Interactive Workflow Provenance](https://arxiv.org/abs/2509.13978),
+[Distilling Feedback into Memory-as-a-Tool](https://arxiv.org/abs/2601.05960),
+and [Structured Belief State](https://arxiv.org/abs/2605.11325).
 
 ## TypeScript Engine
 
@@ -474,7 +487,7 @@ GitHub Security Advisory.
 - [SeemSeam/claude_codex_bridge](https://github.com/SeemSeam/claude_codex_bridge) as a reference for the provider-runtime bridge.
 - Shanghai Artificial Intelligence Laboratory's [Self-Harness paper](https://arxiv.org/abs/2606.09498) for the harness-improvement loop that inspired `fuguectl self-harness`.
 - [Agent Workflow Memory](https://arxiv.org/abs/2409.07429), [AgentHER](https://arxiv.org/abs/2603.21357), [MemRL](https://arxiv.org/abs/2601.03192), [How Memory Management Impacts LLM Agents](https://arxiv.org/abs/2505.16067), [Agent-Native Memory Systems](https://arxiv.org/abs/2606.24775), [STALE](https://arxiv.org/abs/2605.06527), [Governing Evolving Memory in LLM Agents](https://arxiv.org/abs/2603.11768), [Agent Memory: Characterization and System Implications](https://arxiv.org/abs/2606.06448), [MemMachine](https://arxiv.org/abs/2604.04853), [RCR-Router](https://arxiv.org/abs/2508.04903), [BudgetMem](https://arxiv.org/abs/2602.06025), [Token Economics for LLM Agents](https://arxiv.org/abs/2605.09104), [Graph Memory for LLM Agents](https://arxiv.org/abs/2606.06036), [Externalization in LLM Agents](https://arxiv.org/abs/2604.08224), [Cost-Sensitive Store Routing](https://arxiv.org/abs/2603.15658), [Compute Allocation for Reasoning-Intensive Retrieval Agents](https://openreview.net/forum?id=nqr4eTODKl), and [RecoAtlas](https://arxiv.org/abs/2605.18805) for the stale-aware, cause-aware, provenance-visible, budgeted, explainable, utility-gated experience replay direction.
-- [PROV-AGENT](https://arxiv.org/abs/2508.02866) and [LLM Agents for Interactive Workflow Provenance](https://arxiv.org/abs/2509.13978) for the lightweight agentic-workflow provenance framing behind task-derived memory source metadata.
+- [From Agent Traces to Trust](https://arxiv.org/abs/2606.04990), [PROV-AGENT](https://arxiv.org/abs/2508.02866), [LLM Agents for Interactive Workflow Provenance](https://arxiv.org/abs/2509.13978), [Distilling Feedback into Memory-as-a-Tool](https://arxiv.org/abs/2601.05960), and [Structured Belief State](https://arxiv.org/abs/2605.11325) for the evidence-tracing, workflow-provenance, and retrieval-precision framing behind provenance-bearing injected memory.
 - [Securing LLM-Agent Long-Term Memory Against Poisoning](https://arxiv.org/abs/2606.24322) and [From Untrusted Input to Trusted Memory](https://arxiv.org/abs/2606.04329) / [OpenReview](https://openreview.net/forum?id=5cgg9yenCZ) for the write-time trust metadata and trusted-only automatic injection gate that starts addressing memory write-channel risks.
 - [kunchenguid/no-mistakes](https://github.com/kunchenguid/no-mistakes) and [lavish-axi](https://github.com/kunchenguid/lavish-axi) for loop-state and docs-drift ideas.
 - [merkyor/Lynn](https://gitee.com/merkyor/Lynn) for orchestrator-side ownership enforcement inspiration.

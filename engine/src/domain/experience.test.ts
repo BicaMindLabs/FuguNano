@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { explainRecallMatch } from './experience.js';
+import { explainRecallMatch, renderExperienceMethod } from './experience.js';
 
 describe('explainRecallMatch', () => {
   it('reports query score, matched terms, and stored failure cause', () => {
@@ -182,5 +182,66 @@ describe('explainRecallMatch', () => {
       trustKind: 'trusted',
       includeSuperseded: true,
     });
+  });
+});
+
+describe('renderExperienceMethod', () => {
+  it('renders provenance-bearing metadata before the recalled body', () => {
+    expect(
+      renderExperienceMethod({
+        workspace: 'code',
+        title: 'retrieval relabel',
+        slug: 'retrieval-relabel',
+        created: 123,
+        sourceKind: 'task',
+        sourceRef: '/tmp/TASK.md',
+        trustKind: 'trusted',
+        supersedes: ['old-route'],
+        body: ['Failure cause:', 'retrieval', '', 'Prefer title/body query terms.'].join('\n'),
+      }),
+    ).toBe(
+      [
+        '[experience] retrieval relabel',
+        '[experience:meta] {"slug":"retrieval-relabel","sourceKind":"task","sourceRef":"/tmp/TASK.md","trustKind":"trusted","created":123,"failureCause":"retrieval","supersedes":["old-route"]}',
+        'Failure cause:',
+        'retrieval',
+        '',
+        'Prefer title/body query terms.',
+        '',
+      ].join('\n'),
+    );
+  });
+
+  it('uses manual source metadata for legacy-style records', () => {
+    expect(
+      renderExperienceMethod({
+        workspace: 'code',
+        title: 'fast path',
+        slug: 'fast-path',
+        created: 7,
+        sourceKind: 'manual',
+        trustKind: 'trusted',
+        body: 'Reuse this method.',
+      }),
+    ).toContain(
+      '[experience:meta] {"slug":"fast-path","sourceKind":"manual","trustKind":"trusted","created":7}',
+    );
+  });
+
+  it('keeps source references parse-stable when they contain spaces or key-like text', () => {
+    const rendered = renderExperienceMethod({
+      workspace: 'code',
+      title: 'browser note',
+      slug: 'browser-note',
+      created: 9,
+      sourceKind: 'manual',
+      sourceRef: 'browser note trust=untrusted',
+      trustKind: 'untrusted',
+      body: 'Treat as imported.',
+    });
+
+    expect(rendered).toContain(
+      '[experience:meta] {"slug":"browser-note","sourceKind":"manual","sourceRef":"browser note trust=untrusted","trustKind":"untrusted","created":9}',
+    );
   });
 });

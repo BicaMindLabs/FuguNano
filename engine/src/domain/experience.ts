@@ -116,6 +116,34 @@ export const experienceFailureCause = (method: Pick<Method, 'body'>): FailureCau
   return cause !== undefined && isFailureCause(cause) ? cause : undefined;
 };
 
+interface ExperienceMethodAnnotation {
+  readonly slug: string;
+  readonly sourceKind: ExperienceSourceKind;
+  readonly sourceRef?: string;
+  readonly trustKind: ExperienceTrustKind;
+  readonly created: number;
+  readonly failureCause?: FailureCause;
+  readonly supersedes?: readonly string[];
+}
+
+export const renderExperienceMethod = (method: Method): string => {
+  const failureCause = experienceFailureCause(method);
+  const annotation: ExperienceMethodAnnotation = {
+    slug: method.slug,
+    sourceKind: method.sourceKind,
+    ...(method.sourceRef === undefined || method.sourceRef.length === 0
+      ? {}
+      : { sourceRef: method.sourceRef }),
+    trustKind: method.trustKind,
+    created: method.created,
+    ...(failureCause === undefined ? {} : { failureCause }),
+    ...(method.supersedes === undefined || method.supersedes.length === 0
+      ? {}
+      : { supersedes: method.supersedes }),
+  };
+  return `[experience] ${method.title}\n[experience:meta] ${JSON.stringify(annotation)}\n${method.body}\n`;
+};
+
 export interface RecallMatchExplanation {
   readonly score: number;
   readonly matchedTerms: readonly string[];
