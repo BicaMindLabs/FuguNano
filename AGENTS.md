@@ -45,7 +45,10 @@ Reviewer (`coder`) and planner are likewise harness-agnostic. For Antigravity,
 ## Before dispatching
 
 ```
-fuguectl preflight --harness codex|opencode|agy|fugue-cc  # selected runtime path
+fuguectl preflight --harness codex                         # selected runtime path
+fuguectl preflight --harness opencode --target opencode/deepseek-v4-flash-free
+fuguectl preflight --harness agy
+fuguectl preflight --harness fugue-cc                      # full worktree fleet path
 fuguectl plan "<goal>" --harness fugue-cc|codex|opencode|agy [--timeout-ms n] [--harness-arg x] --task TASK.md
 fuguectl fleet status     # is the backend fleet up? (if down → fuguectl fleet up)
 ```

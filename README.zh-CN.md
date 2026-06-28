@@ -104,6 +104,7 @@ make install-skill
 
 ```bash
 fuguectl preflight --harness codex        # 轻量 reviewer 路径
+fuguectl preflight --harness opencode --target opencode/deepseek-v4-flash-free
 fuguectl preflight --harness agy
 fuguectl preflight --harness fugue-cc     # 完整 worktree fleet 路径
 fuguectl task new "implement feature"
@@ -201,6 +202,14 @@ fugue loop init|record|decide|next|status
 fugue goal template|show|check
 fugue agent-registry template|validate|list|resolve
 fugue self-harness template|run
+```
+
+preflight 通过后，可以用最小 live smoke 确认当前机器上的 runtime 真能跑：
+
+```bash
+fuguectl dispatch gpt-5.5 --harness codex --codex-clean --prompt "Reply exactly: OK"
+fuguectl dispatch opencode/deepseek-v4-flash-free --harness opencode --prompt "Reply exactly: OK"
+fuguectl dispatch default --harness agy --prompt "Reply exactly: OK"
 ```
 
 OpenCode 场景下，`preflight --target <provider/model>` 会先检查本机

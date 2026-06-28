@@ -123,6 +123,7 @@ dispatch through the same agent profiles. Smoke-test the installed bundle:
 
 ```bash
 fuguectl preflight --harness codex        # lite reviewer path
+fuguectl preflight --harness opencode --target opencode/deepseek-v4-flash-free
 fuguectl preflight --harness agy
 fuguectl preflight --harness fugue-cc     # full worktree fleet path
 fuguectl task new "implement feature"
@@ -232,6 +233,14 @@ fugue loop init|record|decide|next|status
 fugue goal template|show|check
 fugue agent-registry template|validate|list|resolve
 fugue self-harness template|run
+```
+
+Quick live smoke, after preflight passes:
+
+```bash
+fuguectl dispatch gpt-5.5 --harness codex --codex-clean --prompt "Reply exactly: OK"
+fuguectl dispatch opencode/deepseek-v4-flash-free --harness opencode --prompt "Reply exactly: OK"
+fuguectl dispatch default --harness agy --prompt "Reply exactly: OK"
 ```
 
 For OpenCode, `preflight --target <provider/model>` checks the local
