@@ -82,6 +82,10 @@ interface SmokeSummaryEntry {
 interface SmokeSummary {
   readonly schemaVersion: 1;
   readonly generatedAt: string;
+  readonly status: 'ok' | 'failed';
+  readonly passed: number;
+  readonly failed: number;
+  readonly exitCode: 0 | 1;
   readonly harnesses: readonly SmokeHarnessName[];
   readonly results: readonly SmokeSummaryEntry[];
 }
@@ -264,9 +268,15 @@ export class SmokeCommand extends Command {
   ): Promise<string | undefined> {
     if (this.outDir === undefined) return undefined;
     const summaryPath = joinPath(this.outDir, 'summary.json');
+    const passed = results.filter((result) => result.ok).length;
+    const failed = results.length - passed;
     const summary: SmokeSummary = {
       schemaVersion: 1,
       generatedAt: new Date().toISOString(),
+      status: failed === 0 ? 'ok' : 'failed',
+      passed,
+      failed,
+      exitCode: failed === 0 ? 0 : 1,
       harnesses: selection,
       results: results.map(
         (result): SmokeSummaryEntry => ({

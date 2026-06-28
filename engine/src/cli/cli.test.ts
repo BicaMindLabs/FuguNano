@@ -185,6 +185,10 @@ describe('fugue CLI', () => {
       );
       const summary = JSON.parse(await readFile(join(outDir, 'summary.json'), 'utf8')) as {
         readonly schemaVersion: number;
+        readonly status: string;
+        readonly passed: number;
+        readonly failed: number;
+        readonly exitCode: number;
         readonly harnesses: readonly string[];
         readonly results: readonly {
           readonly harness: string;
@@ -196,6 +200,10 @@ describe('fugue CLI', () => {
         }[];
       };
       expect(summary.schemaVersion).toBe(1);
+      expect(summary.status).toBe('ok');
+      expect(summary.passed).toBe(3);
+      expect(summary.failed).toBe(0);
+      expect(summary.exitCode).toBe(0);
       expect(summary.harnesses).toEqual(['codex', 'opencode', 'agy']);
       expect(summary.results).toHaveLength(3);
       expect(summary.results[0]).toMatchObject({
@@ -241,6 +249,10 @@ describe('fugue CLI', () => {
       expect(result.out).toContain('expected FUGUNANO_AGY_SMOKE_OK');
       expect(result.out).toContain('got "FUGUNANO_AGY_SMOKE_OK \\n"');
       const summary = JSON.parse(await readFile(join(outDir, 'summary.json'), 'utf8')) as {
+        readonly status: string;
+        readonly passed: number;
+        readonly failed: number;
+        readonly exitCode: number;
         readonly results: readonly {
           readonly harness: string;
           readonly status: string;
@@ -248,6 +260,10 @@ describe('fugue CLI', () => {
           readonly detail: string;
         }[];
       };
+      expect(summary.status).toBe('failed');
+      expect(summary.passed).toBe(0);
+      expect(summary.failed).toBe(1);
+      expect(summary.exitCode).toBe(1);
       expect(summary.results[0]).toMatchObject({
         harness: 'agy',
         status: 'failed',

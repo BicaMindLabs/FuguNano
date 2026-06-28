@@ -368,6 +368,16 @@ const planningSurface = (content) =>
         line.includes("fuguectl-plan"),
     )
     .join("\n");
+
+const documentsSmokeSummaryAggregateFields = (content) =>
+  content
+    .split(/\n\s*\n/u)
+    .some(
+      (paragraph) =>
+        paragraph.includes("summary.json") &&
+        paragraph.includes("`status`/`passed`/`failed`/`exitCode`"),
+    );
+
 for (const [file, content] of [
   [fuguectl, driver],
   [planWrapper, planWrapperText],
@@ -459,6 +469,17 @@ for (const [file, content] of [
   if (content.includes("summary.json"))
     ok(`${basename(file)}: documents smoke summary.json`);
   else no(`${basename(file)}: missing smoke summary.json guidance`);
+}
+
+for (const [file, content] of [
+  [readmeEn, en],
+  [readmeZh, zh],
+  [workflowDoc, workflowText],
+  [workflowSkill, workflowSkillText],
+]) {
+  if (documentsSmokeSummaryAggregateFields(content))
+    ok(`${basename(file)}: documents smoke summary aggregate fields`);
+  else no(`${basename(file)}: missing smoke summary aggregate field guidance`);
 }
 
 for (const [file, content] of [
