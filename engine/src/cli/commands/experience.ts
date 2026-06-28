@@ -25,6 +25,65 @@ const parseLimit = (raw: string): number => {
   return Number.isFinite(limit) ? limit : 3;
 };
 
+const field = (content: string, key: string): string => {
+  const prefix = `${key}:`;
+  const line = content.split(/\r?\n/u).find((entry) => entry.startsWith(prefix));
+  return line === undefined ? '' : line.slice(prefix.length).trim();
+};
+
+const section = (content: string, name: string): string => {
+  const lines = content.split(/\r?\n/u);
+  const start = lines.findIndex((line) => line === `## ${name}`);
+  if (start === -1) return '';
+  const body: string[] = [];
+  for (const line of lines.slice(start + 1)) {
+    if (line.startsWith('## ')) break;
+    body.push(line);
+  }
+  return body.join('\n').trim();
+};
+
+const meaningfulLogLines = (log: string): readonly string[] => {
+  const lines = log
+    .split(/\r?\n/u)
+    .map((line) => line.replace(/^- /u, '').trim())
+    .filter((line) => line.length > 0);
+  const preferred = lines.filter((line) =>
+    /accepted|ci|failed|fix|green|review|selected|verification|verified/u.test(line.toLowerCase()),
+  );
+  return (preferred.length > 0 ? preferred : lines).slice(-12);
+};
+
+const renderTaskExperience = (path: string, content: string): string => {
+  const taskTitle = content.split(/\r?\n/u).find((line) => line.startsWith('# ')) ?? '# TASK';
+  const status = field(content, 'Status');
+  const completed = field(content, 'Completed');
+  const requirements = section(content, 'Requirements');
+  const log = meaningfulLogLines(section(content, 'Log'));
+  const completion =
+    completed.length > 0 && completed !== '-'
+      ? `Status: ${status} (completed ${completed})`
+      : `Status: ${status}`;
+  const notes =
+    log.length === 0
+      ? '- No audit log lines were present.'
+      : log.map((line) => `- ${line}`).join('\n');
+  return [
+    `Source task: ${path}`,
+    `Task: ${taskTitle.replace(/^#\s*/u, '')}`,
+    completion,
+    '',
+    'Requirements:',
+    requirements.length > 0 ? requirements : '(none recorded)',
+    '',
+    'Reusable audit notes:',
+    notes,
+  ].join('\n');
+};
+
+const isCompletedTask = (content: string): boolean =>
+  field(content, 'Status') === 'DONE' && !['', '-'].includes(field(content, 'Completed'));
+
 abstract class ExperienceCommand extends Command {
   store = Option.String('--store', defaultExperienceDir());
 
@@ -58,6 +117,45 @@ export class ExperienceAddCommand extends ExperienceCommand {
     }
     this.context.stdout.write(
       `✓ experience stored: ${joinPath(this.store, result.value.workspace, `${result.value.slug}.md`)}\n`,
+    );
+    return 0;
+  }
+}
+
+export class ExperienceLearnCommand extends ExperienceCommand {
+  static override paths = [['experience', 'learn']];
+
+  workspace = Option.String();
+  title = Option.String();
+  task = Option.String('--task');
+
+  override async execute(): Promise<number> {
+    if (this.task === undefined || this.task.length === 0) {
+      this.context.stderr.write('need --task <TASK.md>\n');
+      return 1;
+    }
+    const content = await fs().read(this.task);
+    if (content === null) {
+      this.context.stderr.write(`no --task file ${this.task}\n`);
+      return 1;
+    }
+    if (!isCompletedTask(content)) {
+      this.context.stderr.write(
+        'task is not DONE with a completion timestamp; run task done first\n',
+      );
+      return 1;
+    }
+    const result = await this.experienceStore().add({
+      workspace: this.workspace,
+      title: this.title,
+      body: renderTaskExperience(this.task, content),
+    });
+    if (!isOk(result)) {
+      this.context.stderr.write(`${result.error.detail}\n`);
+      return 1;
+    }
+    this.context.stdout.write(
+      `✓ experience learned: ${joinPath(this.store, result.value.workspace, `${result.value.slug}.md`)}\n`,
     );
     return 0;
   }

@@ -10,7 +10,7 @@
   <img src="https://img.shields.io/badge/Runtime-Node%20%E2%89%A518.18-339933?style=for-the-badge&logo=node.js&logoColor=white" alt="Node.js >= 18.18" />
   <img src="https://img.shields.io/badge/Engine-TypeScript-3178c6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript engine" />
   <img src="https://img.shields.io/badge/fuguectl-25%20%E5%A5%97%E6%B5%8B%E8%AF%95-7c3aed?style=for-the-badge" alt="25 套 fuguectl 测试" />
-  <img src="https://img.shields.io/badge/assertions-338-brightgreen?style=for-the-badge" alt="338 个 fuguectl 断言" />
+  <img src="https://img.shields.io/badge/assertions-341-brightgreen?style=for-the-badge" alt="341 个 fuguectl 断言" />
   <a href="https://github.com/BicaMindLabs/FuguNano/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/BicaMindLabs/FuguNano/ci.yml?branch=main&style=for-the-badge&label=CI" alt="CI status" /></a>
   <img src="https://img.shields.io/badge/license-Apache--2.0-yellowgreen?style=for-the-badge" alt="Apache-2.0 license" />
 </p>
@@ -45,7 +45,7 @@
 - **审查保持独立** - implementer 写代码，Codex 或另一个配置好的独立 reviewer 给出 `ACCEPTED` / `NEEDS FIX`。
 - **输出不会丢** - dispatch 可用 `--out` 持久化 reviewer/agent 输出；join barrier 仍强制“派出 N 个，收回 N 个”。
 - **修复有边界** - keep-best、二次确认、询问用户、升级和非收敛状态避免无限循环。
-- **免训练学习** - allocation 用 benchmark prior 加 live review outcome 迭代路由。
+- **免训练学习** - allocation 用 benchmark prior 加 live review outcome 迭代路由，已完成的 TASK trace 也可以沉淀成后续自动回放的 experience memory。
 - **Self-Harness 就绪** - TypeScript engine 能挖失败 run、提出有界 harness edits，并只 promote 不回退的改动。
 
 ## 快速开始
@@ -166,7 +166,7 @@ stdout 或 durable artifact。`task new` 使用独占创建避免并发 operator
 | Routing and context    | `fuguectl allocate <type>`、`fuguectl workspace list\|show\|model\|context`、`fuguectl agents template\|validate\|list\|resolve`、`fuguectl skills index\|list\|match\|show\|inject\|validate\|forge`                                                                                                         |
 | Dispatch and gather    | `fuguectl dispatch <target>`、`fuguectl cache init\|put\|fail\|barrier\|collect\|resume`                                                                                                                                                                                                                      |
 | Integration and loop   | `fuguectl integrate --work <repo>`、`fuguectl loop init\|record\|decide\|status`、`fuguectl run set\|round\|status\|next\|clear`、`fuguectl summary <round>`                                                                                                                                                  |
-| Memory and maintenance | `fuguectl experience add\|list\|recall\|show`、`fuguectl self-harness template\|run`、`fuguectl runtime check\|adapt`（provider + 已安装 workflow bundle 漂移）、`fuguectl selftest`                                                                                                                          |
+| Memory and maintenance | `fuguectl experience add\|learn\|list\|recall\|show`、`fuguectl self-harness template\|run`、`fuguectl runtime check\|adapt`（provider + 已安装 workflow bundle 漂移）、`fuguectl selftest`                                                                                                                   |
 
 ## TypeScript Engine
 
@@ -197,7 +197,7 @@ fugue plan "<goal>" --harness fugue-cc|codex|opencode|agy|lite --out <dir> [--mo
 fugue task new|log|done
 fugue template <name> --dir <templates> [--set KEY=VALUE ...]
 fugue workspace list|show|model|context
-fugue experience add|list|recall|show --store <dir>
+fugue experience add|learn|list|recall|show --store <dir>
 fugue summary <round> --cache <dir> [--task <file>]
 fugue runtime check [--strict] --state <dir> [--skill <installed SKILL.md>] [--alias-skill <legacy SKILL.md>] [--repo-skill <repo SKILL.md>]
 fugue runtime adapt --state <dir> [--skill <installed SKILL.md>] [--alias-skill <legacy SKILL.md>] [--repo-skill <repo SKILL.md>]

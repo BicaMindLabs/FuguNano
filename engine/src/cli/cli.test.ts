@@ -1408,6 +1408,141 @@ describe('fugue CLI', () => {
       expect(rejected.code).toBe(1);
       expect(rejected.err).toContain('suspected key');
     });
+
+    it('learns a reusable experience from a completed task audit', async () => {
+      const task = join(dir, 'TASK.md');
+      await writeFile(
+        task,
+        [
+          '# TASK-2026-06-28-999: Fix dispatch observation',
+          'Status: DONE',
+          'Priority: P2',
+          'Created: 2026-06-28 20:00',
+          'Completed: 2026-06-28 20:10',
+          '',
+          '## Requirements',
+          'Keep model stdout clean while reporting dispatch observability.',
+          '',
+          '## Log',
+          '- [2026-06-28 20:03] Fix: wait for stdout before writing [obs].',
+          '- [2026-06-28 20:05] Verification: npm run check green.',
+          '- [2026-06-28 20:08] Independent review: VERDICT: ACCEPTED.',
+          '',
+        ].join('\n'),
+        'utf8',
+      );
+
+      const learned = await run([
+        'experience',
+        'learn',
+        '--store',
+        store,
+        'code',
+        'dispatch obs boundary',
+        '--task',
+        task,
+      ]);
+      const recalled = await run(['experience', 'recall', '--store', store, 'code']);
+
+      expect(learned.code).toBe(0);
+      expect(learned.out).toContain('dispatch-obs-boundary.md');
+      expect(recalled.out).toContain('[experience] dispatch obs boundary');
+      expect(recalled.out).toContain(`Source task: ${task}`);
+      expect(recalled.out).toContain('Keep model stdout clean');
+      expect(recalled.out).toContain('VERDICT: ACCEPTED');
+    });
+
+    it('rejects learning from a missing task audit', async () => {
+      const learned = await run([
+        'experience',
+        'learn',
+        '--store',
+        store,
+        'code',
+        'missing task',
+        '--task',
+        join(dir, 'missing.md'),
+      ]);
+
+      expect(learned.code).toBe(1);
+      expect(learned.err).toContain('no --task file');
+    });
+
+    it.each([
+      { status: 'IN_PROGRESS', completed: '2026-06-28 20:10' },
+      { status: 'NEEDS_FIX', completed: '2026-06-28 20:10' },
+      { status: 'DONE', completed: '-' },
+    ])(
+      'rejects learning from an unfinished task audit: $status / $completed',
+      async (taskState) => {
+        const task = join(
+          dir,
+          `${taskState.status}-${taskState.completed.replace(/[^a-z0-9]/giu, '-')}.md`,
+        );
+        await writeFile(
+          task,
+          [
+            '# TASK-2026-06-28-998: Unfinished task',
+            `Status: ${taskState.status}`,
+            'Priority: P2',
+            'Created: 2026-06-28 20:00',
+            `Completed: ${taskState.completed}`,
+            '',
+            '## Requirements',
+            'Do not learn this yet.',
+            '',
+          ].join('\n'),
+          'utf8',
+        );
+
+        const learned = await run([
+          'experience',
+          'learn',
+          '--store',
+          store,
+          'code',
+          'unfinished task',
+          '--task',
+          task,
+        ]);
+
+        expect(learned.code).toBe(1);
+        expect(learned.err).toContain('task is not DONE');
+      },
+    );
+
+    it('applies secret redaction when learning from a task audit', async () => {
+      const task = join(dir, 'TASK-secret.md');
+      await writeFile(
+        task,
+        [
+          '# TASK-2026-06-28-997: Secret task',
+          'Status: DONE',
+          'Priority: P2',
+          'Created: 2026-06-28 20:00',
+          'Completed: 2026-06-28 20:10',
+          '',
+          '## Requirements',
+          `Never store token sk-${'a'.repeat(25)}.`,
+          '',
+        ].join('\n'),
+        'utf8',
+      );
+
+      const learned = await run([
+        'experience',
+        'learn',
+        '--store',
+        store,
+        'code',
+        'secret task',
+        '--task',
+        task,
+      ]);
+
+      expect(learned.code).toBe(1);
+      expect(learned.err).toContain('suspected key');
+    });
   });
 
   describe('summary command', () => {

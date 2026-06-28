@@ -51,12 +51,12 @@ Top team:   planner
 
 ## Which to Pick
 
-| Scenario                                                                              | Use                                                                                                                                                                                                                                     |
-| ------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Real parallel **implementation** (multi-file, each with its own worktree, persistent) | **fugue runtime profiles** (`fugue-cc` worktrees plus Codex/OpenCode where useful)                                                                                                                                                      |
-| **Hierarchical team / sub-agent orchestration**                                       | Host-native subagents plus custom model bridges, when available                                                                                                                                                                         |
+| Scenario                                                                              | Use                                                                                                                                                                                                                                                     |
+| ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Real parallel **implementation** (multi-file, each with its own worktree, persistent) | **fugue runtime profiles** (`fugue-cc` worktrees plus Codex/OpenCode where useful)                                                                                                                                                                      |
+| **Hierarchical team / sub-agent orchestration**                                       | Host-native subagents plus custom model bridges, when available                                                                                                                                                                                         |
 | Multi-model **planning**                                                              | Either works (`fuguectl plan --harness <runtime\|lite> [--models a,b] [--out <dir>] [--timeout-ms n] [--allow-partial] [--codex-clean] [--harness-arg x] [--codex-arg x] [--opencode-arg x] [--agy-arg x] --task TASK.md` or native parallel subagents) |
-| Cross-model **review**                                                                | independent Codex or other reviewer profile                                                                                                                                                                                             |
+| Cross-model **review**                                                                | independent Codex or other reviewer profile                                                                                                                                                                                                             |
 
 > See the example in `orchestration/agent-team/team-review.workflow.mjs` (a Workflow script: plan panel -> cross-model implementation -> Codex review, deterministic orchestration).
 
@@ -78,8 +78,9 @@ Task completes -> distill the reusable method -> sanitize -> store per workstati
 
 ```bash
 echo "use a defensive copy to avoid mutating the input range" | fuguectl experience add code "defensive-copy trick"   # sanitization gate (plaintext keys rejected)
+fuguectl experience learn code "dispatch-observability retro" --task ~/.claude/tasks/TASK-2026-06-28-050.md
 fuguectl experience recall code              # recall this workstation's experience
 fuguectl workspace context code              # the Memory segment has auto-injected the experience above
 ```
 
-The store lives in `${FUGUNANO_STATE:-~/.config/fugunano}/experience/<ws>/` (not in the repo, accumulated at runtime). This is isomorphic to Leo's habit of "distilling skills" — completed work settles into a reusable method. `FUGUE_STATE` remains a compatibility fallback for existing local setups.
+The store lives in `${FUGUNANO_STATE:-~/.config/fugunano}/experience/<ws>/` (not in the repo, accumulated at runtime). This is isomorphic to Leo's habit of "distilling skills" — completed work settles into a reusable method. `experience learn` turns a completed TASK audit into reusable memory, so Reflexion-style trace learning becomes part of the normal operator loop. `FUGUE_STATE` remains a compatibility fallback for existing local setups.

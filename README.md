@@ -10,7 +10,7 @@
   <img src="https://img.shields.io/badge/Runtime-Node%20%E2%89%A518.18-339933?style=for-the-badge&logo=node.js&logoColor=white" alt="Node.js >= 18.18" />
   <img src="https://img.shields.io/badge/Engine-TypeScript-3178c6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript engine" />
   <img src="https://img.shields.io/badge/fuguectl-25%20suites-7c3aed?style=for-the-badge" alt="25 fuguectl test suites" />
-  <img src="https://img.shields.io/badge/assertions-338-brightgreen?style=for-the-badge" alt="338 fuguectl assertions" />
+  <img src="https://img.shields.io/badge/assertions-341-brightgreen?style=for-the-badge" alt="341 fuguectl assertions" />
   <a href="https://github.com/BicaMindLabs/FuguNano/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/BicaMindLabs/FuguNano/ci.yml?branch=main&style=for-the-badge&label=CI" alt="CI status" /></a>
   <img src="https://img.shields.io/badge/license-Apache--2.0-yellowgreen?style=for-the-badge" alt="Apache-2.0 license" />
 </p>
@@ -55,7 +55,8 @@
 - **Bounded repair** - keep-best, confirmation passes, user escalation, and
   non-convergence states keep the loop from spinning forever.
 - **Learning without training** - allocation blends benchmark priors with live
-  review outcomes, then feeds better routes into later rounds.
+  review outcomes, and completed TASK traces can be distilled into replayed
+  experience memory for later rounds.
 - **Self-Harness ready** - the TypeScript engine can mine failed runs, propose
   bounded harness edits, and promote only non-regressing changes.
 
@@ -193,7 +194,7 @@ so final status updates do not clobber concurrent audit lines.
 | Routing and context    | `fuguectl allocate <type>`, `fuguectl workspace list\|show\|model\|context`, `fuguectl agents template\|validate\|list\|resolve`, `fuguectl skills index\|list\|match\|show\|inject\|validate\|forge`                                                                                                         |
 | Dispatch and gather    | `fuguectl dispatch <target>`, `fuguectl cache init\|put\|fail\|barrier\|collect\|resume`                                                                                                                                                                                                                      |
 | Integration and loop   | `fuguectl integrate --work <repo>`, `fuguectl loop init\|record\|decide\|status`, `fuguectl run set\|round\|status\|next\|clear`, `fuguectl summary <round>`                                                                                                                                                  |
-| Memory and maintenance | `fuguectl experience add\|list\|recall\|show`, `fuguectl self-harness template\|run`, `fuguectl runtime check\|adapt` (provider + installed workflow bundle drift), `fuguectl selftest`                                                                                                                       |
+| Memory and maintenance | `fuguectl experience add\|learn\|list\|recall\|show`, `fuguectl self-harness template\|run`, `fuguectl runtime check\|adapt` (provider + installed workflow bundle drift), `fuguectl selftest`                                                                                                                |
 
 ## TypeScript Engine
 
@@ -228,7 +229,7 @@ fugue plan "<goal>" --harness fugue-cc|codex|opencode|agy|lite --out <dir> [--mo
 fugue task new|log|done
 fugue template <name> --dir <templates> [--set KEY=VALUE ...]
 fugue workspace list|show|model|context
-fugue experience add|list|recall|show --store <dir>
+fugue experience add|learn|list|recall|show --store <dir>
 fugue summary <round> --cache <dir> [--task <file>]
 fugue runtime check [--strict] --state <dir> [--skill <installed SKILL.md>] [--alias-skill <legacy SKILL.md>] [--repo-skill <repo SKILL.md>]
 fugue runtime adapt --state <dir> [--skill <installed SKILL.md>] [--alias-skill <legacy SKILL.md>] [--repo-skill <repo SKILL.md>]

@@ -64,6 +64,19 @@ writeFileSync(
     "  const file = path.join(dir, slug + '.md');",
     "  fs.writeFileSync(file, '---\\nworkspace: ' + ws + '\\ntitle: ' + title + '\\ncreated: 1\\n---\\n' + body + '\\n');",
     "  process.stdout.write('experience stored: ' + file + '\\n');",
+    "} else if (cmd === 'learn') {",
+    "  const ws = rest[0];",
+    "  const title = rest[1];",
+    "  const taskIndex = rest.indexOf('--task');",
+    "  if (!ws || !title || taskIndex === -1) die('usage: learn <ws> <title> --task <file>');",
+    "  const task = rest[taskIndex + 1];",
+    "  const body = 'Source task: ' + task + '\\n\\n' + fs.readFileSync(task, 'utf8');",
+    "  const dir = path.join(store, ws);",
+    "  fs.mkdirSync(dir, { recursive: true });",
+    "  const slug = slugify(title);",
+    "  const file = path.join(dir, slug + '.md');",
+    "  fs.writeFileSync(file, '---\\nworkspace: ' + ws + '\\ntitle: ' + title + '\\ncreated: 1\\n---\\n' + body + '\\n');",
+    "  process.stdout.write('experience learned: ' + file + '\\n');",
     "} else if (cmd === 'list') {",
     "  const ws = rest[0];",
     "  const base = ws === undefined ? store : path.join(store, ws);",
@@ -170,12 +183,31 @@ suite.ok("show prints record", () =>
   ),
 );
 
+const task = join(tmp, "TASK.md");
+writeFileSync(
+  task,
+  "# TASK-1: Runtime fix\nStatus: DONE\n\n## Requirements\nKeep observations separate.\n",
+);
+run(experience, ["learn", "code", "task-retro", "--task", task]);
+suite.ok("learn stores task-derived experience", () =>
+  existsSync(join(process.env.FUGUE_EXPERIENCE, "code", "task-retro.md")),
+);
+suite.ok("learned task can be recalled", () =>
+  run(experience, ["recall", "code", "--query", "Source task"]).stdout.includes(
+    task,
+  ),
+);
 suite.ok("workspace context injects experience", () =>
   run(workspace, ["context", "code"]).stdout.includes("defensive copy"),
 );
 suite.ok("wrapper delegates to engine CLI", () =>
   readFileSync(process.env.FUGUE_EXPERIENCE_CALLS, "utf8").includes(
     "experience add code defensive-copy-trick\n",
+  ),
+);
+suite.ok("wrapper delegates learn to engine CLI", () =>
+  readFileSync(process.env.FUGUE_EXPERIENCE_CALLS, "utf8").includes(
+    `experience learn code task-retro --task ${task}\n`,
   ),
 );
 

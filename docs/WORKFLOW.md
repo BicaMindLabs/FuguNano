@@ -68,12 +68,12 @@ Automatically iterate **fix -> re-review** until it passes review, with a capped
 5. **Fix = operator patch** (v4 hard rule, no bouncing back to the implementer for a rewrite) + write each round into the TASK file for the audit trail.
 6. **Three exit states**: ACCEPTED -> DONE / over MAX_ROUNDS(3) -> escalate to a human / **non-converging -> Meta-Reflector** (first reflect on "why it won't fix" with diagnosis + suggestions, then escalate — not a plain retry).
 
-Research basis: 1-2 rounds capture ~75% of the improvement, a hard cap of 5-6 rounds prevents oscillation, generation != review adds ~+20%.
-sources: [LLM Verification Loops](https://timjwilliams.medium.com/llm-verification-loops-best-practices-and-patterns-07541c854fd8) · [Loop Engineering 2026](https://shaam.blog/articles/loop-engineering-ai-agents) · Reflexion / Self-Refine.
+Research basis: 1-2 rounds capture most reachable improvement, a hard cap prevents oscillation, and generation != review keeps the verifier independent. The memory step follows [Reflexion](https://arxiv.org/abs/2303.11366) and [Self-Refine](https://arxiv.org/abs/2303.17651): useful traces should become reusable verbal feedback, not vanish into logs. Harness evolution follows [Self-Harness](https://arxiv.org/abs/2606.09498) and related retrospective harness optimization work such as [RHO](https://arxiv.org/abs/2606.05922).
+sources: [LLM Verification Loops](https://timjwilliams.medium.com/llm-verification-loops-best-practices-and-patterns-07541c854fd8) · [Loop Engineering 2026](https://shaam.blog/articles/loop-engineering-ai-agents) · [Reflexion](https://arxiv.org/abs/2303.11366) · [Self-Refine](https://arxiv.org/abs/2303.17651) · [Self-Harness](https://arxiv.org/abs/2606.09498).
 
 ### Phase 6 — Wrap-up (fuguectl)
 
-Review passes -> merge into the main branch, mark the TASK file `DONE`, clean up worktrees, write memory (non-obvious gotchas/decisions).
+Review passes -> merge into the main branch, mark the TASK file `DONE`, clean up worktrees, then run `fuguectl experience learn <workspace> "<retro-title>" --task <TASK.md>` for non-obvious gotchas/decisions so the next workspace context can replay them.
 
 ---
 
