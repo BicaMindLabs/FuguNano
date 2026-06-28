@@ -1552,6 +1552,147 @@ describe('fugue CLI', () => {
       },
     );
 
+    it('learns from a terminal failed task only with an explicit relabeled lesson', async () => {
+      const task = join(dir, 'TASK-needs-fix.md');
+      await writeFile(
+        task,
+        [
+          '# TASK-2026-06-28-996: Failed dispatch task',
+          'Status: NEEDS_FIX',
+          'Priority: P2',
+          'Created: 2026-06-28 20:00',
+          'Completed: 2026-06-28 20:10',
+          '',
+          '## Requirements',
+          'Keep dispatch memory relevant.',
+          '',
+          '## Output files',
+          '- engine/src/cli/commands/dispatch.ts',
+          '',
+          '## Log',
+          '- [2026-06-28 20:06] Failed because broad query matched workspace metadata.',
+          '- [2026-06-28 20:08] Review: NEEDS FIX.',
+          '',
+        ].join('\n'),
+        'utf8',
+      );
+
+      const missingLesson = await run([
+        'experience',
+        'learn',
+        '--store',
+        store,
+        'code',
+        'failed dispatch relabel',
+        '--task',
+        task,
+        '--allow-failure',
+      ]);
+      const learned = await run([
+        'experience',
+        'learn',
+        '--store',
+        store,
+        'code',
+        'failed dispatch relabel',
+        '--task',
+        task,
+        '--allow-failure',
+        '--lesson',
+        'Score experience relevance on title/body tokens only.',
+      ]);
+      const recalled = await run([
+        'experience',
+        'recall',
+        '--store',
+        store,
+        'code',
+        '--query',
+        'relevance title body tokens',
+      ]);
+
+      expect(missingLesson.code).toBe(1);
+      expect(missingLesson.err).toContain('requires --allow-failure and --lesson');
+      expect(learned.code).toBe(0);
+      expect(learned.out).toContain('failed-dispatch-relabel.md');
+      expect(recalled.out).toContain('[experience] failed dispatch relabel');
+      expect(recalled.out).toContain('Status: NEEDS_FIX');
+      expect(recalled.out).toContain('Relabeled lesson:');
+      expect(recalled.out).toContain('Score experience relevance on title/body tokens only.');
+    });
+
+    it('rejects failure learning from a non-terminal task audit', async () => {
+      const task = join(dir, 'TASK-active.md');
+      await writeFile(
+        task,
+        [
+          '# TASK-2026-06-28-995: Active task',
+          'Status: IN_PROGRESS',
+          'Priority: P2',
+          'Created: 2026-06-28 20:00',
+          'Completed: -',
+          '',
+          '## Requirements',
+          'Do not learn active tasks.',
+          '',
+        ].join('\n'),
+        'utf8',
+      );
+
+      const learned = await run([
+        'experience',
+        'learn',
+        '--store',
+        store,
+        'code',
+        'active relabel',
+        '--task',
+        task,
+        '--allow-failure',
+        '--lesson',
+        'This should not be accepted.',
+      ]);
+
+      expect(learned.code).toBe(1);
+      expect(learned.err).toContain('terminal non-DONE status');
+    });
+
+    it('rejects failure learning from an unknown status even with a completion timestamp', async () => {
+      const task = join(dir, 'TASK-unknown-status.md');
+      await writeFile(
+        task,
+        [
+          '# TASK-2026-06-28-994: Unknown status task',
+          'Status: TODO',
+          'Priority: P2',
+          'Created: 2026-06-28 20:00',
+          'Completed: 2026-06-28 20:10',
+          '',
+          '## Requirements',
+          'Do not learn typo statuses.',
+          '',
+        ].join('\n'),
+        'utf8',
+      );
+
+      const learned = await run([
+        'experience',
+        'learn',
+        '--store',
+        store,
+        'code',
+        'unknown relabel',
+        '--task',
+        task,
+        '--allow-failure',
+        '--lesson',
+        'This should not be accepted.',
+      ]);
+
+      expect(learned.code).toBe(1);
+      expect(learned.err).toContain('terminal non-DONE status');
+    });
+
     it('applies secret redaction when learning from a task audit', async () => {
       const task = join(dir, 'TASK-secret.md');
       await writeFile(

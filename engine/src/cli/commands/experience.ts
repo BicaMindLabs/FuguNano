@@ -54,7 +54,11 @@ const meaningfulLogLines = (log: string): readonly string[] => {
   return (preferred.length > 0 ? preferred : lines).slice(-12);
 };
 
-const renderTaskExperience = (path: string, content: string): string => {
+const renderTaskExperience = (
+  path: string,
+  content: string,
+  options: { readonly lesson?: string } = {},
+): string => {
   const taskTitle = content.split(/\r?\n/u).find((line) => line.startsWith('# ')) ?? '# TASK';
   const status = field(content, 'Status');
   const completed = field(content, 'Completed');
@@ -80,6 +84,7 @@ const renderTaskExperience = (path: string, content: string): string => {
     'Output files:',
     outputFiles.length > 0 ? outputFiles : '(none recorded)',
     '',
+    ...(options.lesson === undefined ? [] : ['Relabeled lesson:', options.lesson, '']),
     'Reusable audit notes:',
     notes,
   ].join('\n');
@@ -87,6 +92,13 @@ const renderTaskExperience = (path: string, content: string): string => {
 
 const isCompletedTask = (content: string): boolean =>
   field(content, 'Status') === 'DONE' && !['', '-'].includes(field(content, 'Completed'));
+
+const TERMINAL_FAILURE_STATUSES = new Set(['NEEDS_FIX', 'FAILED', 'BLOCKED']);
+
+const isTerminalFailedTask = (content: string): boolean => {
+  const status = field(content, 'Status');
+  return TERMINAL_FAILURE_STATUSES.has(status) && !['', '-'].includes(field(content, 'Completed'));
+};
 
 abstract class ExperienceCommand extends Command {
   store = Option.String('--store', defaultExperienceDir());
@@ -132,6 +144,8 @@ export class ExperienceLearnCommand extends ExperienceCommand {
   workspace = Option.String();
   title = Option.String();
   task = Option.String('--task');
+  allowFailure = Option.Boolean('--allow-failure', false);
+  lesson = Option.String('--lesson');
 
   override async execute(): Promise<number> {
     if (this.task === undefined || this.task.length === 0) {
@@ -143,16 +157,36 @@ export class ExperienceLearnCommand extends ExperienceCommand {
       this.context.stderr.write(`no --task file ${this.task}\n`);
       return 1;
     }
-    if (!isCompletedTask(content)) {
+    const completed = isCompletedTask(content);
+    const lesson = this.lesson?.trim();
+    if (!completed && !this.allowFailure) {
       this.context.stderr.write(
         'task is not DONE with a completion timestamp; run task done first\n',
       );
       return 1;
     }
+    if (!completed) {
+      if (!isTerminalFailedTask(content)) {
+        this.context.stderr.write(
+          'failed task learning requires a terminal non-DONE status with a completion timestamp\n',
+        );
+        return 1;
+      }
+      if (lesson === undefined || lesson.length === 0) {
+        this.context.stderr.write(
+          'failed task learning requires --allow-failure and --lesson <reusable lesson>\n',
+        );
+        return 1;
+      }
+    }
+    const body =
+      completed || lesson === undefined
+        ? renderTaskExperience(this.task, content)
+        : renderTaskExperience(this.task, content, { lesson });
     const result = await this.experienceStore().add({
       workspace: this.workspace,
       title: this.title,
-      body: renderTaskExperience(this.task, content),
+      body,
     });
     if (!isOk(result)) {
       this.context.stderr.write(`${result.error.detail}\n`);
