@@ -5,8 +5,10 @@ runSimpleBridge({
   argv: process.argv.slice(2),
   command: "plan",
   helpOnEmpty: false,
-  help: `fuguectl-plan "<goal>" [--harness fugue-cc|codex|opencode|agy] [--models m1,m2,..] [--out <dir>] [--timeout-ms n] [--harness-arg x] [--task <file>]
-default models = fugue-cc: cc-deepseek,cc-kimi,coder · codex: gpt-5.5 · opencode: opencode/deepseek-v4-flash-free · agy: default
+  help: `fuguectl-plan "<goal>" [--harness fugue-cc|codex|opencode|agy|lite] [--models m1,m2,..] [--out <dir>] [--timeout-ms n] [--allow-partial] [--harness-arg x] [--codex-arg x] [--opencode-arg x] [--agy-arg x] [--task <file>]
+default models = fugue-cc: cc-deepseek,cc-kimi,coder · codex: gpt-5.5 · opencode: opencode/deepseek-v4-flash-free · agy: default · lite: codex:gpt-5.5,opencode:opencode/deepseek-v4-flash-free,agy:default
+lite custom models must be prefixed: codex:<model>, opencode:<provider/model>, agy:<model|default>
+--allow-partial exits 0 when at least one planner wrote an artifact; failures stay visible in output and TASK logs
 default out    = <cache_root>/plans
 `,
 });

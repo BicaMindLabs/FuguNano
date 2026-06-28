@@ -10,7 +10,7 @@
   <img src="https://img.shields.io/badge/Runtime-Node%20%E2%89%A518.18-339933?style=for-the-badge&logo=node.js&logoColor=white" alt="Node.js >= 18.18" />
   <img src="https://img.shields.io/badge/Engine-TypeScript-3178c6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript engine" />
   <img src="https://img.shields.io/badge/fuguectl-25%20suites-7c3aed?style=for-the-badge" alt="25 fuguectl test suites" />
-  <img src="https://img.shields.io/badge/assertions-337-brightgreen?style=for-the-badge" alt="337 fuguectl assertions" />
+  <img src="https://img.shields.io/badge/assertions-338-brightgreen?style=for-the-badge" alt="338 fuguectl assertions" />
   <a href="https://github.com/BicaMindLabs/FuguNano/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/BicaMindLabs/FuguNano/ci.yml?branch=main&style=for-the-badge&label=CI" alt="CI status" /></a>
   <img src="https://img.shields.io/badge/license-Apache--2.0-yellowgreen?style=for-the-badge" alt="Apache-2.0 license" />
 </p>
@@ -128,6 +128,7 @@ fuguectl preflight --harness agy
 fuguectl preflight --harness lite         # all lite runtimes: codex + opencode + agy
 fuguectl preflight --harness fugue-cc     # full worktree fleet path
 fuguectl task new "implement feature"
+fuguectl plan "implement feature" --harness lite --allow-partial --out /tmp/fugunano-plan --task TASK.md
 fuguectl dispatch cc-deepseek --template impl --task TASK.md --task-type backend
 fuguectl cache barrier <round>
 fuguectl integrate --work /path/to/project --agents "cc-deepseek cc-kimi"
@@ -185,14 +186,14 @@ so final status updates do not clobber concurrent audit lines.
 `orchestration/fuguectl/fuguectl` is the production operator entry point. It has
 24 subcommands and 25 test suites.
 
-| Area                   | Commands                                                                                                                                                                                                             |
-| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Setup and recon        | `fuguectl doctor`, `fuguectl init --dry-run\|--write`, `fuguectl version`, `fuguectl preflight --harness fugue-cc\|codex\|opencode\|agy\|all`, `fuguectl smoke`, `fuguectl fleet status\|up\|down`                   |
-| Planning               | `fuguectl task new\|log\|done`, `fuguectl template <name>`, `fuguectl plan "<goal>" [--harness h] [--models a,b] [--out <dir>] [--timeout-ms n] [--harness-arg x] [--task f]`, `fuguectl goal template\|show\|check` |
-| Routing and context    | `fuguectl allocate <type>`, `fuguectl workspace list\|show\|model\|context`, `fuguectl agents template\|validate\|list\|resolve`, `fuguectl skills index\|list\|match\|show\|inject\|validate\|forge`                |
-| Dispatch and gather    | `fuguectl dispatch <target>`, `fuguectl cache init\|put\|fail\|barrier\|collect\|resume`                                                                                                                             |
-| Integration and loop   | `fuguectl integrate --work <repo>`, `fuguectl loop init\|record\|decide\|status`, `fuguectl run set\|round\|status\|next\|clear`, `fuguectl summary <round>`                                                         |
-| Memory and maintenance | `fuguectl experience add\|list\|recall\|show`, `fuguectl self-harness template\|run`, `fuguectl runtime check\|adapt` (provider + installed workflow bundle drift), `fuguectl selftest`                              |
+| Area                   | Commands                                                                                                                                                                                                                                                                                      |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Setup and recon        | `fuguectl doctor`, `fuguectl init --dry-run\|--write`, `fuguectl version`, `fuguectl preflight --harness fugue-cc\|codex\|opencode\|agy\|lite\|all`, `fuguectl smoke`, `fuguectl fleet status\|up\|down`                                                                                      |
+| Planning               | `fuguectl task new\|log\|done`, `fuguectl template <name>`, `fuguectl plan "<goal>" [--harness h\|lite] [--models a,b] [--out <dir>] [--timeout-ms n] [--allow-partial] [--harness-arg x] [--codex-arg x] [--opencode-arg x] [--agy-arg x] [--task f]`, `fuguectl goal template\|show\|check` |
+| Routing and context    | `fuguectl allocate <type>`, `fuguectl workspace list\|show\|model\|context`, `fuguectl agents template\|validate\|list\|resolve`, `fuguectl skills index\|list\|match\|show\|inject\|validate\|forge`                                                                                         |
+| Dispatch and gather    | `fuguectl dispatch <target>`, `fuguectl cache init\|put\|fail\|barrier\|collect\|resume`                                                                                                                                                                                                      |
+| Integration and loop   | `fuguectl integrate --work <repo>`, `fuguectl loop init\|record\|decide\|status`, `fuguectl run set\|round\|status\|next\|clear`, `fuguectl summary <round>`                                                                                                                                  |
+| Memory and maintenance | `fuguectl experience add\|list\|recall\|show`, `fuguectl self-harness template\|run`, `fuguectl runtime check\|adapt` (provider + installed workflow bundle drift), `fuguectl selftest`                                                                                                       |
 
 ## TypeScript Engine
 
@@ -223,7 +224,7 @@ fugue integrate --work <repo> --agents "a b" [--ownership file] [--dry]
 fugue skills index|list|match|show|inject|validate|forge
 fugue preflight [--harness fugue-cc|codex|opencode|agy|lite|all] [--model provider/model|--target provider/model] [--config-only] [provider.config]
 fugue cache init|put|fail|status|barrier|collect|list|resume --cache <dir>
-fugue plan "<goal>" --harness fugue-cc|codex|opencode|agy --out <dir> [--models m1,m2] [--timeout-ms n] [--harness-arg x] [--task <file>]
+fugue plan "<goal>" --harness fugue-cc|codex|opencode|agy|lite --out <dir> [--models m1,m2] [--timeout-ms n] [--allow-partial] [--harness-arg x] [--codex-arg x] [--opencode-arg x] [--agy-arg x] [--task <file>]
 fugue task new|log|done
 fugue template <name> --dir <templates> [--set KEY=VALUE ...]
 fugue workspace list|show|model|context
@@ -251,6 +252,12 @@ caught before the run starts.
 For Antigravity, `--harness agy` dispatches through `agy --prompt`; target
 `default` uses the current Antigravity settings, while any other target is passed
 as `--model`.
+For planning across the Codex Bar runtimes, `fuguectl plan --harness lite`
+dispatches to Codex, OpenCode, and Antigravity in parallel. Custom lite planner
+targets must be prefixed, for example
+`--models codex:gpt-5.5,opencode:opencode/deepseek-v4-flash-free,agy:default`.
+Add `--allow-partial` during exploratory planning when a slow planner should not
+discard usable plans from the others.
 
 `runtime check` also compares the repo's `orchestration/fuguectl/` bundle with
 the installed workflow bundle. Add `--strict` when automation should fail on

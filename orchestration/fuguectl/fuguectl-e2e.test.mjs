@@ -86,7 +86,9 @@ suite.ok("help lists verbose dispatch observability", () =>
   helpOut.includes("--verbose"),
 );
 suite.ok("help lists planning harness", () =>
-  helpOut.includes('plan "<goal>" [--harness fugue-cc|codex|opencode|agy]'),
+  helpOut.includes(
+    'plan "<goal>" [--harness fugue-cc|codex|opencode|agy|lite]',
+  ),
 );
 suite.ok(
   "help lists planning models",
@@ -106,7 +108,11 @@ suite.ok(
   "help lists planning harness args and task audit",
   () =>
     helpOut.includes('plan "<goal>"') &&
+    helpOut.includes("[--allow-partial]") &&
     helpOut.includes("[--harness-arg x]") &&
+    helpOut.includes("[--codex-arg x]") &&
+    helpOut.includes("[--opencode-arg x]") &&
+    helpOut.includes("[--agy-arg x]") &&
     helpOut.includes("[--task <file>]"),
 );
 suite.ok(

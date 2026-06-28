@@ -174,6 +174,22 @@ suite.ok("wrapper preserves harness option", () =>
 );
 
 run(plan, [
+  "all lite planning",
+  "--harness",
+  "lite",
+  "--codex-arg=-c",
+  "--codex-arg=mcp_servers={}",
+  "--opencode-arg=--trace",
+  "--agy-arg=--new-project",
+  "--allow-partial",
+]);
+suite.ok("wrapper preserves lite planning harness and per-runtime args", () =>
+  readFileSync(process.env.FUGUE_PLAN_CALLS, "utf8").includes(
+    "plan all lite planning --harness lite --codex-arg=-c --codex-arg=mcp_servers={} --opencode-arg=--trace --agy-arg=--new-project --allow-partial\n",
+  ),
+);
+
+run(plan, [
   "runtime controlled planning",
   "--harness",
   "codex",

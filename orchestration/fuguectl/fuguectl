@@ -25,7 +25,7 @@ const help = `fuguectl — fugue workflow control-plane entrypoint.
   fuguectl workspace list|show|model|context <name>
   fuguectl agents template|validate [file]|list [file]|resolve [file] <id>
   fuguectl experience add|list|recall|show <ws>
-  fuguectl plan "<goal>" [--harness fugue-cc|codex|opencode|agy] [--models a,b,c] [--out <dir>] [--timeout-ms n] [--harness-arg x] [--task <file>]
+  fuguectl plan "<goal>" [--harness fugue-cc|codex|opencode|agy|lite] [--models a,b,c] [--out <dir>] [--timeout-ms n] [--allow-partial] [--harness-arg x] [--codex-arg x] [--opencode-arg x] [--agy-arg x] [--task <file>]
   fuguectl goal template|show|check <spec>
   fuguectl loop init|record|decide|status
   fuguectl run set|round|status|next|clear
@@ -46,7 +46,7 @@ const quickstartHelp = `fuguectl quickstart — safe first run
      fuguectl smoke --harness all --codex-clean --timeout-ms 120000
 
   3. Create a durable planning artifact:
-     fuguectl plan "your goal" --harness codex --timeout-ms 120000 --out /tmp/fugunano-plan --task TASK.md
+     fuguectl plan "your goal" --harness lite --timeout-ms 120000 --allow-partial --out /tmp/fugunano-plan --task TASK.md
 
   4. Optional full fleet setup:
      fuguectl init --write

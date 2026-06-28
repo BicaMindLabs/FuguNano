@@ -17,8 +17,9 @@ Send "decompose the goal" to several vendors at once, get different perspectives
 
 - **fuguectl route** (this repo's tooling):
   ```bash
-  fuguectl plan "<goal>" --harness fugue-cc --models cc-deepseek,cc-kimi,coder --out <dir> --timeout-ms 120000 --harness-arg x --task TASK.md
-  # Each model writes its decomposition to <dir>/<model>.plan.md; the planner synthesizes into Phase 1
+  fuguectl plan "<goal>" --harness fugue-cc --models cc-deepseek,cc-kimi,coder --out <dir> --timeout-ms 120000 --allow-partial --harness-arg x --codex-arg x --opencode-arg x --agy-arg x --task TASK.md
+  fuguectl plan "<goal>" --harness lite --out <dir> --timeout-ms 120000 --allow-partial --codex-arg=-c --codex-arg=mcp_servers={} --task TASK.md
+  # Each target writes its decomposition to <dir>/<sanitized-target-label>.plan.md; the planner synthesizes into Phase 1
   ```
 - **Native route** (host agent subagent tool): the planner spawns N subagents in parallel, each with a different custom agent or model hint, each producing one decomposition, and the planner synthesizes.
 
@@ -50,12 +51,12 @@ Top team:   planner
 
 ## Which to Pick
 
-| Scenario                                                                              | Use                                                                                                                                                            |
-| ------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Real parallel **implementation** (multi-file, each with its own worktree, persistent) | **fugue runtime profiles** (`fugue-cc` worktrees plus Codex/OpenCode where useful)                                                                             |
-| **Hierarchical team / sub-agent orchestration**                                       | Host-native subagents plus custom model bridges, when available                                                                                                |
-| Multi-model **planning**                                                              | Either works (`fuguectl plan --harness <runtime> [--models a,b] [--out <dir>] [--timeout-ms n] [--harness-arg x] --task TASK.md` or native parallel subagents) |
-| Cross-model **review**                                                                | independent Codex or other reviewer profile                                                                                                                    |
+| Scenario                                                                              | Use                                                                                                                                                                                                                                     |
+| ------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Real parallel **implementation** (multi-file, each with its own worktree, persistent) | **fugue runtime profiles** (`fugue-cc` worktrees plus Codex/OpenCode where useful)                                                                                                                                                      |
+| **Hierarchical team / sub-agent orchestration**                                       | Host-native subagents plus custom model bridges, when available                                                                                                                                                                         |
+| Multi-model **planning**                                                              | Either works (`fuguectl plan --harness <runtime\|lite> [--models a,b] [--out <dir>] [--timeout-ms n] [--allow-partial] [--harness-arg x] [--codex-arg x] [--opencode-arg x] [--agy-arg x] --task TASK.md` or native parallel subagents) |
+| Cross-model **review**                                                                | independent Codex or other reviewer profile                                                                                                                                                                                             |
 
 > See the example in `orchestration/agent-team/team-review.workflow.mjs` (a Workflow script: plan panel -> cross-model implementation -> Codex review, deterministic orchestration).
 

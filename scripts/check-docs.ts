@@ -349,7 +349,11 @@ const planningTokens = [
   "--models",
   "--out",
   "--timeout-ms",
+  "--allow-partial",
   "--harness-arg",
+  "--codex-arg",
+  "--opencode-arg",
+  "--agy-arg",
   "--task",
 ];
 const planningSurface = (content) =>
@@ -441,6 +445,22 @@ for (const [file, content] of [
   if (content.includes("preflight --harness lite"))
     ok(`${basename(file)}: documents lite preflight`);
   else no(`${basename(file)}: missing 'preflight --harness lite'`);
+}
+
+for (const [file, content] of [
+  [fuguectl, driver],
+  [planWrapper, planWrapperText],
+  [readmeEn, en],
+  [readmeZh, zh],
+  [agentsDoc, agentsText],
+  [agentTeamDoc, agentTeamText],
+  [workflowDoc, workflowText],
+  [workflowSkill, workflowSkillText],
+]) {
+  const surface = planningSurface(content);
+  if (surface.includes("--harness lite") || surface.includes("|lite"))
+    ok(`${basename(file)}: documents lite planning`);
+  else no(`${basename(file)}: missing 'plan --harness lite'`);
 }
 
 const selfCliText = text(selfCli);

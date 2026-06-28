@@ -2165,6 +2165,207 @@ describe('fugue CLI', () => {
       }
     });
 
+    it('dispatches planning through all lite runtimes', async () => {
+      const task = join(dir, 'TASK-lite-plan.md');
+      await writeFile(task, '## Log\n', 'utf8');
+      process.env.FUGUE_CODEX = codexBin;
+      process.env.FUGUE_OPENCODE = opencodeBin;
+      process.env.FUGUE_AGY = agyBin;
+      try {
+        const planned = await run([
+          'plan',
+          'compare available lite planners',
+          '--harness',
+          'lite',
+          '--out',
+          out,
+          '--task',
+          task,
+        ]);
+        const called = await readFile(calls, 'utf8');
+        const prompt = await readFile(prompts, 'utf8');
+        const taskLog = await readFile(task, 'utf8');
+
+        expect(planned.code).toBe(0);
+        expect(planned.out).toContain('planning panel: goal decomposition (lite)');
+        expect(planned.out).toContain('codex:gpt-5.5');
+        expect(planned.out).toContain('opencode:opencode/deepseek-v4-flash-free');
+        expect(planned.out).toContain('agy:default');
+        expect(planned.out).toContain('codex_gpt-5.5.plan.md');
+        expect(planned.out).toContain('opencode_opencode_deepseek-v4-flash-free.plan.md');
+        expect(planned.out).toContain('agy_default.plan.md');
+        expect(called).toContain('codex:gpt-5.5');
+        expect(called).toContain('opencode:opencode/deepseek-v4-flash-free');
+        expect(called).toContain('agy:--prompt');
+        expect(prompt).toContain('compare available lite planners');
+        expect(taskLog).toContain('plan → gpt-5.5 [codex] (status=started');
+        expect(taskLog).toContain(
+          'plan → opencode/deepseek-v4-flash-free [opencode] (status=started',
+        );
+        expect(taskLog).toContain('plan → default [agy] (status=started');
+      } finally {
+        delete process.env.FUGUE_CODEX;
+        delete process.env.FUGUE_OPENCODE;
+        delete process.env.FUGUE_AGY;
+      }
+    });
+
+    it('accepts prefixed custom lite planning targets', async () => {
+      process.env.FUGUE_CODEX = codexBin;
+      process.env.FUGUE_AGY = agyBin;
+      try {
+        const planned = await run([
+          'plan',
+          'custom lite planner set',
+          '--harness',
+          'lite',
+          '--models',
+          'codex:gpt-5.5,agy:default',
+          '--out',
+          out,
+        ]);
+        const called = await readFile(calls, 'utf8');
+
+        expect(planned.code).toBe(0);
+        expect(called).toContain('codex:gpt-5.5');
+        expect(called).toContain('agy:--prompt');
+        expect(called).not.toContain('opencode:');
+      } finally {
+        delete process.env.FUGUE_CODEX;
+        delete process.env.FUGUE_AGY;
+      }
+    });
+
+    it('rejects unprefixed custom lite planning targets', async () => {
+      const planned = await run([
+        'plan',
+        'bad lite planner set',
+        '--harness',
+        'lite',
+        '--models',
+        'gpt-5.5',
+      ]);
+
+      expect(planned.code).toBe(2);
+      expect(planned.err).toContain('lite planning models must be prefixed');
+    });
+
+    it('rejects planning targets whose artifact paths would collide', async () => {
+      const planned = await run([
+        'plan',
+        'colliding planner set',
+        '--harness',
+        'lite',
+        '--models',
+        'codex:a/b,codex:a:b',
+        '--out',
+        out,
+      ]);
+
+      expect(planned.code).toBe(2);
+      expect(planned.err).toContain('duplicate artifact path');
+    });
+
+    it('can accept partial lite planning success explicitly', async () => {
+      process.env.FUGUE_CODEX = codexBin;
+      process.env.FUGUE_OPENCODE = join(dir, 'missing-opencode');
+      try {
+        const planned = await run([
+          'plan',
+          'partial lite planner set',
+          '--harness',
+          'lite',
+          '--models',
+          'codex:gpt-5.5,opencode:opencode/deepseek-v4-flash-free',
+          '--out',
+          out,
+          '--allow-partial',
+        ]);
+
+        expect(planned.code).toBe(0);
+        expect(planned.out).toContain('codex:gpt-5.5');
+        expect(planned.out).toContain('opencode:opencode/deepseek-v4-flash-free dispatch failed');
+        expect(planned.out).toContain('partial: --allow-partial accepted available artifacts');
+        await expect(readFile(join(out, 'codex_gpt-5.5.plan.md'), 'utf8')).resolves.toContain(
+          '# stub plan',
+        );
+      } finally {
+        delete process.env.FUGUE_CODEX;
+        delete process.env.FUGUE_OPENCODE;
+      }
+    });
+
+    it('salvages a plan artifact written before a planner failure', async () => {
+      await writeFile(
+        codexBin,
+        [
+          '#!/usr/bin/env bash',
+          'prompt="${@: -1}"',
+          "outfile=$(printf '%s' \"$prompt\" | sed -n 's/.*write to \\([^*]*\\)\\*\\*.*/\\1/p' | head -1)",
+          'mkdir -p "$(dirname "$outfile")"',
+          'printf "# salvaged plan\\n" > "$outfile"',
+          'exit 1',
+          '',
+        ].join('\n'),
+        'utf8',
+      );
+      await chmod(codexBin, 0o755);
+      process.env.FUGUE_CODEX = codexBin;
+      try {
+        const planned = await run([
+          'plan',
+          'salvage planner output',
+          '--harness',
+          'codex',
+          '--out',
+          out,
+          '--allow-partial',
+        ]);
+
+        expect(planned.code).toBe(0);
+        expect(planned.out).toContain('dispatch failed but left written artifact');
+        expect(planned.out).toContain('partial: --allow-partial accepted available artifacts');
+        await expect(readFile(join(out, 'codex_gpt-5.5.plan.md'), 'utf8')).resolves.toContain(
+          '# salvaged plan',
+        );
+      } finally {
+        delete process.env.FUGUE_CODEX;
+      }
+    });
+
+    it('does not accept a stale plan artifact from an earlier run', async () => {
+      await mkdir(out, { recursive: true });
+      await writeFile(join(out, 'codex_gpt-5.5.plan.md'), '# stale plan\n', 'utf8');
+      await writeFile(
+        codexBin,
+        ['#!/usr/bin/env bash', `printf 'codex:%s\\n' "$3" >> "${calls}"`, 'exit 1', ''].join('\n'),
+        'utf8',
+      );
+      await chmod(codexBin, 0o755);
+      process.env.FUGUE_CODEX = codexBin;
+      try {
+        const planned = await run([
+          'plan',
+          'stale planner output',
+          '--harness',
+          'codex',
+          '--out',
+          out,
+          '--allow-partial',
+        ]);
+
+        expect(planned.code).toBe(1);
+        expect(planned.out).toContain('dispatch failed');
+        expect(planned.out).toContain('collect: no plan artifacts were written');
+        expect(planned.out).not.toContain('partial: --allow-partial accepted');
+        await expect(readFile(join(out, 'codex_gpt-5.5.plan.md'), 'utf8')).rejects.toMatchObject({
+          code: 'ENOENT',
+        });
+      } finally {
+        delete process.env.FUGUE_CODEX;
+      }
+    });
+
     it('forwards planning runtime controls to the selected harness', async () => {
       await writeFile(
         codexBin,
@@ -2197,7 +2398,7 @@ describe('fugue CLI', () => {
         ]);
         const called = await readFile(calls, 'utf8');
         const prompt = await readFile(prompts, 'utf8');
-        const captured = await readFile(join(out, 'gpt-5.5.plan.md'), 'utf8');
+        const captured = await readFile(join(out, 'codex_gpt-5.5.plan.md'), 'utf8');
 
         expect(planned.code).toBe(0);
         expect(called).toContain('codex-argv:exec -c mcp_servers={} --model gpt-5.5');
@@ -2205,6 +2406,60 @@ describe('fugue CLI', () => {
         expect(captured).toContain('# arg plan');
       } finally {
         delete process.env.FUGUE_CODEX;
+      }
+    });
+
+    it('forwards harness-specific planning runtime controls', async () => {
+      await writeFile(
+        codexBin,
+        [
+          '#!/usr/bin/env bash',
+          `printf 'codex-argv:%s\\n' "$*" >> "${calls}"`,
+          'prompt="${@: -1}"',
+          `printf '%s\\n' "$prompt" >> "${prompts}"`,
+          "printf '# codex arg plan\\n'",
+          '',
+        ].join('\n'),
+        'utf8',
+      );
+      await writeFile(
+        opencodeBin,
+        [
+          '#!/usr/bin/env bash',
+          `printf 'opencode-argv:%s\\n' "$*" >> "${calls}"`,
+          'prompt="${@: -1}"',
+          `printf '%s\\n' "$prompt" >> "${prompts}"`,
+          "printf '# opencode arg plan\\n'",
+          '',
+        ].join('\n'),
+        'utf8',
+      );
+      await chmod(codexBin, 0o755);
+      await chmod(opencodeBin, 0o755);
+      process.env.FUGUE_CODEX = codexBin;
+      process.env.FUGUE_OPENCODE = opencodeBin;
+      try {
+        const planned = await run([
+          'plan',
+          'plan with per runtime args',
+          '--harness',
+          'lite',
+          '--models',
+          'codex:gpt-5.5,opencode:opencode/deepseek-v4-flash-free',
+          '--out',
+          out,
+          '--codex-arg=-c',
+          '--codex-arg=mcp_servers={}',
+          '--opencode-arg=--trace',
+        ]);
+        const called = await readFile(calls, 'utf8');
+
+        expect(planned.code).toBe(0);
+        expect(called).toContain('codex-argv:exec -c mcp_servers={} --model gpt-5.5');
+        expect(called).toContain('opencode-argv:run --trace -m opencode/deepseek-v4-flash-free');
+      } finally {
+        delete process.env.FUGUE_CODEX;
+        delete process.env.FUGUE_OPENCODE;
       }
     });
 
@@ -2223,7 +2478,7 @@ describe('fugue CLI', () => {
 
         expect(planned.code).toBe(0);
         expect(called).toContain('codex:gpt-5.5');
-        expect(planned.out).toContain('gpt-5.5.plan.md');
+        expect(planned.out).toContain('codex_gpt-5.5.plan.md');
       } finally {
         delete process.env.FUGUE_CODEX;
       }
@@ -2247,8 +2502,8 @@ describe('fugue CLI', () => {
 
         expect(planned.code).toBe(0);
         expect(called).toContain('opencode:opencode/deepseek-v4-flash-free');
-        expect(planned.out).toContain('opencode_deepseek-v4-flash-free.plan.md');
-        expect(prompt).toContain(join(out, 'opencode_deepseek-v4-flash-free.plan.md'));
+        expect(planned.out).toContain('opencode_opencode_deepseek-v4-flash-free.plan.md');
+        expect(prompt).toContain(join(out, 'opencode_opencode_deepseek-v4-flash-free.plan.md'));
       } finally {
         delete process.env.FUGUE_OPENCODE;
       }
