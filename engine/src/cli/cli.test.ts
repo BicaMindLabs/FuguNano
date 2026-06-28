@@ -230,6 +230,19 @@ describe('fugue CLI', () => {
       expect(await readFile(file, 'utf8')).toContain('Priority: P0');
     });
 
+    it('creates unique task files under concurrent task new calls', async () => {
+      const results = await Promise.all(
+        Array.from({ length: 8 }, (_, index) => run(['task', 'new', `parallel ${String(index)}`])),
+      );
+      const paths = results.map((result) => result.out.trim());
+
+      expect(results.every((result) => result.code === 0)).toBe(true);
+      expect(new Set(paths).size).toBe(paths.length);
+      for (const path of paths) {
+        expect(await readFile(path, 'utf8')).toContain('Status: IN_PROGRESS');
+      }
+    });
+
     it('joins split log words into one message', async () => {
       const created = await run(['task', 'new', 'log target']);
       const file = created.out.trim();

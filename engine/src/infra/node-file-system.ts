@@ -17,6 +17,9 @@ const isErrnoException = (error: unknown): error is NodeJS.ErrnoException =>
 
 const isNotFound = (error: unknown): boolean => isErrnoException(error) && error.code === 'ENOENT';
 
+const isAlreadyExists = (error: unknown): boolean =>
+  isErrnoException(error) && error.code === 'EEXIST';
+
 const isMissing = (error: unknown): boolean =>
   isNotFound(error) || (isErrnoException(error) && error.code === 'ENOTDIR');
 
@@ -29,6 +32,17 @@ export class NodeFileSystem implements FileSystem {
       return await readFile(path, 'utf8');
     } catch (error) {
       if (isNotFound(error)) return null;
+      throw error;
+    }
+  }
+
+  async writeNew(path: string, content: string): Promise<boolean> {
+    await mkdir(dirname(path), { recursive: true });
+    try {
+      await writeFile(path, content, { encoding: 'utf8', flag: 'wx' });
+      return true;
+    } catch (error) {
+      if (isAlreadyExists(error)) return false;
       throw error;
     }
   }

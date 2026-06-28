@@ -6,6 +6,8 @@
 export interface FileSystem {
   /** File contents, or null if it does not exist. */
   read(path: string): Promise<string | null>;
+  /** Create a file only if absent, returning false when it already exists. */
+  writeNew(path: string, content: string): Promise<boolean>;
   /** Write atomically (temp + rename), creating parent dirs as needed. */
   write(path: string, content: string): Promise<void>;
   /** Append content, creating parent dirs as needed. */

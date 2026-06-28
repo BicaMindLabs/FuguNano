@@ -21,8 +21,7 @@ export class FsTaskStore implements TaskStore {
     for (let n = 1; n <= 999; n += 1) {
       const id = `TASK-${day}-${pad3(n)}`;
       const path = joinPath(this.dir, `${id}.md`);
-      if ((await this.fs.read(path)) === null) {
-        await this.fs.write(path, renderTaskFile(id, title, priority, this.stamp()));
+      if (await this.fs.writeNew(path, renderTaskFile(id, title, priority, this.stamp()))) {
         return { id, path };
       }
     }

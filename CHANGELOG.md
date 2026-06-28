@@ -22,6 +22,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/), versioning [SemV
 
 ### Fixed
 
+- **Concurrent TASK creation is collision-safe**: `fuguectl task new` now creates TASK files with exclusive file creation instead of read-then-write, so parallel operators receive distinct TASK IDs instead of racing on the same path.
 - **Planning TASK audit is append-safe**: concurrent `fuguectl plan --task` commands now append planner start/terminal lines instead of read-modify-writing the whole TASK file, so multi-planner decomposition keeps every audit entry.
 - **Phase 3 TASK audit is append-safe**: concurrent `fuguectl summary --task` and `fuguectl integrate --task` runs now append round/integration records instead of read-modify-writing the whole TASK file.
 - **Operator TASK notes are append-safe**: concurrent `fuguectl task log` calls now append note lines instead of read-modify-writing the whole TASK file.

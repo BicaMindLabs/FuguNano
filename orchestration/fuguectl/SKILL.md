@@ -67,7 +67,7 @@ Three roles, five phases. Planner orchestrates, the implementer fleet writes cod
 
    `"$FO" doctor` shows the full environment + recommendation. **Never dispatch when preflight is NO-GO** — that's how tasks get stuck in an empty queue.
 
-2. **Scaffold the TASK file** — don't hand-write boilerplate: `F=$("$FO" task new "<title>" P1)` → `$TASKS/TASK-{date}-{NNN}.md`; `"$FO" task log "$F" "<note>"` appends operator notes with append-safe writes, `"$FO" task done "$F"` closes it. Structure:
+2. **Scaffold the TASK file** — don't hand-write boilerplate: `F=$("$FO" task new "<title>" P1)` → `$TASKS/TASK-{date}-{NNN}.md` (exclusive creation, so concurrent operators get distinct files); `"$FO" task log "$F" "<note>"` appends operator notes with append-safe writes, `"$FO" task done "$F"` closes it. Structure:
 
    ```markdown
    # TASK-{date}-{n}: {title}

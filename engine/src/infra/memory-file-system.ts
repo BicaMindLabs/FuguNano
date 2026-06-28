@@ -32,6 +32,12 @@ export class MemoryFileSystem implements FileSystem {
     return Promise.resolve();
   }
 
+  writeNew(path: string, content: string): Promise<boolean> {
+    if (this.#files.has(path)) return Promise.resolve(false);
+    this.#files.set(path, { content, mtime: this.clock.now() });
+    return Promise.resolve(true);
+  }
+
   append(path: string, content: string): Promise<void> {
     const existing = this.#files.get(path)?.content ?? '';
     this.#files.set(path, { content: `${existing}${content}`, mtime: this.clock.now() });
