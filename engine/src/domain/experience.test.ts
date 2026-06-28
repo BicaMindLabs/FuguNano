@@ -105,6 +105,29 @@ describe('explainRecallMatch', () => {
     });
   });
 
+  it('includes the active source reference filter when provided', () => {
+    const explanation = explainRecallMatch(
+      {
+        title: 'task-derived retro',
+        body: 'Use task provenance in recall audits.',
+        sourceKind: 'task',
+        sourceRef: '/tmp/TASK.md',
+        trustKind: 'trusted',
+      },
+      { query: 'task provenance', sourceKind: 'task', sourceRef: '/tmp/TASK.md' },
+    );
+
+    expect(explanation).toEqual({
+      score: 2,
+      matchedTerms: ['task', 'provenance'],
+      sourceKind: 'task',
+      sourceRef: '/tmp/TASK.md',
+      trustKind: 'trusted',
+      sourceFilter: 'task',
+      sourceRefFilter: '/tmp/TASK.md',
+    });
+  });
+
   it('reports stored trust and the active trust filter', () => {
     const explanation = explainRecallMatch(
       {

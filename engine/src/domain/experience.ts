@@ -123,6 +123,7 @@ export interface RecallMatchExplanation {
   readonly failureCause?: FailureCause;
   readonly minScore?: number;
   readonly sourceFilter?: ExperienceSourceKind;
+  readonly sourceRefFilter?: string;
   readonly trustFilter?: ExperienceTrustFilter;
   readonly maxAgeSeconds?: number;
 }
@@ -148,6 +149,7 @@ export const explainRecallMatch = (
     ...(failureCause === undefined ? {} : { failureCause }),
     ...(options.minScore === undefined ? {} : { minScore: options.minScore }),
     ...(options.sourceKind === undefined ? {} : { sourceFilter: options.sourceKind }),
+    ...(options.sourceRef === undefined ? {} : { sourceRefFilter: options.sourceRef }),
     ...(options.trust === undefined ? {} : { trustFilter: options.trust }),
     ...(options.maxAgeSeconds === undefined ? {} : { maxAgeSeconds: options.maxAgeSeconds }),
   };
@@ -166,6 +168,7 @@ export interface RecallOptions {
   readonly failureCause?: FailureCause;
   readonly minScore?: number;
   readonly sourceKind?: ExperienceSourceKind;
+  readonly sourceRef?: string;
   readonly trust?: ExperienceTrustFilter;
   readonly maxAgeSeconds?: number;
 }

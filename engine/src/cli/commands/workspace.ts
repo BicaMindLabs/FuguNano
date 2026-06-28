@@ -109,6 +109,7 @@ const renderExperience = (methods: readonly Method[]): readonly string[] =>
 const recallOptions = (
   query: string | undefined,
   sourceKind: ExperienceSourceKind | undefined,
+  sourceRef: string | undefined,
   limit: number | undefined,
   trust: ExperienceTrustFilter,
   maxAgeSeconds: number | undefined,
@@ -119,6 +120,9 @@ const recallOptions = (
       : { limit: limit ?? 3, query, trust };
   if (sourceKind !== undefined) {
     options = { ...options, sourceKind };
+  }
+  if (sourceRef !== undefined) {
+    options = { ...options, sourceRef };
   }
   if (maxAgeSeconds !== undefined) {
     options = { ...options, maxAgeSeconds };
@@ -145,6 +149,15 @@ const experienceSourceError = (raw: string | undefined): string => {
   const rendered = source === undefined || source.length === 0 ? '<empty>' : source;
   return `unknown --experience-source ${rendered}; expected one of ${EXPERIENCE_SOURCE_KINDS.join(', ')}\n`;
 };
+
+const parseExperienceSourceRef = (raw: string | undefined): string | null | undefined => {
+  if (raw === undefined) return undefined;
+  const value = raw.trim();
+  return value.length === 0 ? null : value;
+};
+
+const experienceSourceRefError = (): string =>
+  '--experience-source-ref must be a non-empty string\n';
 
 const parseExperienceLimit = (raw: string | undefined): number | null | undefined => {
   if (raw === undefined) return undefined;
@@ -256,6 +269,7 @@ export class WorkspaceContextCommand extends WorkspaceCommandOptions {
   query = Option.String('--query');
   experience = Option.String('--experience', defaultExperienceDir());
   experienceSource = Option.String('--experience-source');
+  experienceSourceRef = Option.String('--experience-source-ref');
   experienceLimit = Option.String('--experience-limit');
   experienceTrust = Option.String('--experience-trust');
   experienceMaxAgeDays = Option.String('--experience-max-age-days');
@@ -264,6 +278,11 @@ export class WorkspaceContextCommand extends WorkspaceCommandOptions {
     const experienceSource = parseExperienceSource(this.experienceSource);
     if (experienceSource === null) {
       this.context.stderr.write(experienceSourceError(this.experienceSource));
+      return 2;
+    }
+    const experienceSourceRef = parseExperienceSourceRef(this.experienceSourceRef);
+    if (experienceSourceRef === null) {
+      this.context.stderr.write(experienceSourceRefError());
       return 2;
     }
     const experienceLimit = parseExperienceLimit(this.experienceLimit);
@@ -295,6 +314,7 @@ export class WorkspaceContextCommand extends WorkspaceCommandOptions {
       recallOptions(
         this.query ?? this.task,
         experienceSource,
+        experienceSourceRef,
         experienceLimit,
         experienceTrust ?? 'trusted',
         experienceMaxAgeSeconds,

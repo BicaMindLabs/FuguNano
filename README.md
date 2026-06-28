@@ -211,14 +211,15 @@ Each record also carries lightweight provenance: `experience add` writes
 origin with `experience add --source-ref <url|path|note>`, so browser notes,
 paper summaries, and model-derived imports remain origin-visible during later
 recall. Use `--source manual|task` when manual notes and task-derived memories
-should be routed separately; this is an operator routing/audit control, not a
-full authority or poisoning defense. Records also
+should be routed separately, and `--source-ref <url|path|note>` when a recall
+should route by one exact write-time origin. These are operator routing/audit
+controls, not full authority or poisoning defenses. Records also
 carry `trustKind=trusted|untrusted`: `experience add --trust untrusted` marks
 content imported from a browser, model, or other unreviewed channel, while
 operator notes and learned TASK audits default to `trusted`. Add `--explain` to
 recall when you want the audit line that shows score, matched query terms,
 stored failure cause, active cause filter, active source filter, active trust
-filter, provenance source, and stored trust.
+filter, active source-ref filter, provenance source, and stored trust.
 Add `--min-score <n>` with a query when you want a stricter manual recall gate:
 weak one-token matches are dropped from that recall result.
 Add `--max-age-days <n>` when old memories should be treated as stale for this
@@ -226,11 +227,14 @@ recall; the original records stay on disk, but retrieval ignores anything older
 than the requested freshness window and `--explain` prints the active gate.
 For automatic memory injection, pass `--experience-source manual|task` to
 `workspace context` or `dispatch --workspace`; it applies the same source route
-before query ranking and prompt assembly. Add `--experience-limit <n>` on the
-same automatic-injection paths when a smaller prompt budget should receive fewer
-experience records. Automatic injection is trusted-only by default; add
-`--experience-trust all` only when you intentionally want untrusted records in
-the prompt for inspection or sandboxed work. Add
+before query ranking and prompt assembly. Add
+`--experience-source-ref <url|path|note>` when automatic injection should replay
+only memory imported or learned from one exact origin. Add
+`--experience-limit <n>` on the same automatic-injection paths when a smaller
+prompt budget should receive fewer experience records. Automatic injection is
+trusted-only by default; add `--experience-trust all` only when you
+intentionally want untrusted records in the prompt for inspection or sandboxed
+work. Add
 `--experience-max-age-days <n>` when automatic injection should prefer only
 recent experience after a model, dependency, API, or workflow change.
 
@@ -248,6 +252,7 @@ fuguectl experience learn code "failed-query retro" \
 fuguectl experience recall code \
   --failure-cause retrieval \
   --source task \
+  --source-ref TASK.md \
   --trust trusted \
   --query "dispatch output" \
   --min-score 2 \
@@ -256,6 +261,7 @@ fuguectl experience recall code \
 
 fuguectl workspace context code \
   --experience-source task \
+  --experience-source-ref TASK.md \
   --experience-limit 1 \
   --experience-trust all \
   --experience-max-age-days 30 \
@@ -265,8 +271,8 @@ fuguectl workspace context code \
 This follows the same direction as Agent Workflow Memory, AgentHER, MemRL, and
 recent agent-native memory, budget-tier routing, token-economics,
 store-routing, and provenance studies: do not replay every trace. FuguNano's
-current step is deliberately modest: select by workspace, source, write-time
-source reference, trust mark, failure mode, retrieval evidence, utility
+current step is deliberately modest: select by workspace, source class, exact
+write-time source reference, trust mark, failure mode, retrieval evidence, utility
 threshold, freshness window, and an explicit recall cap; learned budget-tier
 routing, semantic conflict adjudication, and formal authority elevation are
 future work.
@@ -295,7 +301,7 @@ fugue init [--dry-run|--write]
 fugue fleet status|up|down
 fugue allocate <task-type>|list|record|feed|stats|reset|decay
 fugue smoke [--harness all|codex|opencode|agy] [--timeout-ms n] [--task <file>] [--out-dir <dir>]
-fugue dispatch <target> --harness fugue-cc|codex|opencode|agy [--timeout-ms n] [--codex-clean] [--harness-arg x] [--out <file>] [--require-output] [--verbose] [--workspace ws [--experience-query q] [--experience-source manual|task] [--experience-limit n] [--experience-trust trusted|all] [--experience-max-age-days n]] --template <name>|--prompt-file <file>|--prompt <text>
+fugue dispatch <target> --harness fugue-cc|codex|opencode|agy [--timeout-ms n] [--codex-clean] [--harness-arg x] [--out <file>] [--require-output] [--verbose] [--workspace ws [--experience-query q] [--experience-source manual|task] [--experience-source-ref ref] [--experience-limit n] [--experience-trust trusted|all] [--experience-max-age-days n]] --template <name>|--prompt-file <file>|--prompt <text>
 fugue integrate --work <repo> --agents "a b" [--ownership file] [--dry]
 fugue skills index|list|match|show|inject|validate|forge
 fugue preflight [--harness fugue-cc|codex|opencode|agy|lite|all] [--model provider/model|--target provider/model] [--config-only] [provider.config]
@@ -303,10 +309,10 @@ fugue cache init|put|fail|status|barrier|collect|list|resume --cache <dir>
 fugue plan "<goal>" --harness fugue-cc|codex|opencode|agy|lite --out <dir> [--models m1,m2] [--timeout-ms n] [--allow-partial] [--codex-clean] [--harness-arg x] [--codex-arg x] [--opencode-arg x] [--agy-arg x] [--task <file>]
 fugue task new|log|done
 fugue template <name> --dir <templates> [--set KEY=VALUE ...]
-fugue workspace list|show|model|context [context: --experience-source manual|task --experience-limit n --experience-trust trusted|all --experience-max-age-days n]
+fugue workspace list|show|model|context [context: --experience-source manual|task --experience-source-ref ref --experience-limit n --experience-trust trusted|all --experience-max-age-days n]
 fugue experience add|list|show --store <dir> [add: --trust trusted|untrusted --source-ref ref]
 fugue experience learn --store <dir> [--failure-cause cause]
-fugue experience recall --store <dir> [--failure-cause cause] [--source manual|task] [--trust trusted|untrusted|all] [--min-score n] [--max-age-days n] [--explain]
+fugue experience recall --store <dir> [--failure-cause cause] [--source manual|task] [--source-ref ref] [--trust trusted|untrusted|all] [--min-score n] [--max-age-days n] [--explain]
 fugue summary <round> --cache <dir> [--task <file>]
 fugue runtime check [--strict] --state <dir> [--skill <installed SKILL.md>] [--alias-skill <legacy SKILL.md>] [--repo-skill <repo SKILL.md>]
 fugue runtime adapt --state <dir> [--skill <installed SKILL.md>] [--alias-skill <legacy SKILL.md>] [--repo-skill <repo SKILL.md>]

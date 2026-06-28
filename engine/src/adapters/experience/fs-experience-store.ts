@@ -140,6 +140,9 @@ export class FsExperienceStore implements ExperienceStore {
     if (options.sourceKind !== undefined) {
       methods = methods.filter((method) => method.sourceKind === options.sourceKind);
     }
+    if (options.sourceRef !== undefined) {
+      methods = methods.filter((method) => method.sourceRef === options.sourceRef);
+    }
     if (options.trust !== undefined && options.trust !== 'all') {
       methods = methods.filter((method) => method.trustKind === options.trust);
     }

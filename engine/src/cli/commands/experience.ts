@@ -48,6 +48,7 @@ const renderRecallExplanation = (
   const filter = options.failureCause ?? '-';
   const minScore = explanation.minScore ?? '-';
   const sourceFilter = explanation.sourceFilter ?? '-';
+  const sourceRefFilter = explanation.sourceRefFilter ?? '-';
   const trustFilter = explanation.trustFilter ?? '-';
   const maxAgeDays =
     explanation.maxAgeSeconds === undefined ? '-' : String(explanation.maxAgeSeconds / 86_400);
@@ -55,7 +56,7 @@ const renderRecallExplanation = (
     explanation.sourceRef === undefined
       ? explanation.sourceKind
       : `${explanation.sourceKind}:${explanation.sourceRef}`;
-  return `[experience:explain] score=${explanation.score} minScore=${minScore} maxAgeDays=${maxAgeDays} matched=${matched} failureCause=${failureCause} filter=${filter} sourceFilter=${sourceFilter} trustFilter=${trustFilter} source=${source} trust=${explanation.trustKind}\n`;
+  return `[experience:explain] score=${explanation.score} minScore=${minScore} maxAgeDays=${maxAgeDays} matched=${matched} failureCause=${failureCause} filter=${filter} sourceFilter=${sourceFilter} sourceRefFilter=${sourceRefFilter} trustFilter=${trustFilter} source=${source} trust=${explanation.trustKind}\n`;
 };
 
 const parseLimit = (raw: string): number => {
@@ -362,6 +363,7 @@ export class ExperienceRecallCommand extends ExperienceCommand {
   limit = Option.String('--limit', '3');
   failureCause = Option.String('--failure-cause');
   sourceKind = Option.String('--source');
+  sourceRef = Option.String('--source-ref');
   trust = Option.String('--trust');
   minScore = Option.String('--min-score');
   maxAgeDays = Option.String('--max-age-days');
@@ -397,6 +399,11 @@ export class ExperienceRecallCommand extends ExperienceCommand {
         return 1;
       }
     }
+    const sourceRef = this.sourceRef?.trim();
+    if (this.sourceRef !== undefined && (sourceRef === undefined || sourceRef.length === 0)) {
+      this.context.stderr.write(sourceRefError());
+      return 1;
+    }
     const minScore = parseMinScore(this.minScore);
     if (minScore === null) {
       this.context.stderr.write('unknown --min-score; expected a positive integer\n');
@@ -424,6 +431,9 @@ export class ExperienceRecallCommand extends ExperienceCommand {
       sourceKind !== undefined && isExperienceSourceKind(sourceKind) ? sourceKind : undefined;
     if (recallSourceKind !== undefined) {
       options = { ...options, sourceKind: recallSourceKind };
+    }
+    if (sourceRef !== undefined) {
+      options = { ...options, sourceRef };
     }
     const recallTrustFilter: ExperienceTrustFilter | undefined =
       trustFilter !== undefined && isExperienceTrustFilter(trustFilter) ? trustFilter : undefined;

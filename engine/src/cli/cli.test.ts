@@ -1294,6 +1294,20 @@ describe('fugue CLI', () => {
         ),
       );
       const calledDefault = await readFile(fugueCcCalled, 'utf8');
+      const sourceRefDispatch = await run(
+        args(
+          'cc-x',
+          '--workspace',
+          'code',
+          '--experience-source-ref',
+          '/tmp/TASK.md',
+          '--experience-limit',
+          '3',
+          '--prompt',
+          'fix redis cache expiration',
+        ),
+      );
+      const calledSourceRef = await readFile(fugueCcCalled, 'utf8');
       const includeUntrusted = await run(
         args(
           'cc-x',
@@ -1316,6 +1330,12 @@ describe('fugue CLI', () => {
       const withoutWorkspace = await run(
         args('cc-x', '--experience-source', 'task', '--prompt', 'x'),
       );
+      const blankSourceRef = await run(
+        args('cc-x', '--workspace', 'code', '--experience-source-ref', '   ', '--prompt', 'x'),
+      );
+      const sourceRefWithoutWorkspace = await run(
+        args('cc-x', '--experience-source-ref', '/tmp/TASK.md', '--prompt', 'x'),
+      );
       const badLimit = await run(
         args('cc-x', '--workspace', 'code', '--experience-limit', '0', '--prompt', 'x'),
       );
@@ -1334,6 +1354,10 @@ describe('fugue CLI', () => {
       expect(calledDefault).not.toContain('[experience] Task redis old');
       expect(calledDefault).not.toContain('[experience] Manual redis');
       expect(calledDefault).not.toContain('[experience] Task redis untrusted');
+      expect(sourceRefDispatch.code).toBe(0);
+      expect(calledSourceRef).toContain('[experience] Task redis old');
+      expect(calledSourceRef).not.toContain('[experience] Task redis new');
+      expect(calledSourceRef).not.toContain('[experience] Manual redis');
       expect(includeUntrusted.code).toBe(0);
       expect(calledAll).toContain('[experience] Task redis untrusted');
       expect(calledAll).not.toContain('[experience] Task redis new');
@@ -1341,6 +1365,12 @@ describe('fugue CLI', () => {
       expect(invalid.err).toContain('unknown --experience-source imported');
       expect(withoutWorkspace.code).toBe(2);
       expect(withoutWorkspace.err).toContain('--experience-source requires --workspace');
+      expect(blankSourceRef.code).toBe(2);
+      expect(blankSourceRef.err).toContain('--experience-source-ref must be a non-empty string');
+      expect(sourceRefWithoutWorkspace.code).toBe(2);
+      expect(sourceRefWithoutWorkspace.err).toContain(
+        '--experience-source-ref requires --workspace',
+      );
       expect(badLimit.code).toBe(2);
       expect(badLimit.err).toContain('unknown --experience-limit 0');
       expect(limitWithoutWorkspace.code).toBe(2);
@@ -1849,6 +1879,67 @@ describe('fugue CLI', () => {
       expect(manualOnly.out).toContain('source=manual');
       expect(manualOnly.out).toContain('[experience] manual dispatch source');
       expect(manualOnly.out).not.toContain('[experience] task dispatch source');
+
+      const otherTask = join(dir, 'TASK-source-other.md');
+      await writeFile(
+        otherTask,
+        [
+          '# TASK-2026-06-28-998: Alternate source task',
+          'Status: DONE',
+          'Priority: P2',
+          'Created: 2026-06-28 20:00',
+          'Completed: 2026-06-28 20:10',
+          '',
+          '## Requirements',
+          'Keep dispatch output source filtering deterministic.',
+          '',
+          '## Output files',
+          '- engine/src/cli/commands/experience.ts',
+          '',
+          '## Log',
+          '- [2026-06-28 20:05] Verification green.',
+          '',
+        ].join('\n'),
+        'utf8',
+      );
+      await run([
+        'experience',
+        'learn',
+        '--store',
+        store,
+        'code',
+        'other task dispatch source',
+        '--task',
+        otherTask,
+      ]);
+      const sourceRefOnly = await run([
+        'experience',
+        'recall',
+        '--store',
+        store,
+        'code',
+        '--query',
+        'dispatch source',
+        '--source-ref',
+        task,
+        '--explain',
+      ]);
+      const blankSourceRef = await run([
+        'experience',
+        'recall',
+        '--store',
+        store,
+        'code',
+        '--source-ref',
+        '   ',
+      ]);
+
+      expect(sourceRefOnly.code).toBe(0);
+      expect(sourceRefOnly.out).toContain(`sourceRefFilter=${task}`);
+      expect(sourceRefOnly.out).toContain('[experience] task dispatch source');
+      expect(sourceRefOnly.out).not.toContain('[experience] other task dispatch source');
+      expect(blankSourceRef.code).toBe(1);
+      expect(blankSourceRef.err).toContain('--source-ref must be a non-empty string');
       expect(unknown.code).toBe(1);
       expect(unknown.err).toContain('unknown --source imported');
       expect(empty.code).toBe(1);
@@ -5289,6 +5380,21 @@ describe('fugue CLI', () => {
         '--task',
         'fix redis cache expiration',
       ]);
+      const contextSourceRef = await run([
+        'workspace',
+        'context',
+        ...wsArgs(),
+        ...modelArgs(),
+        '--experience',
+        experience,
+        '--experience-source-ref',
+        '/tmp/TASK.md',
+        '--experience-limit',
+        '3',
+        'code',
+        '--task',
+        'fix redis cache expiration',
+      ]);
       const unknown = await run([
         'workspace',
         'context',
@@ -5308,6 +5414,17 @@ describe('fugue CLI', () => {
         '--experience',
         experience,
         '--experience-source',
+        '   ',
+        'code',
+      ]);
+      const blankSourceRef = await run([
+        'workspace',
+        'context',
+        ...wsArgs(),
+        ...modelArgs(),
+        '--experience',
+        experience,
+        '--experience-source-ref',
         '   ',
         'code',
       ]);
@@ -5342,10 +5459,16 @@ describe('fugue CLI', () => {
       expect(contextAll.code).toBe(0);
       expect(contextAll.out).toContain('[experience] Task redis untrusted');
       expect(contextAll.out).not.toContain('[experience] Task redis new');
+      expect(contextSourceRef.code).toBe(0);
+      expect(contextSourceRef.out).toContain('[experience] Task redis old');
+      expect(contextSourceRef.out).not.toContain('[experience] Task redis new');
+      expect(contextSourceRef.out).not.toContain('[experience] Manual redis');
       expect(unknown.code).toBe(2);
       expect(unknown.err).toContain('unknown --experience-source imported');
       expect(empty.code).toBe(2);
       expect(empty.err).toContain('unknown --experience-source <empty>');
+      expect(blankSourceRef.code).toBe(2);
+      expect(blankSourceRef.err).toContain('--experience-source-ref must be a non-empty string');
       expect(badLimit.code).toBe(2);
       expect(badLimit.err).toContain('unknown --experience-limit not-a-number');
       expect(badTrust.code).toBe(2);

@@ -249,6 +249,34 @@ describe('FsExperienceStore', () => {
     expect(manualOnly.map((m) => m.title)).toEqual(['manual dispatch output']);
   });
 
+  it('recall can filter by exact source reference before query ranking', async () => {
+    const clock = fakeClock(1_000);
+    const store = make(clock);
+    await store.add({
+      workspace: 'code',
+      title: 'old imported dispatch output',
+      sourceKind: 'manual',
+      sourceRef: 'https://example.test/old-note',
+      body: 'Imported dispatch output anchors with extra dispatch evidence.',
+    });
+    clock.set(2_000);
+    await store.add({
+      workspace: 'code',
+      title: 'new imported dispatch output',
+      sourceKind: 'manual',
+      sourceRef: 'https://example.test/new-note',
+      body: 'Imported dispatch output anchors.',
+    });
+
+    const recalled = await store.recall('code', {
+      query: 'dispatch output anchors evidence',
+      sourceRef: 'https://example.test/new-note',
+      limit: 3,
+    });
+
+    expect(recalled.map((m) => m.title)).toEqual(['new imported dispatch output']);
+  });
+
   it('recall can filter by trust before query ranking', async () => {
     const clock = fakeClock(1_000);
     const store = make(clock);

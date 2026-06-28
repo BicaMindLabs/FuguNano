@@ -17,14 +17,14 @@ const help = `fuguectl — fugue workflow control-plane entrypoint.
   fuguectl smoke [--harness all|codex|opencode|agy] [--timeout-ms n] [--task <file>] [--out-dir <dir>]  live lite-runtime smoke (+ <out-dir>/summary.json)
   fuguectl task new|log|done   TASK file scaffold/log/finalize
   fuguectl template <n> [--set K=V]   render prompt template
-  fuguectl dispatch <agent> [--harness fugue-cc|codex|opencode|agy] [--timeout-ms n] [--codex-clean] [--harness-arg x] [--out <file>] [--require-output] [--verbose] [--workspace ws [--experience-query q] [--experience-source manual|task] [--experience-limit n] [--experience-trust trusted|all] [--experience-max-age-days n]] --template <n>|--prompt-file <f>|--prompt <text> [--task <file>]
+  fuguectl dispatch <agent> [--harness fugue-cc|codex|opencode|agy] [--timeout-ms n] [--codex-clean] [--harness-arg x] [--out <file>] [--require-output] [--verbose] [--workspace ws [--experience-query q] [--experience-source manual|task] [--experience-source-ref ref] [--experience-limit n] [--experience-trust trusted|all] [--experience-max-age-days n]] --template <n>|--prompt-file <f>|--prompt <text> [--task <file>]
   fuguectl cache ...           result cache + join barrier
   fuguectl integrate --work <repo> --agents "a b" [--onconflict abort|skip]
   fuguectl allocate <task-type> [--top]|record|stats|reset
   fuguectl skills index|list|match|show|inject|validate|forge
-  fuguectl workspace list|show|model|context <name> [context: --experience-source manual|task --experience-limit n --experience-trust trusted|all --experience-max-age-days n]
+  fuguectl workspace list|show|model|context <name> [context: --experience-source manual|task --experience-source-ref ref --experience-limit n --experience-trust trusted|all --experience-max-age-days n]
   fuguectl agents template|validate [file]|list [file]|resolve [file] <id>
-  fuguectl experience add|learn|list|recall|show <ws> [add: --trust trusted|untrusted --source-ref ref] [recall: --query q --source manual|task --trust trusted|untrusted|all --min-score n --max-age-days n --explain]
+  fuguectl experience add|learn|list|recall|show <ws> [add: --trust trusted|untrusted --source-ref ref] [recall: --query q --source manual|task --source-ref ref --trust trusted|untrusted|all --min-score n --max-age-days n --explain]
   fuguectl plan "<goal>" [--harness fugue-cc|codex|opencode|agy|lite] [--models a,b,c] [--out <dir>] [--timeout-ms n] [--allow-partial] [--codex-clean] [--harness-arg x] [--codex-arg x] [--opencode-arg x] [--agy-arg x] [--task <file>]  writes <out>/summary.json
   fuguectl goal template|show|check <spec>
   fuguectl loop init|record|decide|status

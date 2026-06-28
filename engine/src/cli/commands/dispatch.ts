@@ -63,6 +63,7 @@ const splitCsv = (raw: string): readonly string[] =>
 const recallOptions = (
   query: string | undefined,
   sourceKind: ExperienceSourceKind | undefined,
+  sourceRef: string | undefined,
   limit: number | undefined,
   trust: ExperienceTrustFilter,
   maxAgeSeconds: number | undefined,
@@ -73,6 +74,9 @@ const recallOptions = (
       : { limit: limit ?? 3, query, trust };
   if (sourceKind !== undefined) {
     options = { ...options, sourceKind };
+  }
+  if (sourceRef !== undefined) {
+    options = { ...options, sourceRef };
   }
   if (maxAgeSeconds !== undefined) {
     options = { ...options, maxAgeSeconds };
@@ -99,6 +103,15 @@ const experienceSourceError = (raw: string | undefined): string => {
   const rendered = source === undefined || source.length === 0 ? '<empty>' : source;
   return `unknown --experience-source ${rendered}; expected one of ${EXPERIENCE_SOURCE_KINDS.join(', ')}\n`;
 };
+
+const parseExperienceSourceRef = (raw: string | undefined): string | null | undefined => {
+  if (raw === undefined) return undefined;
+  const value = raw.trim();
+  return value.length === 0 ? null : value;
+};
+
+const experienceSourceRefError = (): string =>
+  '--experience-source-ref must be a non-empty string\n';
 
 const parseExperienceLimit = (raw: string | undefined): number | null | undefined => {
   if (raw === undefined) return undefined;
@@ -285,6 +298,7 @@ export class DispatchCommand extends Command {
   workspace = Option.String('--workspace');
   experienceQuery = Option.String('--experience-query');
   experienceSource = Option.String('--experience-source');
+  experienceSourceRef = Option.String('--experience-source-ref');
   experienceLimit = Option.String('--experience-limit');
   experienceTrust = Option.String('--experience-trust');
   experienceMaxAgeDays = Option.String('--experience-max-age-days');
@@ -321,6 +335,11 @@ export class DispatchCommand extends Command {
       this.context.stderr.write(experienceSourceError(this.experienceSource));
       return 2;
     }
+    const experienceSourceRef = parseExperienceSourceRef(this.experienceSourceRef);
+    if (experienceSourceRef === null) {
+      this.context.stderr.write(experienceSourceRefError());
+      return 2;
+    }
     const experienceLimit = parseExperienceLimit(this.experienceLimit);
     if (experienceLimit === null) {
       this.context.stderr.write(experienceLimitError(this.experienceLimit));
@@ -338,6 +357,13 @@ export class DispatchCommand extends Command {
     }
     if (experienceSource !== undefined && (this.workspace === undefined || this.workspace === '')) {
       this.context.stderr.write('--experience-source requires --workspace\n');
+      return 2;
+    }
+    if (
+      experienceSourceRef !== undefined &&
+      (this.workspace === undefined || this.workspace === '')
+    ) {
+      this.context.stderr.write('--experience-source-ref requires --workspace\n');
       return 2;
     }
     if (experienceLimit !== undefined && (this.workspace === undefined || this.workspace === '')) {
@@ -358,6 +384,7 @@ export class DispatchCommand extends Command {
 
     const prompt = await this.prompt(
       experienceSource,
+      experienceSourceRef,
       experienceLimit,
       experienceTrust ?? 'trusted',
       experienceMaxAgeSeconds,
@@ -472,6 +499,7 @@ export class DispatchCommand extends Command {
 
   private async prompt(
     experienceSource: ExperienceSourceKind | undefined,
+    experienceSourceRef: string | undefined,
     experienceLimit: number | undefined,
     experienceTrust: ExperienceTrustFilter,
     experienceMaxAgeSeconds: number | undefined,
@@ -490,6 +518,7 @@ export class DispatchCommand extends Command {
         this.workspace,
         query,
         experienceSource,
+        experienceSourceRef,
         experienceLimit,
         experienceTrust,
         experienceMaxAgeSeconds,
@@ -526,6 +555,7 @@ export class DispatchCommand extends Command {
     name: string,
     query: string | undefined,
     experienceSource: ExperienceSourceKind | undefined,
+    experienceSourceRef: string | undefined,
     experienceLimit: number | undefined,
     experienceTrust: ExperienceTrustFilter,
     experienceMaxAgeSeconds: number | undefined,
@@ -541,6 +571,7 @@ export class DispatchCommand extends Command {
       recallOptions(
         query,
         experienceSource,
+        experienceSourceRef,
         experienceLimit,
         experienceTrust,
         experienceMaxAgeSeconds,
