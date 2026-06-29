@@ -42,6 +42,7 @@ import type {
 import { HARNESS_NAMES, type Harness, type HarnessName } from '../../domain/ports/harness.js';
 import { assembleContext, renderBundle, renderTemplate } from '../../domain/prompt-render.js';
 import { isOk } from '../../domain/result.js';
+import { renderRuntimeGuardPacket, runtimeGuardPacket } from '../../domain/runtime-guard.js';
 import type { SkillSource } from '../../domain/skill.js';
 import { systemClock } from '../../infra/clock.js';
 import type { FileSystem } from '../../infra/file-system.js';
@@ -217,6 +218,11 @@ const formatDurationMs = (ms: number): string => {
 
 const sha256 = (value: string): string => createHash('sha256').update(value, 'utf8').digest('hex');
 
+const GUARD_MODES = ['strict', 'warn', 'off'] as const;
+type GuardMode = (typeof GUARD_MODES)[number];
+const isGuardMode = (value: string): value is GuardMode =>
+  (GUARD_MODES as readonly string[]).includes(value);
+
 const failureFields = (kind: string | undefined): string =>
   kind === undefined ? '' : ` error=${kind}`;
 
@@ -342,6 +348,7 @@ export class DispatchCommand extends Command {
   verbose = Option.Boolean('--verbose', false);
   harnessArgs = Option.Array('--harness-arg', []);
   codexClean = Option.Boolean('--codex-clean', process.env.FUGUE_CODEX_CLEAN === '1');
+  guard = Option.String('--guard', process.env.FUGUE_DISPATCH_GUARD ?? 'warn');
 
   private readonly fs = new NodeFileSystem();
 
@@ -352,6 +359,10 @@ export class DispatchCommand extends Command {
     }
     if (this.codexClean && this.harness !== 'codex') {
       this.context.stderr.write('--codex-clean requires --harness codex\n');
+      return 2;
+    }
+    if (!isGuardMode(this.guard)) {
+      this.context.stderr.write(`unknown --guard '${this.guard}' (strict|warn|off)\n`);
       return 2;
     }
     if (!isActionApprovalClass(this.approvalClass)) {
@@ -447,6 +458,7 @@ export class DispatchCommand extends Command {
       experienceMaxAgeSeconds,
     );
     if (prompt === null) return 2;
+    if (!(await this.runGuard(prompt))) return 2;
     const timeoutMs = parseTimeoutMs(this.timeoutMs);
     if (timeoutMs === null) {
       this.context.stderr.write(
@@ -765,6 +777,38 @@ export class DispatchCommand extends Command {
   private async appendTaskLine(message: string): Promise<void> {
     if (this.task === undefined) return;
     await appendTaskAuditLine(this.fs, this.task, message);
+  }
+
+  /**
+   * Pre-dispatch runtime guard. The same runtimeGuardPacket the `guard` command
+   * prints offline, now an online gate on the assembled prompt:
+   *   off    — skip entirely.
+   *   warn   — (default) compute, surface review/block on stderr, always proceed.
+   *   strict — refuse dispatch on a `block` disposition (rc 2); review still proceeds.
+   * Returns false when dispatch must be refused.
+   */
+  private async runGuard(prompt: string): Promise<boolean> {
+    if (this.guard === 'off') return true;
+    const packet = runtimeGuardPacket(prompt, {
+      sourceRef: this.task ?? this.target,
+      sourceSha256: sha256(prompt),
+    });
+    if (packet.disposition === 'allow') return true;
+    if (this.guard === 'strict' && packet.disposition === 'block') {
+      this.context.stderr.write(renderRuntimeGuardPacket(packet));
+      this.context.stderr.write('[guard] dispatch blocked (disposition=block); rerun with --guard warn to override\n');
+      await this.appendTaskLine(
+        `guard blocked dispatch disposition=block findings=${String(packet.findingCount)}`,
+      );
+      return false;
+    }
+    this.context.stderr.write(
+      `[guard] disposition=${packet.disposition} findings=${String(packet.findingCount)} (proceeding; --guard strict blocks on block)\n`,
+    );
+    await this.appendTaskLine(
+      `guard disposition=${packet.disposition} findings=${String(packet.findingCount)}`,
+    );
+    return true;
   }
 
   private async appendAllocationLedger(): Promise<void> {
