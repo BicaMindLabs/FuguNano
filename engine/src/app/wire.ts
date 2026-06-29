@@ -3,6 +3,10 @@ import { createHash } from 'node:crypto';
 import { BetaBernoulliAllocator } from '../adapters/allocation/beta-bernoulli-allocator.js';
 import { PersistentBarrier } from '../adapters/barrier/persistent-barrier.js';
 import { AgyHarness } from '../adapters/harness/agy-harness.js';
+import {
+  AgentCliHarness,
+  QWEN_CODE_INVOCATION_DESCRIPTOR,
+} from '../adapters/harness/agent-cli-harness.js';
 import { FugueCcHarness } from '../adapters/harness/fugue-cc-harness.js';
 import { CodexHarness } from '../adapters/harness/codex-harness.js';
 import type { HarnessExecOptions } from '../adapters/harness/exec-helpers.js';
@@ -16,7 +20,7 @@ import { joinPath } from '../adapters/store/paths.js';
 import { DEFAULT_ALLOCATION_PARAMS, type BenchTable } from '../domain/allocation.js';
 import type { AgentRegistry } from '../domain/agent-registry.js';
 import { DEFAULT_POLICIES } from '../domain/policy-eval.js';
-import { HARNESS_NAMES, type Harness, type HarnessName } from '../domain/ports/harness.js';
+import { ALL_HARNESS_NAMES, type Harness, type HarnessName } from '../domain/ports/harness.js';
 import { renderTemplate } from '../domain/prompt-render.js';
 import type { EvalCase, SelfHarnessSpec } from '../domain/self-harness-spec.js';
 import { systemClock } from '../infra/clock.js';
@@ -67,6 +71,8 @@ const buildHarness = (
       return new OpencodeHarness(runner, options);
     case 'agy':
       return new AgyHarness(runner, options);
+    case 'agent-cli':
+      return new AgentCliHarness(runner, QWEN_CODE_INVOCATION_DESCRIPTOR, options);
   }
 };
 
@@ -76,7 +82,7 @@ const buildHarnessMap = (
   args?: readonly string[],
 ): ReadonlyMap<HarnessName, Harness> =>
   new Map(
-    HARNESS_NAMES.map((name): readonly [HarnessName, Harness] => [
+    ALL_HARNESS_NAMES.map((name): readonly [HarnessName, Harness] => [
       name,
       buildHarness(name, runner, cwd, args),
     ]),

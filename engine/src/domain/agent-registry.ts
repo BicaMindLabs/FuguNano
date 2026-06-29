@@ -1,4 +1,4 @@
-import { HARNESS_NAMES } from './ports/harness.js';
+import { ALL_HARNESS_NAMES } from './ports/harness.js';
 import type { HarnessName } from './ports/harness.js';
 import { err, ok } from './result.js';
 import type { Result } from './result.js';
@@ -27,7 +27,7 @@ export interface AgentRegistry {
   readonly agents: readonly AgentProfile[];
 }
 
-const HARNESS_NAME_SET: ReadonlySet<string> = new Set(HARNESS_NAMES);
+const HARNESS_NAME_SET: ReadonlySet<string> = new Set(ALL_HARNESS_NAMES);
 const AGENT_ROLE_SET: ReadonlySet<string> = new Set(AGENT_ROLES);
 const PROFILE_KEY_SET: ReadonlySet<string> = new Set([
   'id',
@@ -133,7 +133,7 @@ const parseProfile = (value: unknown, index: number): Result<AgentProfile, strin
   const id = trimNonEmptyString(value.id);
   if (id === undefined) return err(`${prefix}.id must be a non-empty string`);
   if (!isHarnessName(value.harness)) {
-    return err(`${prefix}.harness must be one of ${HARNESS_NAMES.join(', ')}`);
+    return err(`${prefix}.harness must be one of ${ALL_HARNESS_NAMES.join(', ')}`);
   }
 
   const target = optionalString(value, 'target', `${prefix}.target`);
@@ -227,6 +227,16 @@ export const renderAgentRegistryTemplate = (): string =>
           canEditFiles: true,
           workspace: 'code',
           tags: ['frontend', 'ui'],
+        },
+        {
+          id: 'qwen-code',
+          harness: 'agent-cli',
+          target: 'default',
+          modelFamily: 'qwen',
+          roles: ['implementer'],
+          canEditFiles: true,
+          workspace: 'code',
+          tags: ['experimental', 'agent-cli'],
         },
       ],
     },

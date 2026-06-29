@@ -99,6 +99,28 @@ describe('parseAgentRegistryJson', () => {
   it('renders a valid starter template', () => {
     const registry = parseAgentRegistryJson(renderAgentRegistryTemplate());
     expect(registry.ok).toBe(true);
+    expect(registry.ok && findAgentProfile(registry.value, 'qwen-code')?.harness).toBe('agent-cli');
+  });
+
+  it('parses experimental agent-cli profiles for opt-in runtimes', () => {
+    const registry = parseOk(
+      JSON.stringify({
+        agents: [
+          {
+            id: 'qwen-code',
+            harness: 'agent-cli',
+            target: 'default',
+            modelFamily: 'qwen',
+            roles: ['implementer'],
+            tags: ['experimental'],
+          },
+        ],
+      }),
+    );
+
+    const profile = findAgentProfile(registry, 'qwen-code');
+    expect(profile && resolveAgentTarget(profile)).toBe('default');
+    expect(profile && agentHasRole(profile, 'implementer')).toBe(true);
   });
 
   it('rejects duplicate agent ids', () => {

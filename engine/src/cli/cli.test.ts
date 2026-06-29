@@ -771,6 +771,7 @@ describe('fugue CLI', () => {
     let codexCalled: string;
     let opencodeCalled: string;
     let agyCalled: string;
+    let qwenCalled: string;
 
     beforeEach(async () => {
       dir = await mkdtemp(join(tmpdir(), 'fugue-dispatch-'));
@@ -785,6 +786,7 @@ describe('fugue CLI', () => {
       codexCalled = join(dir, 'codex.called');
       opencodeCalled = join(dir, 'opencode.called');
       agyCalled = join(dir, 'agy.called');
+      qwenCalled = join(dir, 'qwen.called');
       await mkdir(templates, { recursive: true });
       await mkdir(workspaces, { recursive: true });
       await writeFile(join(templates, 'impl.md'), 'Role={{ROLE}}\nScope={{SCOPE}}\n', 'utf8');
@@ -808,6 +810,7 @@ describe('fugue CLI', () => {
       const codex = join(dir, 'codex');
       const opencode = join(dir, 'opencode');
       const agy = join(dir, 'agy');
+      const qwen = join(dir, 'qwen');
       codexBin = codex;
       opencodeBin = opencode;
       await writeFile(
@@ -835,14 +838,21 @@ describe('fugue CLI', () => {
         ['#!/usr/bin/env bash', `echo "ARGV: $*" > "${agyCalled}"`, ''].join('\n'),
         'utf8',
       );
+      await writeFile(
+        qwen,
+        ['#!/usr/bin/env bash', `echo "ARGV: $*" > "${qwenCalled}"`, ''].join('\n'),
+        'utf8',
+      );
       await chmod(fugueCc, 0o755);
       await chmod(codex, 0o755);
       await chmod(opencode, 0o755);
       await chmod(agy, 0o755);
+      await chmod(qwen, 0o755);
       process.env.FUGUE_CC_BIN = fugueCc;
       process.env.FUGUE_CODEX = codex;
       process.env.FUGUE_OPENCODE = opencode;
       process.env.FUGUE_AGY = agy;
+      process.env.FUGUE_AGENT_CLI = qwen;
     });
 
     afterEach(async () => {
@@ -850,6 +860,7 @@ describe('fugue CLI', () => {
       delete process.env.FUGUE_CODEX;
       delete process.env.FUGUE_OPENCODE;
       delete process.env.FUGUE_AGY;
+      delete process.env.FUGUE_AGENT_CLI;
       delete process.env.FUGUE_SKILLS_ROOT;
       delete process.env.FUGUE_PLUGINS_ROOT;
       delete process.env.FUGUE_TEMPLATES;
@@ -1061,6 +1072,17 @@ describe('fugue CLI', () => {
       expect(opencodeCall).toContain('custom prompt content');
       expect(agyCall).toContain('ARGV: --prompt custom prompt content');
       expect(agyCall).not.toContain('--model');
+    });
+
+    it('dispatches prompt files through the experimental agent-cli harness', async () => {
+      const qwenDispatch = await run(
+        args('default', '--harness', 'agent-cli', '--prompt-file', promptFile),
+      );
+      const qwenCall = await readFile(qwenCalled, 'utf8');
+
+      expect(qwenDispatch.code).toBe(0);
+      expect(qwenCall).toContain('ARGV: -p custom prompt content');
+      expect(qwenCall).not.toContain('--model');
     });
 
     it('passes harness args through to lite harnesses', async () => {
@@ -5679,6 +5701,35 @@ describe('fugue CLI', () => {
       expect(result.out).toContain(agy);
       expect(result.out).not.toContain('missing fugue-cc');
       expect(result.out).not.toContain('FUGUE_CC_WORK unset');
+      expect(result.out).not.toContain('provider config not located');
+    });
+
+    it('can preflight the opt-in agent-cli harness without entering all/lite defaults', async () => {
+      const codex = join(dir, 'codex');
+      const qwen = join(dir, 'qwen');
+      await writeFile(codex, '#!/usr/bin/env bash\nexit 0\n', 'utf8');
+      await writeFile(
+        qwen,
+        '#!/usr/bin/env bash\n[ "$1" = "--version" ] && printf "qwen-code 1.0.0\\n"\n',
+        'utf8',
+      );
+      await chmod(codex, 0o755);
+      await chmod(qwen, 0o755);
+
+      const result = await run([
+        'preflight',
+        '--harness',
+        'agent-cli',
+        '--codex-bin',
+        codex,
+        '--agent-cli-bin',
+        qwen,
+      ]);
+
+      expect(result.code).toBe(0);
+      expect(result.out).toContain('harness=agent-cli');
+      expect(result.out).toContain('qwen-code 1.0.0');
+      expect(result.out).not.toContain('missing fugue-cc');
       expect(result.out).not.toContain('provider config not located');
     });
 

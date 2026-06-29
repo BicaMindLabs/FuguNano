@@ -8,13 +8,17 @@ import { Command, Option } from 'clipanion';
 
 import { FsExperienceStore } from '../../adapters/experience/fs-experience-store.js';
 import { AgyHarness } from '../../adapters/harness/agy-harness.js';
+import {
+  AgentCliHarness,
+  QWEN_CODE_INVOCATION_DESCRIPTOR,
+} from '../../adapters/harness/agent-cli-harness.js';
 import { CodexHarness } from '../../adapters/harness/codex-harness.js';
 import { FugueCcHarness } from '../../adapters/harness/fugue-cc-harness.js';
 import { OpencodeHarness } from '../../adapters/harness/opencode-harness.js';
 import { classifyType, parseDescription } from '../../domain/skill-parse.js';
 import type { SkillRef, SkillSourceKind, SkillType } from '../../domain/skill.js';
 import { DEFAULT_NOTE_RE } from '../../domain/skill.js';
-import { HARNESS_NAMES, type Harness, type HarnessName } from '../../domain/ports/harness.js';
+import { ALL_HARNESS_NAMES, type Harness, type HarnessName } from '../../domain/ports/harness.js';
 import { isOk } from '../../domain/result.js';
 import { systemClock } from '../../infra/clock.js';
 import { NodeCommandRunner } from '../../infra/node-command-runner.js';
@@ -86,7 +90,7 @@ const isSource = (value: string): value is SkillSourceKind =>
 const isType = (value: string): value is SkillType => value === 'functional' || value === 'note';
 
 const isHarnessName = (value: string): value is HarnessName =>
-  (HARNESS_NAMES as readonly string[]).includes(value);
+  (ALL_HARNESS_NAMES as readonly string[]).includes(value);
 
 const pluginId = (skillMdPath: string): string => {
   const parts = skillMdPath.split('/');
@@ -606,6 +610,10 @@ export class SkillsCommand extends Command {
         return new OpencodeHarness(runner, { bin: process.env.FUGUE_OPENCODE ?? 'opencode' });
       case 'agy':
         return new AgyHarness(runner, { bin: process.env.FUGUE_AGY ?? 'agy' });
+      case 'agent-cli':
+        return new AgentCliHarness(runner, QWEN_CODE_INVOCATION_DESCRIPTOR, {
+          bin: process.env.FUGUE_AGENT_CLI ?? QWEN_CODE_INVOCATION_DESCRIPTOR.bin,
+        });
     }
   }
 

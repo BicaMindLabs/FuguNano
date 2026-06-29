@@ -5,12 +5,16 @@ import { performance } from 'node:perf_hooks';
 
 import { Command, Option } from 'clipanion';
 
+import {
+  AgentCliHarness,
+  QWEN_CODE_INVOCATION_DESCRIPTOR,
+} from '../../adapters/harness/agent-cli-harness.js';
 import { CodexHarness } from '../../adapters/harness/codex-harness.js';
 import { FugueCcHarness } from '../../adapters/harness/fugue-cc-harness.js';
 import { AgyHarness } from '../../adapters/harness/agy-harness.js';
 import { OpencodeHarness } from '../../adapters/harness/opencode-harness.js';
 import { DEFAULT_PLAN_AGENTS } from '../../domain/plan.js';
-import { HARNESS_NAMES, type Harness, type HarnessName } from '../../domain/ports/harness.js';
+import { ALL_HARNESS_NAMES, type Harness, type HarnessName } from '../../domain/ports/harness.js';
 import { isOk } from '../../domain/result.js';
 import { NodeCommandRunner } from '../../infra/node-command-runner.js';
 import { NodeFileSystem } from '../../infra/node-file-system.js';
@@ -50,6 +54,7 @@ const defaultPlanOut = (): string => joinPath(defaultCacheRoot(import.meta.url),
 const DEFAULT_CODEX_PLAN_AGENTS = ['gpt-5.5'] as const;
 const DEFAULT_OPENCODE_PLAN_AGENTS = ['opencode/deepseek-v4-flash-free'] as const;
 const DEFAULT_AGY_PLAN_AGENTS = ['default'] as const;
+const DEFAULT_AGENT_CLI_PLAN_AGENTS = ['default'] as const;
 const LITE_HARNESSES = ['codex', 'opencode', 'agy'] as const satisfies readonly HarnessName[];
 const CODEX_CLEAN_ARGS = [
   '--ignore-user-config',
@@ -136,7 +141,7 @@ const formatPlanResultLine = (entry: PlanRunResult): string => {
 };
 
 const isHarnessName = (value: string): value is HarnessName =>
-  (HARNESS_NAMES as readonly string[]).includes(value);
+  (ALL_HARNESS_NAMES as readonly string[]).includes(value);
 
 const isLiteHarness = (value: string): value is (typeof LITE_HARNESSES)[number] =>
   (LITE_HARNESSES as readonly string[]).includes(value);
@@ -144,7 +149,7 @@ const isLiteHarness = (value: string): value is (typeof LITE_HARNESSES)[number] 
 const isPlanHarness = (value: string): value is PlanHarness =>
   value === 'lite' || isHarnessName(value);
 
-const planHarnesses = (): string => [...HARNESS_NAMES, 'lite'].join('|');
+const planHarnesses = (): string => [...ALL_HARNESS_NAMES, 'lite'].join('|');
 
 const targetLabel = (target: PlanTarget): string =>
   target.harness === 'fugue-cc' ? target.agent : `${target.harness}:${target.agent}`;
@@ -221,6 +226,8 @@ const defaultAgentsFor = (harness: HarnessName): readonly string[] => {
       return DEFAULT_OPENCODE_PLAN_AGENTS;
     case 'agy':
       return DEFAULT_AGY_PLAN_AGENTS;
+    case 'agent-cli':
+      return DEFAULT_AGENT_CLI_PLAN_AGENTS;
   }
 };
 
@@ -501,6 +508,8 @@ export class PlanCommand extends Command {
         return [...this.harnessArgs, ...this.agyArgs];
       case 'fugue-cc':
         return this.harnessArgs;
+      case 'agent-cli':
+        return this.harnessArgs;
     }
   }
 
@@ -529,6 +538,12 @@ export class PlanCommand extends Command {
       case 'agy':
         return new AgyHarness(runner, {
           bin: process.env.FUGUE_AGY ?? 'agy',
+          ...(timeoutMs !== undefined ? { timeoutMs } : {}),
+          ...(args.length > 0 ? { args } : {}),
+        });
+      case 'agent-cli':
+        return new AgentCliHarness(runner, QWEN_CODE_INVOCATION_DESCRIPTOR, {
+          bin: process.env.FUGUE_AGENT_CLI ?? QWEN_CODE_INVOCATION_DESCRIPTOR.bin,
           ...(timeoutMs !== undefined ? { timeoutMs } : {}),
           ...(args.length > 0 ? { args } : {}),
         });

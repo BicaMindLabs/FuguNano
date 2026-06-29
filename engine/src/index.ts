@@ -157,6 +157,19 @@ export type {
   DispatchErrorKind,
   HealthStatus,
 } from './domain/dispatch.js';
+export type {
+  InvocationDescriptor,
+  PromptMode,
+  ModelArgMode,
+  FailureMode,
+  BuildArgvOptions,
+} from './domain/invocation-descriptor.js';
+export {
+  PROMPT_MODES,
+  MODEL_ARG_MODES,
+  FAILURE_MODES,
+  buildArgv,
+} from './domain/invocation-descriptor.js';
 export type { Workspace } from './domain/workspace.js';
 export type { PromptBundle, AssembleInput } from './domain/prompt.js';
 export { assembleContext, renderBundle, renderTemplate } from './domain/prompt-render.js';
@@ -264,8 +277,17 @@ export type { RunStore, RunPatch } from './domain/ports/run-store.js';
 export type { ReviewLoop } from './domain/ports/review-loop.js';
 export type { AllocationStrategy, RankOptions } from './domain/ports/allocation-strategy.js';
 export type { QualityGate } from './domain/ports/quality-gate.js';
-export { HARNESS_NAMES } from './domain/ports/harness.js';
-export type { Harness, HarnessName } from './domain/ports/harness.js';
+export {
+  ALL_HARNESS_NAMES,
+  EXPERIMENTAL_HARNESS_NAMES,
+  HARNESS_NAMES,
+} from './domain/ports/harness.js';
+export type {
+  CoreHarnessName,
+  ExperimentalHarnessName,
+  Harness,
+  HarnessName,
+} from './domain/ports/harness.js';
 export type { WorkspaceStore } from './domain/ports/workspace-store.js';
 export type { ExperienceStore } from './domain/ports/experience-store.js';
 export type { VcsPort } from './domain/ports/vcs.js';
@@ -302,6 +324,11 @@ export { FugueCcHarness } from './adapters/harness/fugue-cc-harness.js';
 export { CodexHarness } from './adapters/harness/codex-harness.js';
 export { OpencodeHarness } from './adapters/harness/opencode-harness.js';
 export { AgyHarness } from './adapters/harness/agy-harness.js';
+export {
+  AgentCliHarness,
+  CODEX_INVOCATION_DESCRIPTOR,
+  QWEN_CODE_INVOCATION_DESCRIPTOR,
+} from './adapters/harness/agent-cli-harness.js';
 export type { HarnessExecOptions } from './adapters/harness/exec-helpers.js';
 export {
   HarnessBackedProposer,
