@@ -4,15 +4,21 @@ import { join as joinPath } from 'node:path';
 
 import { Command, Option } from 'clipanion';
 
+import { QWEN_CODE_INVOCATION_DESCRIPTOR } from '../../adapters/harness/agent-cli-harness.js';
 import { checkProviderConfig } from '../../domain/preflight-checks.js';
 import type { GateCheck } from '../../domain/gate.js';
-import { HARNESS_NAMES, type HarnessName } from '../../domain/ports/harness.js';
+import {
+  EXPERIMENTAL_HARNESS_NAMES,
+  HARNESS_NAMES,
+  type CoreHarnessName,
+  type ExperimentalHarnessName,
+} from '../../domain/ports/harness.js';
 import { NodeCommandRunner } from '../../infra/node-command-runner.js';
 import { NodeFileSystem } from '../../infra/node-file-system.js';
 import type { CommandRunner } from '../../infra/command-runner.js';
 import { fuguectlScript } from '../default-paths.js';
 
-type PreflightHarness = HarnessName | 'all' | 'lite';
+type PreflightHarness = CoreHarnessName | ExperimentalHarnessName | 'all' | 'lite';
 
 interface MutableStatus {
   fail: boolean;
@@ -30,7 +36,12 @@ const fs = (): NodeFileSystem => new NodeFileSystem();
 const nonEmptyEnv = (value: string | undefined): string | undefined =>
   value !== undefined && value.length > 0 ? value : undefined;
 
-const PREFLIGHT_HARNESSES: readonly PreflightHarness[] = [...HARNESS_NAMES, 'lite', 'all'];
+const PREFLIGHT_HARNESSES: readonly PreflightHarness[] = [
+  ...HARNESS_NAMES,
+  ...EXPERIMENTAL_HARNESS_NAMES,
+  'lite',
+  'all',
+];
 
 const parseHarness = (value: string): PreflightHarness | null =>
   PREFLIGHT_HARNESSES.includes(value as PreflightHarness) ? (value as PreflightHarness) : null;
@@ -46,6 +57,8 @@ const includesOpencode = (harness: PreflightHarness): boolean =>
 
 const includesAgy = (harness: PreflightHarness): boolean =>
   harness === 'agy' || harness === 'lite' || harness === 'all';
+
+const includesAgentCli = (harness: PreflightHarness): boolean => harness === 'agent-cli';
 
 const trimNonEmpty = (value: string | undefined): string | undefined => {
   const trimmed = value?.trim();
@@ -184,6 +197,10 @@ export class PreflightCommand extends Command {
   codexBin = Option.String('--codex-bin', process.env.FUGUE_CODEX ?? 'codex');
   opencodeBin = Option.String('--opencode-bin', process.env.FUGUE_OPENCODE ?? 'opencode');
   agyBin = Option.String('--agy-bin', process.env.FUGUE_AGY ?? 'agy');
+  agentCliBin = Option.String(
+    '--agent-cli-bin',
+    process.env.FUGUE_AGENT_CLI ?? QWEN_CODE_INVOCATION_DESCRIPTOR.bin,
+  );
   model = Option.String('--model');
   target = Option.String('--target');
   cacheScript = Option.String('--cache-script', fuguectlScript(import.meta.url, 'cache'));
@@ -220,6 +237,9 @@ export class PreflightCommand extends Command {
     }
     if (!this.configOnly && includesAgy(harness) && modelToCheck !== undefined) {
       await this.runListedModelCheck(this.agyBin, 'agy', modelToCheck, lines, status, runner);
+    }
+    if (!this.configOnly && includesAgentCli(harness)) {
+      await this.runAgentCliHealth(lines, status, runner);
     }
 
     const configPath =
@@ -299,6 +319,11 @@ export class PreflightCommand extends Command {
       else fail(lines, status, `missing ${this.agyBin}`);
     }
 
+    if (includesAgentCli(harness)) {
+      if (await cliExists(runner, this.agentCliBin)) ok(lines, this.agentCliBin);
+      else fail(lines, status, `missing ${this.agentCliBin}`);
+    }
+
     if (includesFugueCc(harness)) {
       if (await commandExists(runner, 'tmux')) ok(lines, 'tmux');
       else warn(lines, status, 'no tmux (fugue-cc panes need it)');
@@ -372,6 +397,32 @@ export class PreflightCommand extends Command {
       fail(lines, status, `${harnessName} model not found (${model}); run: ${bin} models`);
     } catch {
       fail(lines, status, `${harnessName} models failed; cannot validate ${model}`);
+    }
+  }
+
+  private async runAgentCliHealth(
+    lines: string[],
+    status: MutableStatus,
+    runner: CommandRunner,
+  ): Promise<void> {
+    try {
+      const result = await runner.run(this.agentCliBin, QWEN_CODE_INVOCATION_DESCRIPTOR.healthCmd);
+      if (result.code === 0) {
+        const version = result.stdout.trim();
+        ok(lines, version.length > 0 ? `${this.agentCliBin} ${version}` : this.agentCliBin);
+        return;
+      }
+      fail(
+        lines,
+        status,
+        `${this.agentCliBin} ${QWEN_CODE_INVOCATION_DESCRIPTOR.healthCmd.join(' ')} failed`,
+      );
+    } catch {
+      fail(
+        lines,
+        status,
+        `${this.agentCliBin} ${QWEN_CODE_INVOCATION_DESCRIPTOR.healthCmd.join(' ')} failed`,
+      );
     }
   }
 

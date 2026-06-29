@@ -8,6 +8,10 @@ import { performance } from 'node:perf_hooks';
 import { Command, Option, UsageError } from 'clipanion';
 
 import { FsExperienceStore } from '../../adapters/experience/fs-experience-store.js';
+import {
+  AgentCliHarness,
+  QWEN_CODE_INVOCATION_DESCRIPTOR,
+} from '../../adapters/harness/agent-cli-harness.js';
 import { CodexHarness } from '../../adapters/harness/codex-harness.js';
 import { FugueCcHarness } from '../../adapters/harness/fugue-cc-harness.js';
 import { AgyHarness } from '../../adapters/harness/agy-harness.js';
@@ -39,7 +43,7 @@ import type {
   ExperienceTrustFilter,
   RecallOptions,
 } from '../../domain/experience.js';
-import { HARNESS_NAMES, type Harness, type HarnessName } from '../../domain/ports/harness.js';
+import { ALL_HARNESS_NAMES, type Harness, type HarnessName } from '../../domain/ports/harness.js';
 import { assembleContext, renderBundle, renderTemplate } from '../../domain/prompt-render.js';
 import { incidentPacket, incidentRecoveryPacket } from '../../domain/incident-packet.js';
 import { isOk } from '../../domain/result.js';
@@ -304,7 +308,7 @@ const skillSources = async (): Promise<readonly SkillSource[]> => {
 };
 
 const isHarnessName = (value: string): value is HarnessName =>
-  (HARNESS_NAMES as readonly string[]).includes(value);
+  (ALL_HARNESS_NAMES as readonly string[]).includes(value);
 
 const CODEX_CLEAN_ARGS = [
   '--ignore-user-config',
@@ -359,7 +363,9 @@ export class DispatchCommand extends Command {
 
   override async execute(): Promise<number> {
     if (!isHarnessName(this.harness)) {
-      this.context.stderr.write(`unknown harness '${this.harness}' (${HARNESS_NAMES.join('|')})\n`);
+      this.context.stderr.write(
+        `unknown harness '${this.harness}' (${ALL_HARNESS_NAMES.join('|')})\n`,
+      );
       return 2;
     }
     if (this.codexClean && this.harness !== 'codex') {
@@ -706,6 +712,12 @@ export class DispatchCommand extends Command {
       case 'agy':
         return new AgyHarness(runner, {
           bin: process.env.FUGUE_AGY ?? 'agy',
+          ...(timeoutMs !== undefined ? { timeoutMs } : {}),
+          ...(this.harnessArgs.length > 0 ? { args: this.harnessArgs } : {}),
+        });
+      case 'agent-cli':
+        return new AgentCliHarness(runner, QWEN_CODE_INVOCATION_DESCRIPTOR, {
+          bin: process.env.FUGUE_AGENT_CLI ?? QWEN_CODE_INVOCATION_DESCRIPTOR.bin,
           ...(timeoutMs !== undefined ? { timeoutMs } : {}),
           ...(this.harnessArgs.length > 0 ? { args: this.harnessArgs } : {}),
         });
