@@ -16,7 +16,7 @@ import {
   EXPERIENCE_TRUST_FILTERS,
   isExperienceSourceKind,
   isExperienceTrustFilter,
-  renderExperienceMethod,
+  packExperienceMethodsForPrompt,
 } from '../../domain/experience.js';
 import type {
   ExperienceSourceKind,
@@ -169,6 +169,19 @@ const experienceLimitError = (raw: string | undefined): string => {
   return `unknown --experience-limit ${rendered}; expected a positive integer\n`;
 };
 
+const parseExperienceBudgetChars = (raw: string | undefined): number | null | undefined => {
+  if (raw === undefined) return undefined;
+  const value = raw.trim();
+  if (!/^\d+$/u.test(value)) return null;
+  const parsed = Number.parseInt(value, 10);
+  return parsed > 0 ? parsed : null;
+};
+
+const experienceBudgetCharsError = (raw: string | undefined): string => {
+  const rendered = raw === undefined || raw.trim().length === 0 ? '<empty>' : raw.trim();
+  return `unknown --experience-budget-chars ${rendered}; expected a positive integer\n`;
+};
+
 const parseExperienceMaxAgeDays = (raw: string | undefined): number | null | undefined => {
   if (raw === undefined) return undefined;
   const value = raw.trim();
@@ -268,6 +281,7 @@ export class WorkspaceContextCommand extends WorkspaceCommandOptions {
   experienceSource = Option.String('--experience-source');
   experienceSourceRef = Option.String('--experience-source-ref');
   experienceLimit = Option.String('--experience-limit');
+  experienceBudgetChars = Option.String('--experience-budget-chars');
   experienceTrust = Option.String('--experience-trust');
   experienceMaxAgeDays = Option.String('--experience-max-age-days');
 
@@ -285,6 +299,11 @@ export class WorkspaceContextCommand extends WorkspaceCommandOptions {
     const experienceLimit = parseExperienceLimit(this.experienceLimit);
     if (experienceLimit === null) {
       this.context.stderr.write(experienceLimitError(this.experienceLimit));
+      return 2;
+    }
+    const experienceBudgetChars = parseExperienceBudgetChars(this.experienceBudgetChars);
+    if (experienceBudgetChars === null) {
+      this.context.stderr.write(experienceBudgetCharsError(this.experienceBudgetChars));
       return 2;
     }
     const experienceTrust = parseAutomaticExperienceTrust(this.experienceTrust);
@@ -322,7 +341,7 @@ export class WorkspaceContextCommand extends WorkspaceCommandOptions {
         assembleContext({
           workspace: { ...workspace, models },
           system: await store.systemPrompt(),
-          experience: methods.map(renderExperienceMethod),
+          experience: packExperienceMethodsForPrompt(methods, experienceBudgetChars).rendered,
           ...(this.task !== undefined ? { task: this.task } : {}),
         }),
       ),

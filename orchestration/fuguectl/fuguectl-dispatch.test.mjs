@@ -39,6 +39,12 @@ suite.ok("help lists required dispatch output", () =>
 suite.ok("help lists verbose dispatch observability", () =>
   help.includes("--verbose"),
 );
+suite.ok("help lists dispatch experience source ref", () =>
+  help.includes("--experience-source-ref ref"),
+);
+suite.ok("help lists dispatch experience budget", () =>
+  help.includes("--experience-budget-chars n"),
+);
 
 writeExecutable(join(tmp, "fugue-cc"), [
   "#!/usr/bin/env node",

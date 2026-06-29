@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   auditExperienceMethods,
   explainRecallMatch,
+  packExperienceMethodsForPrompt,
   renderExperienceMethod,
 } from './experience.js';
 import type { Method } from './experience.js';
@@ -248,6 +249,74 @@ describe('renderExperienceMethod', () => {
     expect(rendered).toContain(
       '[experience:meta] {"slug":"browser-note","sourceKind":"manual","sourceRef":"browser note trust=untrusted","trustKind":"untrusted","created":9}',
     );
+  });
+});
+
+describe('packExperienceMethodsForPrompt', () => {
+  const method = (overrides: Partial<Method> = {}): Method => ({
+    workspace: 'code',
+    title: 'memory',
+    slug: 'memory',
+    created: 10,
+    sourceKind: 'manual',
+    trustKind: 'trusted',
+    body: 'Use this method.',
+    ...overrides,
+  });
+  const renderedBlockChars = (rendered: readonly string[]): number =>
+    Array.from(rendered.join('\n').replace(/\s+$/u, '')).length;
+
+  it('keeps all rendered memory when no budget is set', () => {
+    const packed = packExperienceMethodsForPrompt([
+      method({ title: 'one', slug: 'one', body: 'First method.' }),
+      method({ title: 'two', slug: 'two', body: 'Second method.' }),
+    ]);
+
+    expect(packed.rendered).toHaveLength(2);
+    expect(packed.omitted).toBe(0);
+    expect(packed.totalChars).toBe(renderedBlockChars(packed.rendered));
+  });
+
+  it('packs whole provenance-bearing memory units within a hard character budget', () => {
+    const first = method({ title: 'short', slug: 'short', body: 'Short.' });
+    const second = method({ title: 'long', slug: 'long', body: 'Long '.repeat(40) });
+    const firstRendered = renderExperienceMethod(first);
+    const budget = renderedBlockChars([firstRendered]);
+    const packed = packExperienceMethodsForPrompt([first, second], budget);
+
+    expect(packed.rendered).toEqual([firstRendered]);
+    expect(packed.omitted).toBe(1);
+    expect(packed.totalChars).toBe(budget);
+    expect(packed.maxChars).toBe(budget);
+  });
+
+  it('accounts for renderer separators between packed memory units', () => {
+    const methods = [
+      method({ title: 'one', slug: 'one', body: 'One.' }),
+      method({ title: 'two', slug: 'two', body: 'Two.' }),
+      method({ title: 'three', slug: 'three', body: 'Three.' }),
+    ];
+    const rendered = methods.map(renderExperienceMethod);
+    const budgetMissingThirdSeparator = rendered.reduce(
+      (total, entry) => total + Array.from(entry).length,
+      0,
+    );
+    const packed = packExperienceMethodsForPrompt(methods, budgetMissingThirdSeparator);
+
+    expect(packed.rendered).toEqual(rendered.slice(0, 2));
+    expect(packed.omitted).toBe(1);
+    expect(packed.totalChars).toBeLessThanOrEqual(budgetMissingThirdSeparator);
+  });
+
+  it('omits every memory when none fit the budget instead of truncating bodies', () => {
+    const packed = packExperienceMethodsForPrompt(
+      [method({ title: 'short', slug: 'short', body: 'Short.' })],
+      10,
+    );
+
+    expect(packed.rendered).toEqual([]);
+    expect(packed.omitted).toBe(1);
+    expect(packed.totalChars).toBe(0);
   });
 });
 

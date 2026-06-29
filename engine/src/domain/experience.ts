@@ -156,6 +156,49 @@ export const renderExperienceMethod = (method: Method): string => {
   return `[experience] ${method.title}\n[experience:meta] ${JSON.stringify(annotation)}\n${method.body}\n`;
 };
 
+export interface PackedExperienceMethods {
+  readonly rendered: readonly string[];
+  readonly totalChars: number;
+  readonly omitted: number;
+  readonly maxChars?: number;
+}
+
+const charLength = (value: string): number => Array.from(value).length;
+
+const renderedExperienceBlockChars = (rendered: readonly string[]): number =>
+  charLength(rendered.join('\n').replace(/\s+$/u, ''));
+
+export const packExperienceMethodsForPrompt = (
+  methods: readonly Method[],
+  maxChars?: number,
+): PackedExperienceMethods => {
+  const rendered = methods.map(renderExperienceMethod);
+  if (maxChars === undefined) {
+    return {
+      rendered,
+      totalChars: renderedExperienceBlockChars(rendered),
+      omitted: 0,
+    };
+  }
+  const packed: string[] = [];
+  let omitted = 0;
+  for (const entry of rendered) {
+    const next = [...packed, entry];
+    if (renderedExperienceBlockChars(next) <= maxChars) {
+      packed.push(entry);
+    } else {
+      omitted += 1;
+    }
+  }
+  const totalChars = renderedExperienceBlockChars(packed);
+  return {
+    rendered: packed,
+    totalChars,
+    omitted,
+    maxChars,
+  };
+};
+
 export interface RecallMatchExplanation {
   readonly score: number;
   readonly matchedTerms: readonly string[];

@@ -25,7 +25,7 @@ import {
   EXPERIENCE_TRUST_FILTERS,
   isExperienceSourceKind,
   isExperienceTrustFilter,
-  renderExperienceMethod,
+  packExperienceMethodsForPrompt,
 } from '../../domain/experience.js';
 import type {
   ExperienceSourceKind,
@@ -125,6 +125,19 @@ const parseExperienceLimit = (raw: string | undefined): number | null | undefine
 const experienceLimitError = (raw: string | undefined): string => {
   const rendered = raw === undefined || raw.trim().length === 0 ? '<empty>' : raw.trim();
   return `unknown --experience-limit ${rendered}; expected a positive integer\n`;
+};
+
+const parseExperienceBudgetChars = (raw: string | undefined): number | null | undefined => {
+  if (raw === undefined) return undefined;
+  const value = raw.trim();
+  if (!/^\d+$/u.test(value)) return null;
+  const parsed = Number.parseInt(value, 10);
+  return parsed > 0 ? parsed : null;
+};
+
+const experienceBudgetCharsError = (raw: string | undefined): string => {
+  const rendered = raw === undefined || raw.trim().length === 0 ? '<empty>' : raw.trim();
+  return `unknown --experience-budget-chars ${rendered}; expected a positive integer\n`;
 };
 
 const parseExperienceMaxAgeDays = (raw: string | undefined): number | null | undefined => {
@@ -301,6 +314,7 @@ export class DispatchCommand extends Command {
   experienceSource = Option.String('--experience-source');
   experienceSourceRef = Option.String('--experience-source-ref');
   experienceLimit = Option.String('--experience-limit');
+  experienceBudgetChars = Option.String('--experience-budget-chars');
   experienceTrust = Option.String('--experience-trust');
   experienceMaxAgeDays = Option.String('--experience-max-age-days');
   task = Option.String('--task');
@@ -346,6 +360,11 @@ export class DispatchCommand extends Command {
       this.context.stderr.write(experienceLimitError(this.experienceLimit));
       return 2;
     }
+    const experienceBudgetChars = parseExperienceBudgetChars(this.experienceBudgetChars);
+    if (experienceBudgetChars === null) {
+      this.context.stderr.write(experienceBudgetCharsError(this.experienceBudgetChars));
+      return 2;
+    }
     const experienceTrust = parseAutomaticExperienceTrust(this.experienceTrust);
     if (experienceTrust === null) {
       this.context.stderr.write(automaticExperienceTrustError(this.experienceTrust));
@@ -371,6 +390,13 @@ export class DispatchCommand extends Command {
       this.context.stderr.write('--experience-limit requires --workspace\n');
       return 2;
     }
+    if (
+      experienceBudgetChars !== undefined &&
+      (this.workspace === undefined || this.workspace === '')
+    ) {
+      this.context.stderr.write('--experience-budget-chars requires --workspace\n');
+      return 2;
+    }
     if (experienceTrust !== undefined && (this.workspace === undefined || this.workspace === '')) {
       this.context.stderr.write('--experience-trust requires --workspace\n');
       return 2;
@@ -387,6 +413,7 @@ export class DispatchCommand extends Command {
       experienceSource,
       experienceSourceRef,
       experienceLimit,
+      experienceBudgetChars,
       experienceTrust ?? 'trusted',
       experienceMaxAgeSeconds,
     );
@@ -502,6 +529,7 @@ export class DispatchCommand extends Command {
     experienceSource: ExperienceSourceKind | undefined,
     experienceSourceRef: string | undefined,
     experienceLimit: number | undefined,
+    experienceBudgetChars: number | undefined,
     experienceTrust: ExperienceTrustFilter,
     experienceMaxAgeSeconds: number | undefined,
   ): Promise<string | null> {
@@ -521,6 +549,7 @@ export class DispatchCommand extends Command {
         experienceSource,
         experienceSourceRef,
         experienceLimit,
+        experienceBudgetChars,
         experienceTrust,
         experienceMaxAgeSeconds,
       );
@@ -558,6 +587,7 @@ export class DispatchCommand extends Command {
     experienceSource: ExperienceSourceKind | undefined,
     experienceSourceRef: string | undefined,
     experienceLimit: number | undefined,
+    experienceBudgetChars: number | undefined,
     experienceTrust: ExperienceTrustFilter,
     experienceMaxAgeSeconds: number | undefined,
   ): Promise<string | null> {
@@ -588,7 +618,7 @@ export class DispatchCommand extends Command {
           }),
         },
         system: await store.systemPrompt(),
-        experience: methods.map(renderExperienceMethod),
+        experience: packExperienceMethodsForPrompt(methods, experienceBudgetChars).rendered,
       }),
     );
   }

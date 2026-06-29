@@ -10,7 +10,7 @@
   <img src="https://img.shields.io/badge/Runtime-Node%20%E2%89%A518.18-339933?style=for-the-badge&logo=node.js&logoColor=white" alt="Node.js >= 18.18" />
   <img src="https://img.shields.io/badge/Engine-TypeScript-3178c6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript engine" />
   <img src="https://img.shields.io/badge/fuguectl-25%20suites-7c3aed?style=for-the-badge" alt="25 fuguectl test suites" />
-  <img src="https://img.shields.io/badge/assertions-341-brightgreen?style=for-the-badge" alt="341 fuguectl assertions" />
+  <img src="https://img.shields.io/badge/assertions-343-brightgreen?style=for-the-badge" alt="343 fuguectl assertions" />
   <a href="https://github.com/BicaMindLabs/FuguNano/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/BicaMindLabs/FuguNano/ci.yml?branch=main&style=for-the-badge&label=CI" alt="CI status" /></a>
   <img src="https://img.shields.io/badge/license-Apache--2.0-yellowgreen?style=for-the-badge" alt="Apache-2.0 license" />
 </p>
@@ -266,7 +266,10 @@ before query ranking and prompt assembly. Add
 `--experience-source-ref <url|path|note>` when automatic injection should replay
 only memory imported or learned from one exact origin. Add
 `--experience-limit <n>` on the same automatic-injection paths when a smaller
-prompt budget should receive fewer experience records. Automatic injection is
+candidate set should receive fewer experience records. Add
+`--experience-budget-chars <n>` when rendered experience must fit a hard prompt
+budget; packing is deterministic and preserves whole provenance-bearing memory
+units instead of truncating or LLM-summarizing bodies. Automatic injection is
 trusted-only by default; add `--experience-trust all` only when you
 intentionally want untrusted records in the prompt for inspection or sandboxed
 work. Add
@@ -335,7 +338,8 @@ fuguectl experience audit code --json --max-age-days 30
 fuguectl workspace context code \
   --experience-source task \
   --experience-source-ref TASK.md \
-  --experience-limit 1 \
+  --experience-limit 3 \
+  --experience-budget-chars 1200 \
   --experience-trust all \
   --experience-max-age-days 30 \
   --task "fix dispatch output"
@@ -354,10 +358,15 @@ explicit recall cap; expose the recalled set as JSON for retrieval-precision
 audits; run local JSON/JSONL recall eval cases with precision/recall/F1/MRR;
 support body-hashed metadata-only audits for privacy-sensitive review; require
 source-bound confirmation before imported memory is promoted to trusted; scan
-the store for governance violations before replay; then render injected
-memories with source/trust metadata. Learned budget-tier routing, semantic
-conflict adjudication, richer provenance graphs, and formal machine-checked
-authority are future work. The newest references in this direction are
+the store for governance violations before replay; pack automatic injection
+under a deterministic rendered-character budget; then render injected memories
+with source/trust metadata. Learned budget-tier routing, semantic conflict
+adjudication, richer provenance graphs, and formal machine-checked authority
+are future work. The newest references in this direction are
+[MemRefine](https://arxiv.org/abs/2606.13177),
+[Decision-Aware Memory Cards / CICL](https://arxiv.org/abs/2606.08151),
+[Useful Memories Become Faulty](https://arxiv.org/abs/2605.12978),
+[Memory for Autonomous LLM Agents](https://arxiv.org/abs/2603.07670),
 [MemConflict](https://arxiv.org/abs/2605.20926),
 [Don't Ask the LLM to Track Freshness](https://arxiv.org/abs/2606.01435),
 [Agent-Native Memory Systems](https://arxiv.org/abs/2606.24775),
@@ -395,7 +404,7 @@ fugue init [--dry-run|--write]
 fugue fleet status|up|down
 fugue allocate <task-type>|list|record|feed|stats|reset|decay
 fugue smoke [--harness all|codex|opencode|agy] [--timeout-ms n] [--task <file>] [--out-dir <dir>]
-fugue dispatch <target> --harness fugue-cc|codex|opencode|agy [--timeout-ms n] [--codex-clean] [--harness-arg x] [--out <file>] [--require-output] [--verbose] [--workspace ws [--experience-query q] [--experience-source manual|task] [--experience-source-ref ref] [--experience-limit n] [--experience-trust trusted|all] [--experience-max-age-days n]] --template <name>|--prompt-file <file>|--prompt <text>
+fugue dispatch <target> --harness fugue-cc|codex|opencode|agy [--timeout-ms n] [--codex-clean] [--harness-arg x] [--out <file>] [--require-output] [--verbose] [--workspace ws [--experience-query q] [--experience-source manual|task] [--experience-source-ref ref] [--experience-limit n] [--experience-budget-chars n] [--experience-trust trusted|all] [--experience-max-age-days n]] --template <name>|--prompt-file <file>|--prompt <text>
 fugue integrate --work <repo> --agents "a b" [--ownership file] [--dry]
 fugue skills index|list|match|show|inject|validate|forge
 fugue preflight [--harness fugue-cc|codex|opencode|agy|lite|all] [--model provider/model|--target provider/model] [--config-only] [provider.config]
@@ -403,7 +412,7 @@ fugue cache init|put|fail|status|barrier|collect|list|resume --cache <dir>
 fugue plan "<goal>" --harness fugue-cc|codex|opencode|agy|lite --out <dir> [--models m1,m2] [--timeout-ms n] [--allow-partial] [--codex-clean] [--harness-arg x] [--codex-arg x] [--opencode-arg x] [--agy-arg x] [--task <file>]
 fugue task new|log|done
 fugue template <name> --dir <templates> [--set KEY=VALUE ...]
-fugue workspace list|show|model|context [context: --experience-source manual|task --experience-source-ref ref --experience-limit n --experience-trust trusted|all --experience-max-age-days n]
+fugue workspace list|show|model|context [context: --experience-source manual|task --experience-source-ref ref --experience-limit n --experience-budget-chars n --experience-trust trusted|all --experience-max-age-days n]
 fugue experience add|list|show --store <dir> [add: --trust trusted|untrusted --source-ref ref --supersedes slug]
 fugue experience audit --store <dir> [workspace] --json [--max-age-days n]
 fugue experience learn --store <dir> [--failure-cause cause] [--supersedes slug]
@@ -556,6 +565,7 @@ GitHub Security Advisory.
 - [MRMMIA](https://arxiv.org/abs/2605.27825) for the memory-membership privacy risk that motivates metadata-only recall audits with body hashes instead of raw memory text.
 - [Securing LLM-Agent Long-Term Memory Against Poisoning](https://arxiv.org/abs/2606.24322), [From Untrusted Input to Trusted Memory](https://arxiv.org/abs/2606.04329) / [OpenReview](https://openreview.net/forum?id=5cgg9yenCZ), and [Agents That Know Too Much](https://arxiv.org/abs/2606.26627) for the write-time trust metadata, trusted-only automatic injection gate, and origin-bound `experience promote` path that starts addressing memory write-channel and cross-session privacy risks.
 - [A Survey on Long-Term Memory Security in LLM Agents](https://arxiv.org/abs/2604.16548), [Governed Memory](https://arxiv.org/abs/2603.17787), [From Storage to Steering](https://arxiv.org/abs/2603.15125), and [From Agent Traces to Trust](https://arxiv.org/abs/2606.04990) for the lifecycle-governance, control-flow risk, and provenance framing behind `experience audit`.
+- [MemRefine](https://arxiv.org/abs/2606.13177), [Decision-Aware Memory Cards](https://arxiv.org/abs/2606.08151), [Useful Memories Become Faulty](https://arxiv.org/abs/2605.12978), and [Memory for Autonomous LLM Agents](https://arxiv.org/abs/2603.07670) for the storage-budgeted, decision-relevant, evidence-preserving memory management framing behind `--experience-budget-chars`.
 - [kunchenguid/no-mistakes](https://github.com/kunchenguid/no-mistakes) and [lavish-axi](https://github.com/kunchenguid/lavish-axi) for loop-state and docs-drift ideas.
 - [merkyor/Lynn](https://gitee.com/merkyor/Lynn) for orchestrator-side ownership enforcement inspiration.
 - Anthropic's official `skill-creator` meta-skill for the skill authoring and validation flow.

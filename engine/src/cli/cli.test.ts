@@ -9,6 +9,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { FsRunStore } from '../adapters/store/fs-run-store.js';
 import { parseAgentRegistryJson } from '../domain/agent-registry.js';
+import { renderExperienceMethod } from '../domain/experience.js';
 import type { HarnessConfig } from '../domain/self-harness.js';
 import { EDITABLE_SURFACES } from '../domain/self-harness.js';
 import { parseSelfHarnessSpec } from '../domain/self-harness-spec.js';
@@ -1298,6 +1299,36 @@ describe('fugue CLI', () => {
         ),
       );
       const calledDefault = await readFile(fugueCcCalled, 'utf8');
+      const packedBudgetChars = String(
+        Array.from(
+          renderExperienceMethod({
+            workspace: 'code',
+            title: 'Task redis new',
+            slug: 'task-redis-new',
+            created: 3,
+            sourceKind: 'task',
+            sourceRef: '/tmp/TASK-new.md',
+            trustKind: 'trusted',
+            body: 'New task redis cache recipe.',
+          }),
+        ).length,
+      );
+      const packedDispatch = await run(
+        args(
+          'cc-x',
+          '--workspace',
+          'code',
+          '--experience-source',
+          'task',
+          '--experience-limit',
+          '3',
+          '--experience-budget-chars',
+          packedBudgetChars,
+          '--prompt',
+          'fix redis cache expiration',
+        ),
+      );
+      const calledPacked = await readFile(fugueCcCalled, 'utf8');
       const sourceRefDispatch = await run(
         args(
           'cc-x',
@@ -1346,6 +1377,12 @@ describe('fugue CLI', () => {
       const limitWithoutWorkspace = await run(
         args('cc-x', '--experience-limit', '1', '--prompt', 'x'),
       );
+      const badBudget = await run(
+        args('cc-x', '--workspace', 'code', '--experience-budget-chars', '0', '--prompt', 'x'),
+      );
+      const budgetWithoutWorkspace = await run(
+        args('cc-x', '--experience-budget-chars', '100', '--prompt', 'x'),
+      );
       const badTrust = await run(
         args('cc-x', '--workspace', 'code', '--experience-trust', 'untrusted', '--prompt', 'x'),
       );
@@ -1361,6 +1398,10 @@ describe('fugue CLI', () => {
       expect(calledDefault).not.toContain('[experience] Task redis old');
       expect(calledDefault).not.toContain('[experience] Manual redis');
       expect(calledDefault).not.toContain('[experience] Task redis untrusted');
+      expect(packedDispatch.code).toBe(0);
+      expect(calledPacked).toContain('[experience] Task redis new');
+      expect(calledPacked).not.toContain('[experience] Task redis old');
+      expect(calledPacked).not.toContain('[experience] Manual redis');
       expect(sourceRefDispatch.code).toBe(0);
       expect(calledSourceRef).toContain('[experience] Task redis old');
       expect(calledSourceRef).not.toContain('[experience] Task redis new');
@@ -1385,6 +1426,12 @@ describe('fugue CLI', () => {
       expect(badLimit.err).toContain('unknown --experience-limit 0');
       expect(limitWithoutWorkspace.code).toBe(2);
       expect(limitWithoutWorkspace.err).toContain('--experience-limit requires --workspace');
+      expect(badBudget.code).toBe(2);
+      expect(badBudget.err).toContain('unknown --experience-budget-chars 0');
+      expect(budgetWithoutWorkspace.code).toBe(2);
+      expect(budgetWithoutWorkspace.err).toContain(
+        '--experience-budget-chars requires --workspace',
+      );
       expect(badTrust.code).toBe(2);
       expect(badTrust.err).toContain('unknown --experience-trust untrusted');
       expect(trustWithoutWorkspace.code).toBe(2);
@@ -6108,6 +6155,37 @@ describe('fugue CLI', () => {
         '--task',
         'fix redis cache expiration',
       ]);
+      const packedBudgetChars = String(
+        Array.from(
+          renderExperienceMethod({
+            workspace: 'code',
+            title: 'Task redis new',
+            slug: 'task-redis-new',
+            created: 5,
+            sourceKind: 'task',
+            sourceRef: '/tmp/TASK-new.md',
+            trustKind: 'trusted',
+            body: 'New task redis cache recipe.',
+          }),
+        ).length,
+      );
+      const contextPacked = await run([
+        'workspace',
+        'context',
+        ...wsArgs(),
+        ...modelArgs(),
+        '--experience',
+        experience,
+        '--experience-source',
+        'task',
+        '--experience-limit',
+        '3',
+        '--experience-budget-chars',
+        packedBudgetChars,
+        'code',
+        '--task',
+        'fix redis cache expiration',
+      ]);
       const contextAll = await run([
         'workspace',
         'context',
@@ -6184,6 +6262,17 @@ describe('fugue CLI', () => {
         'not-a-number',
         'code',
       ]);
+      const badBudget = await run([
+        'workspace',
+        'context',
+        ...wsArgs(),
+        ...modelArgs(),
+        '--experience',
+        experience,
+        '--experience-budget-chars',
+        'nope',
+        'code',
+      ]);
       const badTrust = await run([
         'workspace',
         'context',
@@ -6204,6 +6293,10 @@ describe('fugue CLI', () => {
       expect(context.out).not.toContain('[experience] Task redis old');
       expect(context.out).not.toContain('[experience] Manual redis');
       expect(context.out).not.toContain('[experience] Task redis untrusted');
+      expect(contextPacked.code).toBe(0);
+      expect(contextPacked.out).toContain('[experience] Task redis new');
+      expect(contextPacked.out).not.toContain('[experience] Task redis old');
+      expect(contextPacked.out).not.toContain('[experience] Manual redis');
       expect(contextAll.code).toBe(0);
       expect(contextAll.out).toContain('[experience] Task redis untrusted');
       expect(contextAll.out).toContain(
@@ -6222,6 +6315,8 @@ describe('fugue CLI', () => {
       expect(blankSourceRef.err).toContain('--experience-source-ref must be a non-empty string');
       expect(badLimit.code).toBe(2);
       expect(badLimit.err).toContain('unknown --experience-limit not-a-number');
+      expect(badBudget.code).toBe(2);
+      expect(badBudget.err).toContain('unknown --experience-budget-chars nope');
       expect(badTrust.code).toBe(2);
       expect(badTrust.err).toContain('unknown --experience-trust untrusted');
     });
