@@ -555,8 +555,59 @@ export class DispatchCommand extends Command {
       ...(this.out !== undefined ? { outputPath: this.out } : {}),
       ...(this.certificate !== undefined ? { certificatePath: this.certificate } : {}),
     });
+    await this.recordIncident(finalRc, {
+      ...(failureKind !== undefined ? { failureKind } : {}),
+      ...(failureDetail !== undefined ? { failureDetail } : {}),
+      output,
+    });
     await this.appendAllocationLedger();
     return finalRc;
+  }
+
+  /**
+   * On a failed dispatch, turn the failure into a structured incident the rest
+   * of the loop can consume instead of an operator hand-running `incident
+   * packet`. Synthesizes a failure log (rc + kind + harness detail/output),
+   * derives the incident + recovery packets, appends a one-line summary with the
+   * first recovery step to the TASK audit, and writes the full packet to
+   * --incident when given. No-op on success.
+   */
+  private async recordIncident(
+    finalRc: number,
+    context: { failureKind?: string; failureDetail?: string; output: string },
+  ): Promise<void> {
+    if (finalRc === 0) return;
+    if (this.task === undefined && this.incident === undefined) return;
+    const failureLog = [
+      `dispatch harness=${this.harness} agent=${this.target} rc=${String(finalRc)}`,
+      context.failureKind !== undefined ? `failure-kind: ${context.failureKind}` : undefined,
+      context.failureDetail,
+      context.output.length > 0 ? context.output : undefined,
+    ]
+      .filter((line): line is string => line !== undefined && line.length > 0)
+      .join('\n');
+    const sourceRef = this.task ?? this.target;
+    const packet = incidentPacket(failureLog, { sourceRef, sourceSha256: sha256(failureLog) });
+    const recovery = incidentRecoveryPacket(packet);
+    if (this.incident !== undefined) {
+      try {
+        await this.fs.write(
+          this.incident,
+          `${JSON.stringify({ incident: packet, recovery }, null, 2)}\n`,
+        );
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        this.context.stderr.write(`failed to write --incident ${this.incident}: ${message}\n`);
+      }
+    }
+    const top = packet.incidents[0];
+    const step = recovery.steps[0];
+    const summary =
+      top !== undefined
+        ? `incident kind=${top.kind} severity=${top.severity} cause=${top.failureCause}`
+        : `incident kind=unclassified rc=${String(finalRc)}`;
+    const nextStep = step !== undefined ? ` next=${step.phase}:${step.action}` : '';
+    await this.appendTaskLine(`${summary}${nextStep}`);
   }
 
   private async appendTaskStart(metrics: {

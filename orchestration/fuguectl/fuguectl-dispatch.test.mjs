@@ -349,4 +349,54 @@ suite.ok(
     ]).status !== 0,
 );
 
+// On a failed dispatch the engine now auto-derives an incident + recovery packet
+// (instead of the operator hand-running `incident packet`). The guard-cc stub
+// emits no stdout, so --require-output forces a failure.
+const incidentTask = join(tmp, "incident-task.md");
+writeFileSync(incidentTask, "## Execution log\n");
+const incidentFile = join(tmp, "incident.json");
+const failed = run(dispatch, [
+  "cc-x",
+  "--prompt-file",
+  promptFile,
+  "--require-output",
+  "--task",
+  incidentTask,
+  "--incident",
+  incidentFile,
+]);
+suite.ok("failed dispatch returns non-0", () => failed.status !== 0);
+suite.ok("failed dispatch writes the --incident packet", () => {
+  if (!existsSync(incidentFile)) return false;
+  const packet = JSON.parse(readFileSync(incidentFile, "utf8"));
+  return (
+    packet.incident.schemaVersion === "fugunano.incident-packet.v1" &&
+    packet.recovery.schemaVersion === "fugunano.incident-recovery.v1"
+  );
+});
+suite.ok("failed dispatch appends an incident summary to the TASK audit", () =>
+  readFileSync(incidentTask, "utf8").includes("incident kind="),
+);
+
+const okTask = join(tmp, "ok-task.md");
+writeFileSync(okTask, "## Execution log\n");
+const noIncidentFile = join(tmp, "no-incident.json");
+run(dispatch, [
+  "cc-deepseek",
+  "--prompt",
+  "inline content",
+  "--task",
+  okTask,
+  "--incident",
+  noIncidentFile,
+]);
+suite.ok(
+  "successful dispatch writes no incident packet",
+  () => !existsSync(noIncidentFile),
+);
+suite.ok(
+  "successful dispatch leaves no incident line in the TASK audit",
+  () => !readFileSync(okTask, "utf8").includes("incident kind="),
+);
+
 suite.done();
