@@ -28,6 +28,7 @@ import type {
 import { evalCaseResult, evalSummary } from '../../domain/experience-eval.js';
 import type { ExperienceEvalCase, ExperienceEvalCaseResult } from '../../domain/experience-eval.js';
 import { isOk } from '../../domain/result.js';
+import { normalizeOption } from '../param-parse.js';
 import { systemClock } from '../../infra/clock.js';
 import { NodeFileSystem } from '../../infra/node-file-system.js';
 import { defaultExperienceDir } from '../default-paths.js';
@@ -250,16 +251,14 @@ const isTerminalFailedTask = (content: string): boolean => {
   return TERMINAL_FAILURE_STATUSES.has(status) && !['', '-'].includes(field(content, 'Completed'));
 };
 
-const normalizeFailureCause = (raw: string | undefined): string | undefined =>
-  raw?.trim().toLowerCase();
+const normalizeFailureCause = normalizeOption;
 
 const failureCauseError = (cause: string | undefined): string => {
   const rendered = cause === undefined || cause.length === 0 ? '<empty>' : cause;
   return `unknown --failure-cause ${rendered}; expected one of ${FAILURE_CAUSES.join(', ')}\n`;
 };
 
-const normalizeSourceKind = (raw: string | undefined): string | undefined =>
-  raw?.trim().toLowerCase();
+const normalizeSourceKind = normalizeOption;
 
 const sourceKindError = (sourceKind: string | undefined): string => {
   const rendered = sourceKind === undefined || sourceKind.length === 0 ? '<empty>' : sourceKind;
@@ -298,8 +297,7 @@ const parseConfirmationRefs = (raw: readonly string[]): readonly string[] | null
 const confirmationRefsError = (): string =>
   '--confirm-source-ref must be a non-empty source reference\n';
 
-const normalizeTrustKind = (raw: string | undefined): string | undefined =>
-  raw?.trim().toLowerCase();
+const normalizeTrustKind = normalizeOption;
 
 const trustKindError = (trustKind: string | undefined): string => {
   const rendered = trustKind === undefined || trustKind.length === 0 ? '<empty>' : trustKind;

@@ -11,6 +11,7 @@ import { checkOwnership } from '../../domain/ownership-check.js';
 import { NodeCommandRunner } from '../../infra/node-command-runner.js';
 import { NodeFileSystem } from '../../infra/node-file-system.js';
 import { appendTaskAudit } from '../task-audit.js';
+import { splitCsv } from '../param-parse.js';
 
 interface MissingIntegration {
   readonly agent: string;
@@ -27,12 +28,6 @@ const identityFor = (name: string): Identity => ({ name, email: 'fugunano@local'
 const splitWords = (raw: string): readonly string[] =>
   raw
     .split(/\s+/u)
-    .map((part) => part.trim())
-    .filter((part) => part.length > 0);
-
-const splitCsv = (raw: string): readonly string[] =>
-  raw
-    .split(',')
     .map((part) => part.trim())
     .filter((part) => part.length > 0);
 

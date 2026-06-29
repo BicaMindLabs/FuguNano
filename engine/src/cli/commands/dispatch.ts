@@ -55,18 +55,13 @@ import {
   defaultTemplatesDir,
   defaultWorkspacesDir,
 } from '../default-paths.js';
+import { normalizeOption, splitCsv } from '../param-parse.js';
 import { appendTaskAuditLine } from '../task-audit.js';
 const defaultSkillsRoot = (): string =>
   process.env.FUGUE_SKILLS_ROOT ?? joinPath(joinPath(homedir(), '.claude'), 'skills');
 const defaultPluginsRoot = (): string =>
   process.env.FUGUE_PLUGINS_ROOT ??
   joinPath(joinPath(joinPath(homedir(), '.claude'), 'plugins'), 'marketplaces');
-
-const splitCsv = (raw: string): readonly string[] =>
-  raw
-    .split(',')
-    .map((part) => part.trim())
-    .filter((part) => part.length > 0);
 
 const recallOptions = (
   query: string | undefined,
@@ -92,8 +87,7 @@ const recallOptions = (
   return options;
 };
 
-const normalizeExperienceSource = (raw: string | undefined): string | undefined =>
-  raw?.trim().toLowerCase();
+const normalizeExperienceSource = normalizeOption;
 
 const parseExperienceSource = (
   raw: string | undefined,

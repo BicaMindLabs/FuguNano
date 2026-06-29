@@ -19,6 +19,7 @@ import { isOk } from '../../domain/result.js';
 import { systemClock } from '../../infra/clock.js';
 import { NodeCommandRunner } from '../../infra/node-command-runner.js';
 import { NodeFileSystem } from '../../infra/node-file-system.js';
+import { splitCsv } from '../param-parse.js';
 
 const stateDir = (): string =>
   process.env.FUGUNANO_STATE ??
@@ -53,12 +54,6 @@ const exists = async (path: string): Promise<boolean> => {
     throw error;
   }
 };
-
-const splitCsv = (raw: string): readonly string[] =>
-  raw
-    .split(',')
-    .map((part) => part.trim())
-    .filter((part) => part.length > 0);
 
 const parseCatalog = (content: string): readonly SkillRef[] => {
   const refs: SkillRef[] = [];

@@ -17,6 +17,7 @@ import {
   defaultAllocationStats,
   defaultAllocationTable,
 } from '../default-paths.js';
+import { splitCsv } from '../param-parse.js';
 
 interface ParsedArgs {
   readonly ok: true;
@@ -122,12 +123,6 @@ const seededOrSystemRng = (): Rng => {
   const parsed = Number.parseInt(seed, 10);
   return seededRng(Number.isFinite(parsed) ? parsed : 0);
 };
-
-const splitCsv = (raw: string): readonly string[] =>
-  raw
-    .split(',')
-    .map((part) => part.trim())
-    .filter((part) => part.length > 0);
 
 const stateLine = (entry: StrategyState[number]): string =>
   `${entry.taskType}\t${entry.agent}\t${String(entry.s)}\t${String(entry.f)}`;
