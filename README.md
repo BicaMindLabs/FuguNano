@@ -30,13 +30,10 @@
 
 </div>
 
-> A repo-native, multi-agent coding loop powered by 9+ LLMs (isolated via
-> Claude Code) and an independent Codex reviewer. Lightweight, bounded, and
-> self-improving (Self-Harness) - no coordinator training required.
-
-FuguNano is a small engineering control plane for multi-agent coding. It does
-not train a conductor. It makes existing agents work as an auditable loop:
-plan, dispatch, gather, review, repair, learn, and improve the harness itself.
+FuguNano is a small, training-free control plane for multi-agent coding. It does
+not train a conductor — it makes the agents you already have work as one
+auditable loop: plan, dispatch, gather, review, repair, learn, and improve the
+harness itself. Every step is backed by deterministic evidence, not model prose.
 
 ## Why FuguNano
 
@@ -47,69 +44,11 @@ plan, dispatch, gather, review, repair, learn, and improve the harness itself.
 | Reviews become prose                            | Review, incident, recovery, guard, and handoff packets are typed.   |
 | Agent loops spin forever                        | The repair loop is bounded, stateful, and reviewer-gated.           |
 | Prompt/runtime safety is invisible              | Guard packets and action certificates create local evidence.        |
-| Improvements disappear after one run            | Experience memory and Self-Harness feed lessons back into the loop. |
-
-## Evo Engineering in 60 seconds
-
-<img src="docs/readme-evo-loop-en.svg" alt="FuguNano Evo Engineering evidence-to-lineage loop" width="920">
-
-FuguNano treats runtime evidence as the start of an engineering loop, not the
-end of a report. Packets become weakness signals; candidates are scored on fixed
-held-in/held-out cases; accepted changes are written to auditable lineage.
-Safety surfaces such as `guard-rule` still require operator promotion.
-
-Dogfood fixture: [.fugunano/evolution/evo-guard-rule-tighten-gh-release-certificate.json](.fugunano/evolution/evo-guard-rule-tighten-gh-release-certificate.json)
-records a real guard-rule promotion for a missing action-certificate check.
-
-## Quick Start
-
-Requirements: macOS or Linux, Node.js >= 18.18, `git`, `tmux`, and whichever
-model credentials you choose to use. Codex is recommended for independent
-review.
-
-```bash
-git clone https://github.com/BicaMindLabs/FuguNano fugunano
-cd fugunano
-
-/path/to/fugunano/orchestration/fuguectl/fuguectl help quickstart
-/path/to/fugunano/orchestration/fuguectl/fuguectl init --dry-run
-make doctor
-make install
-make verify
-make ci-clean
-```
-
-Real keys stay outside the repository:
-
-```bash
-mkdir -p ~/.config
-$EDITOR ~/.config/cc-model-secrets.env
-```
-
-For the optional `fugue-cc` worktree fleet:
-
-```bash
-cp orchestration/fugue-cc/provider.config.example /path/to/project/.fugue-cc/provider.config
-cd /path/to/project
-fugue-cc
-
-/path/to/fugunano/orchestration/fuguectl/fuguectl preflight --harness fugue-cc
-/path/to/fugunano/orchestration/fuguectl/fuguectl fleet status
-```
-
-Install the operator skill:
-
-```bash
-make install-skill
-~/.claude/skills/fugunano/fuguectl selftest
-```
-
-The skill is convenient for Claude Code, but the workflow is runtime-neutral.
-Codex, OpenCode, Antigravity, and future agents can use the same agent profiles.
-Frontend/UI work may be sent through `agy --prompt "..."`; review should remain
-independent.
+| Improvements disappear after one run            | Experience memory and the evolution loop feed lessons back in.      |
 
 ## How It Works
+
+One short pipeline, gated at every hop by the packets below:
 
 ```mermaid
 flowchart LR
@@ -157,6 +96,70 @@ fuguectl loop decide
 `status`/`exitCode`/`allowPartial`/`succeeded`/`available`/`failed`, so planning
 can be inspected without reading model chat.
 
+## Quick Start
+
+Requirements: macOS or Linux, Node.js >= 18.18, `git`, `tmux`, and whichever
+model credentials you choose to use. Codex is recommended for independent
+review.
+
+```bash
+git clone https://github.com/BicaMindLabs/FuguNano fugunano
+cd fugunano
+
+/path/to/fugunano/orchestration/fuguectl/fuguectl help quickstart
+/path/to/fugunano/orchestration/fuguectl/fuguectl init --dry-run
+make doctor
+make install
+make verify
+make ci-clean
+```
+
+Real keys stay outside the repository:
+
+```bash
+mkdir -p ~/.config
+$EDITOR ~/.config/cc-model-secrets.env
+```
+
+For the optional `fugue-cc` worktree fleet:
+
+```bash
+cp orchestration/fugue-cc/provider.config.example /path/to/project/.fugue-cc/provider.config
+cd /path/to/project
+fugue-cc
+
+/path/to/fugunano/orchestration/fuguectl/fuguectl preflight --harness fugue-cc
+/path/to/fugunano/orchestration/fuguectl/fuguectl fleet status
+```
+
+Install the operator skill:
+
+```bash
+make install-skill
+~/.claude/skills/fugunano/fuguectl selftest
+```
+
+The skill is convenient for Claude Code, but the workflow is runtime-neutral.
+Codex, OpenCode, Antigravity, and future agents use the same agent profiles.
+Frontend/UI work may be sent through `agy --prompt "..."`; review should remain
+independent.
+
+## Evidence Packets
+
+The loop does not run on prose — it runs on typed packets. Each one is
+deterministic TypeScript that gates a hop in the pipeline above and becomes
+fuel for the evolution loop below.
+
+| Packet                   | Command                           | Purpose                                               |
+| ------------------------ | --------------------------------- | ----------------------------------------------------- |
+| Task handoff             | `fuguectl task handoff`           | Give the next agent the contract and recent evidence. |
+| Task digest              | `fuguectl task digest`            | Fit long TASK context into a bounded prompt card.     |
+| Review packet            | `fuguectl review packet`          | Turn reviewer prose into findings and checks.         |
+| Incident packet          | `fuguectl incident packet`        | Label failed traces with cause, layer, and evidence.  |
+| Incident recovery packet | `fuguectl incident recovery`      | Emit containment, repair, validation, and learning.   |
+| Runtime guard packet     | `fuguectl guard prompt`           | Block risky prompts before runtime dispatch.          |
+| Action certificate       | `fuguectl dispatch --certificate` | Record proof for a runtime action.                    |
+
 ## Agent Runtime Contract
 
 <p align="center">
@@ -168,15 +171,56 @@ adding an agent never touches orchestration. Four core harnesses
 (`fugue-cc|codex|opencode|agy`) stay in the default surface; experimental
 runtimes are opt-in and excluded from `preflight --all`.
 
-| Tier         | Runtime                                                       | How it plugs in                                                                          |
-| ------------ | ------------------------------------------------------------ | ---------------------------------------------------------------------------------------- |
-| Core         | `fugue-cc` · `codex` · `opencode` · `agy`                    | descriptor-backed adapters in the default surface                                        |
-| Experimental | `agent-cli` (qwen-code · kimi-code · mimo-code · trae · qoder) | one `InvocationDescriptor` per agent in the registry — no new `HarnessName`               |
-| Experimental | `acp-agent`                                                  | a protocol adapter (`initialize → prompt → result`), deliberately not a descriptor       |
+| Tier         | Runtime                                                       | How it plugs in                                                                    |
+| ------------ | ------------------------------------------------------------ | --------------------------------------------------------------------------------- |
+| Core         | `fugue-cc` · `codex` · `opencode` · `agy`                    | descriptor-backed adapters in the default surface                                 |
+| Experimental | `agent-cli` (qwen-code · kimi-code · mimo-code · trae · qoder) | one `InvocationDescriptor` per agent in the registry — no new `HarnessName`        |
+| Experimental | `acp-agent`                                                  | a protocol adapter (`initialize → prompt → result`), deliberately not a descriptor |
 
 A new agent is a registry entry plus a preflight probe and a smoke test, not a
 core change. Every harness satisfies the same port, so it inherits the guard and
 certificate gates for free.
+
+## Evidence-gated Evolution
+
+<p align="center">
+  <img src="docs/readme-evo-loop-en.svg" alt="FuguNano Evo Engineering evidence-to-lineage loop" width="920">
+</p>
+
+FuguNano treats runtime evidence as the start of an engineering loop, not the
+end of a report. Packets become weakness signals; candidate edits to engineering
+surfaces are scored on fixed held-in/held-out cases; only non-regressing changes
+are promoted and written to auditable lineage. Safety surfaces such as
+`guard-rule` always require operator promotion — the agent can never quietly
+relax its own guardrails.
+
+Dogfood fixture: [.fugunano/evolution/evo-guard-rule-tighten-gh-release-certificate.json](.fugunano/evolution/evo-guard-rule-tighten-gh-release-certificate.json)
+records a real guard-rule promotion for a missing action-certificate check.
+
+Self-Harness is the first backend of this loop — it evolves the harness config
+surfaces (system prompt, memory, skills, …):
+
+<p align="center">
+  <img src="docs/readme-self-harness-en.svg" alt="Self-Harness in FuguNano" width="920">
+</p>
+
+It mines verifier-grounded failures, proposes bounded edits, and promotes only
+non-regressing changes. Read the operator guide in
+[docs/SELF_HARNESS.md](docs/SELF_HARNESS.md).
+
+## Command Surface
+
+`orchestration/fuguectl/fuguectl` is the production entry point: 28 subcommands,
+29 test suites, and 408 wrapper assertions.
+
+| Area               | Commands                                                                                                                                                                                                                                                                                                                     |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Setup              | `fuguectl doctor`, `fuguectl init --dry-run\|--write`, `fuguectl version`, `fuguectl preflight --harness fugue-cc\|codex\|opencode\|agy\|lite\|all`, `fuguectl smoke`, `fuguectl fleet status\|up\|down`                                                                                                                     |
+| Planning           | `fuguectl task new\|log\|done\|handoff\|digest`, `fuguectl template <name>`, `fuguectl plan "<goal>" [--harness h\|lite] [--models a,b] [--out dir] [--timeout-ms n] [--allow-partial] [--codex-clean] [--harness-arg x] [--codex-arg x] [--opencode-arg x] [--agy-arg x] [--task f]`, `fuguectl goal template\|show\|check` |
+| Routing            | `fuguectl allocate <type>`, `fuguectl workspace list\|show\|model\|context`, `fuguectl agents template\|validate\|list\|resolve`, `fuguectl skills index\|list\|match\|show\|inject\|validate\|forge`                                                                                                                        |
+| Dispatch           | `fuguectl guard prompt <file\|->`, `fuguectl dispatch <target> [--certificate <file>]`, `fuguectl cache init\|put\|fail\|barrier\|collect\|resume`                                                                                                                                                                           |
+| Review + repair    | `fuguectl integrate --work <repo>`, `fuguectl review packet <file\|->`, `fuguectl incident packet\|recovery <file\|->`, `fuguectl loop init\|record\|decide\|status`, `fuguectl run set\|round\|status\|next\|clear`, `fuguectl summary <round>`                                                                             |
+| Memory + evolution | `fuguectl experience add\|audit\|eval\|learn\|list\|policy\|promote\|recall\|show`, `fuguectl evolve mine\|validate\|promote\|history`, `fuguectl self-harness template\|run`, `fuguectl runtime check\|adapt`, `fuguectl selftest`                                                                                          |
 
 ## Fugu, OpenFugu, FuguNano
 
@@ -193,44 +237,6 @@ certificate gates for free.
 FuguNano is the lightest open entry point on this road: start with policies,
 ports, review gates, evidence packets, and harness improvement before deciding
 whether a learned conductor is worth the cost.
-
-## Command Surface
-
-`orchestration/fuguectl/fuguectl` is the production entry point: 28 subcommands,
-29 test suites, and 408 wrapper assertions.
-
-| Area               | Commands                                                                                                                                                                                                                                                                                                                     |
-| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Setup              | `fuguectl doctor`, `fuguectl init --dry-run\|--write`, `fuguectl version`, `fuguectl preflight --harness fugue-cc\|codex\|opencode\|agy\|lite\|all`, `fuguectl smoke`, `fuguectl fleet status\|up\|down`                                                                                                                     |
-| Planning           | `fuguectl task new\|log\|done\|handoff\|digest`, `fuguectl template <name>`, `fuguectl plan "<goal>" [--harness h\|lite] [--models a,b] [--out dir] [--timeout-ms n] [--allow-partial] [--codex-clean] [--harness-arg x] [--codex-arg x] [--opencode-arg x] [--agy-arg x] [--task f]`, `fuguectl goal template\|show\|check` |
-| Routing            | `fuguectl allocate <type>`, `fuguectl workspace list\|show\|model\|context`, `fuguectl agents template\|validate\|list\|resolve`, `fuguectl skills index\|list\|match\|show\|inject\|validate\|forge`                                                                                                                        |
-| Dispatch           | `fuguectl guard prompt <file\|->`, `fuguectl dispatch <target> [--certificate <file>]`, `fuguectl cache init\|put\|fail\|barrier\|collect\|resume`                                                                                                                                                                           |
-| Review + repair    | `fuguectl integrate --work <repo>`, `fuguectl review packet <file\|->`, `fuguectl incident packet\|recovery <file\|->`, `fuguectl loop init\|record\|decide\|status`, `fuguectl run set\|round\|status\|next\|clear`, `fuguectl summary <round>`                                                                             |
-| Memory + evolution | `fuguectl experience add\|audit\|eval\|learn\|list\|policy\|promote\|recall\|show`, `fuguectl evolve mine\|validate\|promote\|history`, `fuguectl self-harness template\|run`, `fuguectl runtime check\|adapt`, `fuguectl selftest`                                                                                          |
-
-## Evidence Packets
-
-| Packet                   | Command                           | Purpose                                               |
-| ------------------------ | --------------------------------- | ----------------------------------------------------- |
-| Task handoff             | `fuguectl task handoff`           | Give the next agent the contract and recent evidence. |
-| Task digest              | `fuguectl task digest`            | Fit long TASK context into a bounded prompt card.     |
-| Review packet            | `fuguectl review packet`          | Turn reviewer prose into findings and checks.         |
-| Incident packet          | `fuguectl incident packet`        | Label failed traces with cause, layer, and evidence.  |
-| Incident recovery packet | `fuguectl incident recovery`      | Emit containment, repair, validation, and learning.   |
-| Runtime guard packet     | `fuguectl guard prompt`           | Block risky prompts before runtime dispatch.          |
-| Action certificate       | `fuguectl dispatch --certificate` | Record proof for a runtime action.                    |
-
-These packets are deterministic TypeScript, not model summaries.
-
-## Self-Harness
-
-<p align="center">
-  <img src="docs/readme-self-harness-en.svg" alt="Self-Harness in FuguNano" width="920">
-</p>
-
-Self-Harness mines verifier-grounded failures, proposes bounded edits to
-harness surfaces, and promotes only non-regressing changes. Read the operator
-guide in [docs/SELF_HARNESS.md](docs/SELF_HARNESS.md).
 
 ## Docs Map
 
