@@ -185,12 +185,16 @@ export type {
   PromptMode,
   ModelArgMode,
   FailureMode,
+  DynamicArgOrder,
+  ExtraArgPlacement,
   BuildArgvOptions,
 } from './domain/invocation-descriptor.js';
 export {
   PROMPT_MODES,
   MODEL_ARG_MODES,
   FAILURE_MODES,
+  DYNAMIC_ARG_ORDERS,
+  EXTRA_ARG_PLACEMENTS,
   buildArgv,
 } from './domain/invocation-descriptor.js';
 export type { AgentCliId, AgentCliRegistryEntry } from './domain/agent-cli-registry.js';
@@ -356,8 +360,11 @@ export { PersistentReviewLoop } from './adapters/loop/persistent-review-loop.js'
 export { BetaBernoulliAllocator } from './adapters/allocation/beta-bernoulli-allocator.js';
 export { FugueCcHarness } from './adapters/harness/fugue-cc-harness.js';
 export { CodexHarness } from './adapters/harness/codex-harness.js';
-export { OpencodeHarness } from './adapters/harness/opencode-harness.js';
-export { AgyHarness } from './adapters/harness/agy-harness.js';
+export {
+  OPENCODE_INVOCATION_DESCRIPTOR,
+  OpencodeHarness,
+} from './adapters/harness/opencode-harness.js';
+export { AGY_INVOCATION_DESCRIPTOR, AgyHarness } from './adapters/harness/agy-harness.js';
 export {
   AgentCliHarness,
   CODEX_INVOCATION_DESCRIPTOR,
