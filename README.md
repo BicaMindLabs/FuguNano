@@ -4,7 +4,9 @@
 
 # FuguNano
 
-### Open & light-weight version reimplementation of Sakana Fugu
+### Open & light-weight reimplementation of Sakana Fugu
+
+### Evidence-gated Evo Engineering for multi-agent software work
 
 <p align="center">
   <img src="https://img.shields.io/badge/Runtime-Node%20%3E%3D18.18-339933?style=for-the-badge&logo=node.js&logoColor=white" alt="Node.js >= 18.18" />
@@ -46,6 +48,18 @@ plan, dispatch, gather, review, repair, learn, and improve the harness itself.
 | Agent loops spin forever                        | The repair loop is bounded, stateful, and reviewer-gated.           |
 | Prompt/runtime safety is invisible              | Guard packets and action certificates create local evidence.        |
 | Improvements disappear after one run            | Experience memory and Self-Harness feed lessons back into the loop. |
+
+## Evo Engineering in 60 seconds
+
+<img src="docs/readme-evo-loop-en.svg" alt="FuguNano Evo Engineering evidence-to-lineage loop" width="920">
+
+FuguNano treats runtime evidence as the start of an engineering loop, not the
+end of a report. Packets become weakness signals; candidates are scored on fixed
+held-in/held-out cases; accepted changes are written to auditable lineage.
+Safety surfaces such as `guard-rule` still require operator promotion.
+
+Dogfood fixture: [.fugunano/evolution/evo-guard-rule-tighten-gh-release-certificate.json](.fugunano/evolution/evo-guard-rule-tighten-gh-release-certificate.json)
+records a real guard-rule promotion for a missing action-certificate check.
 
 ## Quick Start
 
