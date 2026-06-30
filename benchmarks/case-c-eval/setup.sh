@@ -2,7 +2,8 @@
 # Case C setup: clone FuguNano (local, fast), reuse deps, inject the eval fixture.
 set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
-SRC="${FUGUNANO_SRC:-/Users/jiangyu/workspace/agent/FuguNano}"
+# Portable repo root: FUGUNANO_SRC wins; else derive from git (this repo), else the cwd.
+SRC="${FUGUNANO_SRC:-$(git -C "$HERE" rev-parse --show-toplevel 2>/dev/null || pwd)}"
 WORK="${1:-$HERE/work/fugunano}"
 
 echo "==> clone FuguNano (local) -> $WORK"

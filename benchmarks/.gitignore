@@ -1,6 +1,16 @@
 # benchmark 临时产物 — 可由 setup.sh 重建, 不该 commit
 work/
 dist/
+logs/
 *.log
 *.out
 *.sha
+
+# python (case-swebench 等)
+.venv/
+venv/
+*.pyc
+__pycache__/
+
+# node
+node_modules/

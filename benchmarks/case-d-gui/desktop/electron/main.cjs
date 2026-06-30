@@ -1,11 +1,34 @@
 // Electron main process: window + exec fuguectl via execFile (no shell, no separate server).
 const { app, BrowserWindow, ipcMain } = require('electron');
 const { execFile } = require('node:child_process');
+const fs = require('node:fs');
 const path = require('node:path');
 
-const FUGUE = '/Users/jiangyu/workspace/agent/FuguNano/orchestration/fuguectl/fuguectl';
-const ROOT = '/Users/jiangyu/workspace/agent/FuguNano';
-const ENV = { ...process.env, PATH: `/Applications/Codex.app/Contents/Resources:${process.env.PATH ?? ''}` };
+// Resolve repo root: FUGUNANO_ROOT env wins; otherwise walk up from this file until we find
+// orchestration/fuguectl (so the app works wherever the repo is cloned). No hardcoded paths.
+const findRoot = () => {
+  if (process.env.FUGUNANO_ROOT) return process.env.FUGUNANO_ROOT;
+  let dir = __dirname;
+  for (let i = 0; i < 8; i += 1) {
+    if (fs.existsSync(path.join(dir, 'orchestration', 'fuguectl', 'fuguectl'))) return dir;
+    dir = path.dirname(dir);
+  }
+  return path.resolve(__dirname, '../../..'); // fallback: desktop/electron -> repo root
+};
+const ROOT = findRoot();
+const FUGUE = path.join(ROOT, 'orchestration', 'fuguectl', 'fuguectl');
+
+// codex: prefer whatever is already on $PATH. On macOS the bundled .app is an OPTIONAL fallback
+// only (added when present and not already on PATH) — never the sole supported location.
+const CODEX_FALLBACK = '/Applications/Codex.app/Contents/Resources';
+const needsCodexFallback =
+  process.platform === 'darwin' &&
+  fs.existsSync(path.join(CODEX_FALLBACK, 'codex')) &&
+  !(process.env.PATH ?? '').split(':').includes(CODEX_FALLBACK);
+const ENV = {
+  ...process.env,
+  PATH: `${needsCodexFallback ? `${CODEX_FALLBACK}:` : ''}${process.env.PATH ?? ''}`,
+};
 
 const tokenize = (s) => {
   const out = []; let cur = ''; let q = null;
@@ -36,7 +59,7 @@ const createWindow = () => {
     width: 1100,
     height: 760,
     title: 'FuguNano',
-    backgroundColor: '#000000',
+    backgroundColor: '#ffffff',
     webPreferences: {
       preload: path.join(__dirname, 'preload.cjs'),
       contextIsolation: true,

@@ -7,6 +7,8 @@ import {
   buildLoopCmd,
   buildPlanCmd,
   buildReviewCmd,
+  buildTaskNewCmd,
+  parseTaskFile,
 } from './logic/command-builder';
 import { initialWorkflowState, reducer } from './logic/workflow-state';
 import type { AgentInfo } from './logic/types';
@@ -21,14 +23,45 @@ export function App() {
     void bridge.agents().then(setAgents);
   }, []);
 
+  const log = (...lines: string[]): void => {
+    for (const line of lines) dispatch({ type: 'append-log', line });
+  };
+
+  // Run a command; `after()` is called ONLY on exitCode 0 — a failed step never advances the phase.
   const run = (cmd: string, after: () => void): void => {
     setBusy(true);
     void bridge.run(cmd).then((r) => {
-      dispatch({ type: 'append-log', line: `$ ${cmd}` });
-      dispatch({ type: 'append-log', line: r.stdout.trim() || `(exit ${String(r.exitCode)}, no output)` });
+      log(`$ ${cmd}`, r.stdout.trim() || `(exit ${String(r.exitCode)}, no output)`);
       dispatch({ type: 'set-result', result: r });
-      after();
+      if (r.exitCode === 0) after();
       setBusy(false);
+    });
+  };
+
+  // Plan Task: create a REAL task file first (fuguectl task new), parse its path, then plan against it.
+  const planTask = (): void => {
+    const taskNewCmd = buildTaskNewCmd(goal);
+    setBusy(true);
+    void bridge.run(taskNewCmd).then((r1) => {
+      log(`$ ${taskNewCmd}`, r1.stdout.trim() || `(exit ${String(r1.exitCode)}, no output)`);
+      dispatch({ type: 'set-result', result: r1 });
+      if (r1.exitCode !== 0) {
+        setBusy(false);
+        return;
+      }
+      const taskFile = parseTaskFile(r1.stdout);
+      if (taskFile === '') {
+        log('task new returned no task file path; aborting plan');
+        setBusy(false);
+        return;
+      }
+      const planCmd = buildPlanCmd(goal, taskFile);
+      void bridge.run(planCmd).then((r2) => {
+        log(`$ ${planCmd}`, r2.stdout.trim() || `(exit ${String(r2.exitCode)}, no output)`);
+        dispatch({ type: 'set-result', result: r2 });
+        if (r2.exitCode === 0) dispatch({ type: 'plan-done', taskId: taskFile });
+        setBusy(false);
+      });
     });
   };
 
@@ -52,30 +85,40 @@ export function App() {
               value={goal}
               onChange={(e) => setGoal(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === 'Enter' && goal && !busy) {
-                  run(buildPlanCmd(goal), () => dispatch({ type: 'plan-done', taskId: 'T1' }));
-                }
+                if (e.key === 'Enter' && goal && !busy) planTask();
               }}
             />
-            <button
-              className="btn btn-primary"
-              disabled={busy || !goal}
-              onClick={() => run(buildPlanCmd(goal), () => dispatch({ type: 'plan-done', taskId: 'T1' }))}
-            >
+            <button className="btn btn-primary" disabled={busy || !goal} onClick={planTask}>
               Plan Task
             </button>
           </div>
           <div className="steps">
-            <button className="btn btn-secondary" disabled={!canStep} onClick={() => tid !== null && run(buildDispatchCmd(tid, 'cc-deepseek', 'codex'), () => dispatch({ type: 'dispatch-done' }))}>
+            <button
+              className="btn btn-secondary"
+              disabled={!canStep}
+              onClick={() => tid !== null && run(buildDispatchCmd(tid, 'cc-deepseek', 'codex', goal), () => dispatch({ type: 'dispatch-done' }))}
+            >
               Dispatch
             </button>
-            <button className="btn btn-secondary" disabled={!canStep} onClick={() => tid !== null && run(buildIntegrateCmd(tid), () => dispatch({ type: 'integrate-done' }))}>
+            <button
+              className="btn btn-secondary"
+              disabled={!canStep}
+              onClick={() => tid !== null && run(buildIntegrateCmd(tid), () => dispatch({ type: 'integrate-done' }))}
+            >
               Integrate
             </button>
-            <button className="btn btn-secondary" disabled={!canStep} onClick={() => tid !== null && run(buildReviewCmd(tid), () => dispatch({ type: 'review-done', accepted: true }))}>
+            <button
+              className="btn btn-secondary"
+              disabled={!canStep}
+              onClick={() => tid !== null && run(buildReviewCmd(tid), () => dispatch({ type: 'review-done', accepted: true }))}
+            >
               Review
             </button>
-            <button className="btn btn-secondary" disabled={!canStep} onClick={() => tid !== null && run(buildLoopCmd(tid), () => dispatch({ type: 'loop-done' }))}>
+            <button
+              className="btn btn-secondary"
+              disabled={!canStep}
+              onClick={() => tid !== null && run(buildLoopCmd(tid), () => dispatch({ type: 'loop-done' }))}
+            >
               Loop
             </button>
           </div>
@@ -120,8 +163,8 @@ export function App() {
         <section className="panel">
           <h2>Task</h2>
           <div className="meta">
-            <span>id</span>
-            <span>{state.taskId ?? '—'}</span>
+            <span>file</span>
+            <span title={state.taskId ?? undefined}>{state.taskId ?? '—'}</span>
           </div>
           <div className="meta">
             <span>phase</span>
