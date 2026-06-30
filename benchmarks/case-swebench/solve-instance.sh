@@ -26,10 +26,9 @@ PY
 REPO="$HERE/work/repos/$REPO_NAME"
 [ -d "$REPO/.git" ] || { echo "clone $REPO_NAME into $REPO first (with deps installed)"; exit 1; }
 
-# prepare: base commit + test_patch — must succeed, else the gold tests were never
-# applied and any verdict below would be silently wrong.
+# prepare: base commit + test_patch
 "$PYTHON" "$HERE/prepare_instance.py" "$DS" "$INSTANCE" "$REPO" >/dev/null \
-  || { echo "FAILED: $INSTANCE (prepare_instance: gold test_patch did not apply)"; exit 1; }
+  || { echo "prepare_instance.py failed for $INSTANCE; aborting (repo not ready)" >&2; exit 1; }
 
 # build the solve prompt from the problem statement
 "$PYTHON" - "$DS" "$INSTANCE" "$HERE/work/solve-$INSTANCE.md" <<'PY'

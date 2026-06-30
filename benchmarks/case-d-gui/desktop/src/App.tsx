@@ -17,6 +17,7 @@ export function App() {
   const [state, dispatch] = useReducer(reducer, initialWorkflowState());
   const [goal, setGoal] = useState('');
   const [agents, setAgents] = useState<AgentInfo[]>([]);
+  const [workRepo, setWorkRepo] = useState('');
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -40,6 +41,7 @@ export function App() {
 
   // Plan Task: create a REAL task file first (fuguectl task new), parse its path, then plan against it.
   const planTask = (): void => {
+    dispatch({ type: 'start-plan', goal }); // enter 'planning' phase up front (not stuck on 'idle')
     const taskNewCmd = buildTaskNewCmd(goal);
     setBusy(true);
     void bridge.run(taskNewCmd).then((r1) => {
@@ -92,6 +94,15 @@ export function App() {
               Plan Task
             </button>
           </div>
+          <div className="goal-row">
+            <input
+              className="input"
+              aria-label="work-repo"
+              placeholder="Repo work dir (path)…"
+              value={workRepo}
+              onChange={(e) => setWorkRepo(e.target.value)}
+            />
+          </div>
           <div className="steps">
             <button
               className="btn btn-secondary"
@@ -102,8 +113,12 @@ export function App() {
             </button>
             <button
               className="btn btn-secondary"
-              disabled={!canStep}
-              onClick={() => tid !== null && run(buildIntegrateCmd(tid, '.', 'cc-deepseek'), () => dispatch({ type: 'integrate-done' }))}
+              disabled={!canStep || workRepo === '' || agents.length === 0}
+              onClick={() => {
+                if (tid === null) return;
+                const agentsStr = agents.map((a) => a.name).join(' ');
+                run(buildIntegrateCmd(tid, workRepo, agentsStr), () => dispatch({ type: 'integrate-done' }));
+              }}
             >
               Integrate
             </button>

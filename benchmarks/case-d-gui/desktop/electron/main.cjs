@@ -34,7 +34,11 @@ const tokenize = (s) => {
   const out = []; let cur = ''; let q = null;
   for (let i = 0; i < s.length; i += 1) {
     const c = s[i];
-    if (q !== null) { if (c === q) q = null; else cur += c; }
+    if (q !== null) {
+      if (c === '\\') { cur += s[i + 1] ?? ''; i += 1; } // escaped char: take the next one literally
+      else if (c === q) q = null;
+      else cur += c;
+    }
     else if (c === '"' || c === "'") q = c;
     else if (c === ' ' || c === '\t') { if (cur) { out.push(cur); cur = ''; } }
     else cur += c;
