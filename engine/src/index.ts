@@ -282,6 +282,18 @@ export { detectDrift } from './domain/runtime-sync.js';
 export type { RoleStatus, BackendStatus, DoctorReport } from './domain/doctor.js';
 export { readyBackends, recommend } from './domain/doctor.js';
 export type {
+  SelectorOutcome,
+  SelectorReason,
+  Candidate,
+  SelectorConfig,
+  SelectorDecision,
+} from './domain/selector.js';
+export {
+  DEFAULT_SELECTOR_CONFIG,
+  escalationPriority,
+  route,
+} from './domain/selector.js';
+export type {
   EditableSurface,
   HarnessConfig,
   FailureSignature,
