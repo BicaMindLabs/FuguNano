@@ -6,7 +6,8 @@
 >
   <title id="title">FuguNano overview</title>
   <desc id="desc">
-    A polished overview of the FuguNano multi-agent coding workflow.
+    A polished overview of the FuguNano multi-agent coding workflow: plan,
+    dispatch, join, route, review, ship.
   </desc>
   <defs>
     <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
@@ -91,7 +92,7 @@
   <rect width="1120" height="640" fill="#0b1020" />
   <rect width="1120" height="640" rx="28" fill="url(#bg)" />
   <path
-    d="M72 108 H1048 M72 208 H1048 M72 308 H1048 M72 408 H1048 M72 508 H1048 M172 68 V572 M372 68 V572 M572 68 V572 M772 68 V572 M972 68 V572"
+    d="M72 108 H1048 M72 208 H1048 M72 308 H1048 M72 408 H1048 M72 508 H1048 M241 68 V572 M417 68 V572 M593 68 V572 M769 68 V572 M945 68 V572"
     stroke="#1e293b"
     stroke-width="1"
   />
@@ -112,7 +113,9 @@
   <text x="80" y="178" class="tag">
     Specialist workers implement. Reviewers judge.
   </text>
-  <text x="80" y="206" class="tag">Harnesses improve from failures.</text>
+  <text x="80" y="206" class="tag">
+    Verifier-aware routing. Harnesses improve from failures.
+  </text>
 
   <rect
     x="778"
@@ -130,103 +133,126 @@
   <rect
     x="78"
     y="256"
-    width="174"
+    width="150"
     height="132"
     rx="18"
     fill="#172554"
     stroke="#3b82f6"
   />
-  <text x="110" y="302" class="cardTitle">Plan</text>
-  <text x="110" y="332" class="cardText">preflight</text>
-  <text x="110" y="354" class="cardText">TASK file</text>
-  <text x="110" y="376" class="cardText">ownership split</text>
+  <text x="102" y="302" class="cardTitle">Plan</text>
+  <text x="102" y="332" class="cardText">preflight</text>
+  <text x="102" y="354" class="cardText">TASK file</text>
+  <text x="102" y="376" class="cardText">ownership split</text>
 
   <rect
-    x="294"
+    x="254"
     y="256"
-    width="174"
+    width="150"
     height="132"
     rx="18"
     fill="#052e2b"
     stroke="#14b8a6"
   />
-  <text x="326" y="302" class="cardTitle">Dispatch</text>
-  <text x="326" y="332" class="cardText">runtime profiles</text>
-  <text x="326" y="354" class="cardText">scoped workspaces</text>
-  <text x="326" y="376" class="cardText">selected skills</text>
+  <text x="278" y="302" class="cardTitle">Dispatch</text>
+  <text x="278" y="332" class="cardText">runtime profiles</text>
+  <text x="278" y="354" class="cardText">scoped work</text>
+  <text x="278" y="376" class="cardText">selected skills</text>
 
   <rect
-    x="510"
+    x="430"
     y="256"
-    width="174"
+    width="150"
     height="132"
     rx="18"
     fill="#2e1065"
     stroke="#a855f7"
   />
-  <text x="542" y="302" class="cardTitle">Join</text>
-  <text x="542" y="332" class="cardText">cache first</text>
-  <text x="542" y="354" class="cardText">N sent, N back</text>
-  <text x="542" y="376" class="cardText">durable rounds</text>
+  <text x="454" y="302" class="cardTitle">Join</text>
+  <text x="454" y="332" class="cardText">cache first</text>
+  <text x="454" y="354" class="cardText">N sent, N back</text>
+  <text x="454" y="376" class="cardText">durable rounds</text>
 
   <rect
-    x="726"
+    x="606"
     y="256"
-    width="174"
+    width="150"
+    height="132"
+    rx="18"
+    fill="#083344"
+    stroke="#22d3ee"
+  />
+  <text x="630" y="302" class="cardTitle">Route</text>
+  <text x="630" y="332" class="cardText">TRUST · gated</text>
+  <text x="630" y="354" class="cardText">SPOT-CHECK</text>
+  <text x="630" y="376" class="cardText">or ESCALATE</text>
+
+  <rect
+    x="782"
+    y="256"
+    width="150"
     height="132"
     rx="18"
     fill="#431407"
     stroke="#fb923c"
   />
-  <text x="758" y="302" class="cardTitle">Review</text>
-  <text x="758" y="332" class="cardText">independent judge</text>
-  <text x="758" y="354" class="cardText">ACCEPTED</text>
-  <text x="758" y="376" class="cardText">or NEEDS FIX</text>
+  <text x="806" y="302" class="cardTitle">Review</text>
+  <text x="806" y="332" class="cardText">independent</text>
+  <text x="806" y="354" class="cardText">ACCEPTED</text>
+  <text x="806" y="376" class="cardText">or NEEDS FIX</text>
 
   <rect
-    x="942"
+    x="958"
     y="256"
-    width="100"
+    width="84"
     height="132"
     rx="18"
     fill="#0f2f1d"
     stroke="#22c55e"
   />
-  <text x="966" y="302" class="cardTitle">Ship</text>
-  <text x="966" y="332" class="cardText">or</text>
-  <text x="966" y="354" class="cardText">loop</text>
+  <text x="978" y="302" class="cardTitle">Ship</text>
+  <text x="978" y="332" class="cardText">or</text>
+  <text x="978" y="354" class="cardText">loop</text>
 
   <line
-    x1="252"
+    x1="230"
     y1="322"
-    x2="292"
+    x2="252"
     y2="322"
     stroke="#94a3b8"
     stroke-width="2.5"
     marker-end="url(#arrow)"
   />
   <line
-    x1="468"
+    x1="406"
     y1="322"
-    x2="508"
+    x2="428"
     y2="322"
     stroke="#94a3b8"
     stroke-width="2.5"
     marker-end="url(#arrow)"
   />
   <line
-    x1="684"
+    x1="582"
     y1="322"
-    x2="724"
+    x2="604"
     y2="322"
     stroke="#94a3b8"
     stroke-width="2.5"
     marker-end="url(#arrow)"
   />
   <line
-    x1="900"
+    x1="758"
     y1="322"
-    x2="940"
+    x2="780"
+    y2="322"
+    stroke="#94a3b8"
+    stroke-width="2.5"
+    marker-end="url(#arrow)"
+  />
+  <line
+    x1="934"
+    y1="322"
+    x2="956"
     y2="322"
     stroke="#94a3b8"
     stroke-width="2.5"
