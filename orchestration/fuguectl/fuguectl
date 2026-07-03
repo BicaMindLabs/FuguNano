@@ -33,6 +33,7 @@ const help = `fuguectl — fugue workflow control-plane entrypoint.
   fuguectl goal template|show|check <spec>
   fuguectl loop init|record|decide|status
   fuguectl run set|round|status|next|clear
+  fuguectl route [<file>|-] [--category c] [--threshold n] [--trust-singleton] [--forced a,b,c]  selector decision for one fan-out (exit 0 TRUST / 10 SPOT_CHECK / 20 ESCALATE)
   fuguectl summary <round> [--task <file>]
   fuguectl self-harness template|run  harness self-improvement loop
   fuguectl runtime check [--strict]|adapt [--apply] [--skill <installed SKILL.md>] [--alias-skill <legacy SKILL.md>] [--repo-skill <repo SKILL.md>]
@@ -99,6 +100,7 @@ const commandMap = new Map([
   ["goal", "goal"],
   ["loop", "loop"],
   ["run", "run"],
+  ["route", "route"],
   ["summary", "summary"],
   ["round-summary", "summary"],
   ["self-harness", "self-harness"],
@@ -121,7 +123,7 @@ if (subcommand === "help" || subcommand === "-h" || subcommand === "--help") {
   runEngine([commandMap.get(subcommand), ...rest]);
 } else {
   console.error(
-    `fuguectl: unknown subcommand '${subcommand}' (doctor|init|version|fleet|preflight|smoke|task|guard|review|incident|template|dispatch|cache|integrate|allocate|skills|workspace|agents|experience|evolve|plan|goal|loop|run|summary|self-harness|runtime|selftest|help)`,
+    `fuguectl: unknown subcommand '${subcommand}' (doctor|init|version|fleet|preflight|smoke|task|guard|review|incident|template|dispatch|cache|integrate|allocate|skills|workspace|agents|experience|evolve|plan|goal|loop|run|route|summary|self-harness|runtime|selftest|help)`,
   );
   console.error("try: fuguectl help or fuguectl help quickstart");
   process.exit(2);

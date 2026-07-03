@@ -1,0 +1,4 @@
+#!/usr/bin/env node
+import { runAlwaysBridge } from "./fuguectl-node-bridge.mjs";
+
+runAlwaysBridge({ argv: process.argv.slice(2), command: "route" });

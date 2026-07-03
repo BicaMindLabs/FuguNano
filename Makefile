@@ -1,7 +1,7 @@
 .DEFAULT_GOAL := help
 SHELL := /usr/bin/env bash
 
-.PHONY: help install install-cc install-skill verify doctor test test-engine test-engine-ci scan lint check-docs ci ci-clean
+.PHONY: help install install-cc install-skill verify doctor test test-engine test-engine-ci scan lint check-docs ci ci-clean check
 
 help: ## List available targets
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | \
@@ -41,5 +41,7 @@ check-docs: ## Docs-drift gate (fuguectl README + Self-Harness guide == actual c
 	npm run check:docs
 
 ci: scan lint check-docs test test-engine ## Full local CI using installed deps
+
+check: ci ## Alias for ci
 
 ci-clean: scan lint check-docs test test-engine-ci ## Full clean CI with engine npm ci
