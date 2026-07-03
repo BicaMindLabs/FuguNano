@@ -8,7 +8,7 @@ Cross-harness entry for any coding agent (**Claude Code / Codex / OpenCode / Ant
 orchestration/fuguectl/fuguectl help
 ```
 
-Unified driver (24 subcommands): `doctor` · `init` · `version` · `fleet` · `preflight` · `smoke` · `task` · `template` · `dispatch` · `cache` · `integrate` · `allocate` · `skills` · `workspace` · `agents` · `experience` · `plan` · `goal` · `loop` · `run` · `summary` · `self-harness` · `runtime` · `selftest`. The production driver remains shell-callable from any harness; new orchestration primitives move into the strict TypeScript engine first, then get thin CLI wrappers.
+Unified driver (29 subcommands): `doctor` · `init` · `version` · `fleet` · `preflight` · `smoke` · `task` · `guard` · `review` · `incident` · `template` · `dispatch` · `cache` · `integrate` · `allocate` · `route` · `skills` · `workspace` · `agents` · `experience` · `evolve` · `plan` · `goal` · `loop` · `run` · `summary` · `self-harness` · `runtime` · `selftest`. The production driver remains shell-callable from any harness; new orchestration primitives move into the strict TypeScript engine first, then get thin CLI wrappers.
 
 ## The workflow (5 phases)
 

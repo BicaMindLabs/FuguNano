@@ -38,6 +38,7 @@ import { LoopCommand } from './commands/loop.js';
 import { PlanCommand } from './commands/plan.js';
 import { PreflightCommand } from './commands/preflight.js';
 import { ReviewPacketCommand } from './commands/review.js';
+import { RouteCommand } from './commands/route.js';
 import { RuntimeAdaptCommand, RuntimeCheckCommand } from './commands/runtime.js';
 import { RunCommand } from './commands/run.js';
 import { SelfHarnessRunCommand, SelfHarnessTemplateCommand } from './commands/self-harness.js';
@@ -107,6 +108,7 @@ export const buildCli = (): Cli => {
   cli.register(PlanCommand);
   cli.register(PreflightCommand);
   cli.register(ReviewPacketCommand);
+  cli.register(RouteCommand);
   cli.register(CacheCommand);
   cli.register(RuntimeCheckCommand);
   cli.register(RuntimeAdaptCommand);

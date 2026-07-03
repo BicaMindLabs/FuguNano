@@ -11,8 +11,8 @@
 <p align="center">
   <img src="https://img.shields.io/badge/Runtime-Node%20%3E%3D18.18-339933?style=for-the-badge&logo=node.js&logoColor=white" alt="Node.js >= 18.18" />
   <img src="https://img.shields.io/badge/Engine-TypeScript-3178c6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript engine" />
-  <img src="https://img.shields.io/badge/fuguectl-29%20suites-7c3aed?style=for-the-badge" alt="29 fuguectl test suites" />
-  <img src="https://img.shields.io/badge/assertions-410-brightgreen?style=for-the-badge" alt="410 fuguectl assertions" />
+  <img src="https://img.shields.io/badge/fuguectl-30%20suites-7c3aed?style=for-the-badge" alt="30 fuguectl test suites" />
+  <img src="https://img.shields.io/badge/assertions-423-brightgreen?style=for-the-badge" alt="423 fuguectl assertions" />
   <a href="https://github.com/BicaMindLabs/FuguNano/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/BicaMindLabs/FuguNano/ci.yml?branch=main&style=for-the-badge&label=CI" alt="CI status" /></a>
   <img src="https://img.shields.io/badge/license-Apache--2.0-yellowgreen?style=for-the-badge" alt="Apache-2.0 license" />
 </p>
@@ -194,7 +194,12 @@ what to do with a best-of-N fan-out: `TRUST` (a verifier vouched for a pick),
 
 - **With a cheap verifier** (unit tests / a reference solution) best-of-N is
   effectively free — the gate picks the passing candidate. A fleet of small
-  models matched premium single models across 100 graded algorithm tasks.
+  models matched premium single models across 100 graded algorithm tasks, and
+  again on a harder 14-task set (solo small models passed only ~11/14; the gate
+  lifted the ensemble to 14/14, level with the best premium model). On real
+  SWE-bench-lite instances the same executable-gate pipeline resolves issues
+  end-to-end with no LLM judging anywhere
+  ([benchmarks/case-swebench](benchmarks/case-swebench/)).
 - **Without one, agreement is the only signal — and it fails _correlated_.** On
   security, impossible-requirement, and subtle-correctness traps the whole fleet
   tends to fall into the same hole, so consensus there is confidently wrong.
@@ -213,6 +218,12 @@ SkillHarness). The router is verifier-agnostic: it consumes whatever
 `verified`/`label` signals a task can cheaply produce, which is exactly the
 "verifier ladder" — real gate → synthesized gate → skeptic pass → judge →
 consensus → escalate.
+
+The same law caps the review loop itself: on a SWE-bench instance whose
+gold-required behavior is not observable from any non-cheating signal
+(the issue text itself is ambiguous), single-shot, a blind review-loop, and a
+legitimate-signal loop (repro + regression checks) all fail alike.
+Orchestration buys you exactly as much as the signals you can observe.
 
 ## Evidence-gated Evolution
 
@@ -243,14 +254,14 @@ non-regressing changes. Read the operator guide in
 
 ## Command Surface
 
-`orchestration/fuguectl/fuguectl` is the production entry point: 28 subcommands,
-29 test suites, and 410 wrapper assertions.
+`orchestration/fuguectl/fuguectl` is the production entry point: 29 subcommands,
+30 test suites, and 423 wrapper assertions.
 
 | Area               | Commands                                                                                                                                                                                                                                                                                                                     |
 | ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Setup              | `fuguectl doctor`, `fuguectl init --dry-run\|--write`, `fuguectl version`, `fuguectl preflight --harness fugue-cc\|codex\|opencode\|agy\|lite\|all`, `fuguectl smoke`, `fuguectl fleet status\|up\|down`                                                                                                                     |
 | Planning           | `fuguectl task new\|log\|done\|handoff\|digest`, `fuguectl template <name>`, `fuguectl plan "<goal>" [--harness h\|lite] [--models a,b] [--out dir] [--timeout-ms n] [--allow-partial] [--codex-clean] [--harness-arg x] [--codex-arg x] [--opencode-arg x] [--agy-arg x] [--task f]`, `fuguectl goal template\|show\|check` |
-| Routing            | `fuguectl allocate <type>`, `fuguectl workspace list\|show\|model\|context`, `fuguectl agents template\|validate\|list\|resolve`, `fuguectl skills index\|list\|match\|show\|inject\|validate\|forge`                                                                                                                        |
+| Routing            | `fuguectl allocate <type>`, `fuguectl route [<file>\|-] [--category c] [--threshold n] [--forced a,b]`, `fuguectl workspace list\|show\|model\|context`, `fuguectl agents template\|validate\|list\|resolve`, `fuguectl skills index\|list\|match\|show\|inject\|validate\|forge`                                            |
 | Dispatch           | `fuguectl guard prompt <file\|->`, `fuguectl dispatch <target> [--certificate <file>]`, `fuguectl cache init\|put\|fail\|barrier\|collect\|resume`                                                                                                                                                                           |
 | Review + repair    | `fuguectl integrate --work <repo>`, `fuguectl review packet <file\|->`, `fuguectl incident packet\|recovery <file\|->`, `fuguectl loop init\|record\|decide\|status`, `fuguectl run set\|round\|status\|next\|clear`, `fuguectl summary <round>`                                                                             |
 | Memory + evolution | `fuguectl experience add\|audit\|eval\|learn\|list\|policy\|promote\|recall\|show`, `fuguectl evolve mine\|validate\|promote\|history`, `fuguectl self-harness template\|run`, `fuguectl runtime check\|adapt`, `fuguectl selftest`                                                                                          |

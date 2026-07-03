@@ -34,17 +34,28 @@ const scripts = [
   ...collect(join(root, "backends"), (file) => file.endsWith(".sh")),
   ...collect(join(root, "scripts"), (file) => file.endsWith(".sh")),
   ...collect(join(root, "orchestration"), (file) => file.endsWith(".sh")),
+  // Benchmark drivers are operator-facing bash too; skip work/ (cloned repos,
+  // datasets, venvs — gitignored and full of third-party shell).
+  ...collect(
+    join(root, "benchmarks"),
+    (file) => file.endsWith(".sh") && !file.includes("/work/"),
+  ),
 ].sort();
 
 const uniqueScripts = [...new Set(scripts)];
 let failed = false;
 const shellScripts = [];
 const nodeScripts = [];
+// Benchmark drivers are deliberately bash (they orchestrate git/pytest/venvs
+// across cloned repos); they get a syntax gate instead of the no-shell ban
+// that applies to the operator surface.
+const benchScripts = [];
 
 for (const script of uniqueScripts) {
   const text = readFileSync(join(root, script), "utf8");
   const firstLine = text.split(/\r?\n/u, 1)[0] ?? "";
   if (firstLine.includes("node")) nodeScripts.push(script);
+  else if (script.startsWith("benchmarks/")) benchScripts.push(script);
   else shellScripts.push(script);
 }
 
@@ -60,6 +71,18 @@ for (const script of nodeScripts) {
   }
 }
 if (!failed) console.log("  ✓ all pass");
+
+console.log(`── bash syntax (${String(benchScripts.length)} benchmark drivers) ──`);
+let benchFailed = false;
+for (const script of benchScripts) {
+  const result = spawnSync("bash", ["-n", script], { cwd: root, stdio: "ignore" });
+  if (result.status !== 0) {
+    console.log(`  ✗ bash syntax: ${script}`);
+    failed = true;
+    benchFailed = true;
+  }
+}
+if (!benchFailed) console.log("  ✓ all pass");
 
 if (shellScripts.length === 0) {
   console.log("── no shell scripts ──");

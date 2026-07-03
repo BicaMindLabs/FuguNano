@@ -11,8 +11,8 @@
 <p align="center">
   <img src="https://img.shields.io/badge/Runtime-Node%20%3E%3D18.18-339933?style=for-the-badge&logo=node.js&logoColor=white" alt="Node.js >= 18.18" />
   <img src="https://img.shields.io/badge/Engine-TypeScript-3178c6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript engine" />
-  <img src="https://img.shields.io/badge/fuguectl-29%20%E5%A5%97%E6%B5%8B%E8%AF%95-7c3aed?style=for-the-badge" alt="29 套 fuguectl 测试" />
-  <img src="https://img.shields.io/badge/assertions-410-brightgreen?style=for-the-badge" alt="410 个 fuguectl 断言" />
+  <img src="https://img.shields.io/badge/fuguectl-30%20%E5%A5%97%E6%B5%8B%E8%AF%95-7c3aed?style=for-the-badge" alt="30 套 fuguectl 测试" />
+  <img src="https://img.shields.io/badge/assertions-423-brightgreen?style=for-the-badge" alt="423 个 fuguectl 断言" />
   <a href="https://github.com/BicaMindLabs/FuguNano/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/BicaMindLabs/FuguNano/ci.yml?branch=main&style=for-the-badge&label=CI" alt="CI status" /></a>
   <img src="https://img.shields.io/badge/license-Apache--2.0-yellowgreen?style=for-the-badge" alt="Apache-2.0 license" />
 </p>
@@ -185,7 +185,10 @@ fan-out 的结果:`TRUST`(有验证器背书某个结果)、`TRUST_SPOT_CHECK`(f
 无人验证)、`ESCALATE`(交给 premium 模型)。规则由基准实测得出,不是拍脑袋:
 
 - **有便宜验证器**(单测 / 参考解)时,best-of-N 近乎免费 —— gate 自动挑出通过者。
-  一队小模型在 100 道可判定算法题上追平了 premium 单模。
+  一队小模型在 100 道可判定算法题上追平了 premium 单模;在更难的 14 题集上再次成立
+  (小模型单飞只有 ~11/14,gate 把合奏抬到 14/14,与最强 premium 持平)。在真实
+  SWE-bench-lite 实例上,同一条可执行-gate 流水线端到端解决 issue,全程无任何
+  LLM 裁判([benchmarks/case-swebench](benchmarks/case-swebench/))。
 - **没有验证器时,一致性是唯一信号,而它会“相关性失灵”。** 在安全、不可能要求、
   隐蔽正确性这类坑上,整队小模型往往一起栽进同一个坑,此时共识是“自信的错误”。
   这些类别直接升级;未验证的共识永远不是干净的 `TRUST`,只是 `TRUST_SPOT_CHECK`。
@@ -198,6 +201,11 @@ fan-out 的结果:`TRUST`(有验证器背书某个结果)、`TRUST_SPOT_CHECK`(f
 每个机制都对应一篇论文(EDV、Agentic Abstention、OmniOPD、SkillHarness)。路由器
 本身与验证器无关:任务能便宜产出什么 `verified`/`label` 信号,它就吃什么 —— 这正是
 “验证器阶梯”:真值 gate → 合成 gate → skeptic → 裁判 → 共识 → 升级。
+
+同一条定律也约束着 review loop 本身:在一个“正确行为无法从任何合法信号观测到”
+的 SWE-bench 实例上(issue 原文本身就语义两可),single-shot、盲审 review-loop、
+合法信号 loop(repro + 回归检查)三种方式全部同样失败。
+**编排能买到的,恰好等于你能观测到的信号。**
 
 ## 证据门控进化
 
@@ -225,13 +233,13 @@ memory、skills……):
 
 ## 命令面
 
-`orchestration/fuguectl/fuguectl` 是生产入口:28 个子命令、29 套测试、410 个 wrapper 断言。
+`orchestration/fuguectl/fuguectl` 是生产入口:29 个子命令、30 套测试、423 个 wrapper 断言。
 
 | 区域          | 命令                                                                                                                                                                                                                                                                                                                         |
 | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Setup         | `fuguectl doctor`、`fuguectl init --dry-run\|--write`、`fuguectl version`、`fuguectl preflight --harness fugue-cc\|codex\|opencode\|agy\|lite\|all`、`fuguectl smoke`、`fuguectl fleet status\|up\|down`                                                                                                                     |
 | Planning      | `fuguectl task new\|log\|done\|handoff\|digest`、`fuguectl template <name>`、`fuguectl plan "<goal>" [--harness h\|lite] [--models a,b] [--out dir] [--timeout-ms n] [--allow-partial] [--codex-clean] [--harness-arg x] [--codex-arg x] [--opencode-arg x] [--agy-arg x] [--task f]`、`fuguectl goal template\|show\|check` |
-| Routing       | `fuguectl allocate <type>`、`fuguectl workspace list\|show\|model\|context`、`fuguectl agents template\|validate\|list\|resolve`、`fuguectl skills index\|list\|match\|show\|inject\|validate\|forge`                                                                                                                        |
+| Routing       | `fuguectl allocate <type>`、`fuguectl route [<file>\|-] [--category c] [--threshold n] [--forced a,b]`、`fuguectl workspace list\|show\|model\|context`、`fuguectl agents template\|validate\|list\|resolve`、`fuguectl skills index\|list\|match\|show\|inject\|validate\|forge`                                            |
 | Dispatch      | `fuguectl guard prompt <file\|->`、`fuguectl dispatch <target> [--certificate <file>]`、`fuguectl cache init\|put\|fail\|barrier\|collect\|resume`                                                                                                                                                                           |
 | Review/Repair | `fuguectl integrate --work <repo>`、`fuguectl review packet <file\|->`、`fuguectl incident packet\|recovery <file\|->`、`fuguectl loop init\|record\|decide\|status`、`fuguectl run set\|round\|status\|next\|clear`、`fuguectl summary <round>`                                                                             |
 | Memory/Evolve | `fuguectl experience add\|audit\|eval\|learn\|list\|policy\|promote\|recall\|show`、`fuguectl evolve mine\|validate\|promote\|history`、`fuguectl self-harness template\|run`、`fuguectl runtime check\|adapt`、`fuguectl selftest`                                                                                          |

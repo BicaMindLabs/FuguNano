@@ -26,6 +26,8 @@ after applying the produced patch. Reported per-instance + aggregate.
 | `solve-instance.sh` | run one solver (orchestrated | single) on one instance → candidate patch |
 | `eval_instance.py` | apply candidate patch, run FAIL_TO_PASS + PASS_TO_PASS, emit resolved=1/0 |
 | `run_batch.sh` | loop over N instances × 2 solvers, append rows to `results.csv` |
+| `run_swe.sh` | ONE instance, single-shot Codex solver → gold `FAIL_TO_PASS` gate (no LLM judges; gold test protected from the solver) |
+| `loop_swe.sh` | ONE instance, bounded fix loop on LEGITIMATE signals (bug-report repro + `PASS_TO_PASS` regression) — never the hidden gold test, which stays out of the tree until the final verdict |
 | `README.md` | this file |
 
 ## Run
@@ -34,6 +36,11 @@ after applying the produced patch. Reported per-instance + aggregate.
 cd <FuguNano>/benchmarks/case-swebench
 ./fetch_dataset.sh                                   # one-time
 N=20 ./run_batch.sh                                   # first 20 instances, both solvers
+
+# minimal per-instance drivers (venv python = the instance repo's env):
+./run_swe.sh  sqlfluff__sqlfluff-2419 work/repos/sqlfluff "$PWD/work/venv-sqlfluff/bin/python"
+./loop_swe.sh sqlfluff__sqlfluff-1517 work/repos/sqlfluff "$PWD/work/venv-sqlfluff/bin/python" \
+  'from sqlfluff.core import Linter; Linter().parse_string("select id from tbl;;")' 3
 # → results.csv : instance_id, solver, resolved, wallclock_s, tokens, cost_usd
 ```
 
