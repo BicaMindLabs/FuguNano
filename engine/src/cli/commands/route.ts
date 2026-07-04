@@ -3,6 +3,7 @@ import { Command, Option } from 'clipanion';
 import type { Candidate, SelectorConfig } from '../../domain/selector.js';
 import { DEFAULT_SELECTOR_CONFIG, route } from '../../domain/selector.js';
 import { NodeFileSystem } from '../../infra/node-file-system.js';
+import { appendTaskAudit } from '../task-audit.js';
 
 const readStream = async (stream: AsyncIterable<Buffer | string>): Promise<string> => {
   const chunks: string[] = [];
@@ -64,6 +65,7 @@ export class RouteCommand extends Command {
   threshold = Option.String('--threshold');
   trustSingleton = Option.Boolean('--trust-singleton', false);
   forced = Option.String('--forced');
+  task = Option.String('--task');
 
   override async execute(): Promise<number> {
     const source = this.file ?? '-';
@@ -103,6 +105,20 @@ export class RouteCommand extends Command {
 
     const decision = route(input.candidates, config, this.category ?? input.category);
     this.context.stdout.write(`${JSON.stringify(decision)}\n`);
+
+    if (this.task !== undefined) {
+      const wrote = await appendTaskAudit(
+        new NodeFileSystem(),
+        this.task,
+        `\nselector-decision: ${JSON.stringify(decision)}\n`,
+      );
+      if (!wrote) {
+        this.context.stderr.write(`no TASK file ${this.task}\n`);
+        return 2;
+      }
+      this.context.stderr.write(`→ written to ${this.task}\n`);
+    }
+
     switch (decision.outcome) {
       case 'TRUST':
         return 0;
