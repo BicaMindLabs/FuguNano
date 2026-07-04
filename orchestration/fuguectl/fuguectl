@@ -33,7 +33,7 @@ const help = `fuguectl — fugue workflow control-plane entrypoint.
   fuguectl goal template|show|check <spec>
   fuguectl loop init|record|decide|status
   fuguectl run set|round|status|next|clear
-  fuguectl route [<file>|-] [--category c] [--threshold n] [--trust-singleton] [--forced a,b,c] [--task <file>]  selector decision for one fan-out (exit 0 TRUST / 10 SPOT_CHECK / 20 ESCALATE)
+  fuguectl route [<file>|-|--round n [--cache dir] [--gate cmd [--gate-arg x]]] [--category c] [--threshold n] [--trust-singleton] [--forced a,b,c] [--task <file>]  selector decision for one fan-out (exit 0 TRUST / 10 SPOT_CHECK / 20 ESCALATE)
   fuguectl summary <round> [--task <file>]
   fuguectl self-harness template|run  harness self-improvement loop
   fuguectl runtime check [--strict]|adapt [--apply] [--skill <installed SKILL.md>] [--alias-skill <legacy SKILL.md>] [--repo-skill <repo SKILL.md>]

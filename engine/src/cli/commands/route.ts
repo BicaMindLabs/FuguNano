@@ -1,8 +1,13 @@
+import { createHash } from 'node:crypto';
+import { join as joinPath } from 'node:path';
+
 import { Command, Option } from 'clipanion';
 
 import type { Candidate, SelectorConfig } from '../../domain/selector.js';
 import { DEFAULT_SELECTOR_CONFIG, route } from '../../domain/selector.js';
+import { NodeCommandRunner } from '../../infra/node-command-runner.js';
 import { NodeFileSystem } from '../../infra/node-file-system.js';
+import { defaultCacheRoot } from '../default-paths.js';
 import { appendTaskAudit } from '../task-audit.js';
 
 const readStream = async (stream: AsyncIterable<Buffer | string>): Promise<string> => {
@@ -17,6 +22,71 @@ interface RouteInput {
   readonly candidates: readonly Candidate[];
   readonly category?: string;
 }
+
+/**
+ * Build candidates from a cache fan-out round. Each `done` task with a result
+ * artifact becomes a candidate; `fail`/`pending` tasks are excluded (no
+ * artifact to trust). Signals:
+ * - with a --gate command: run `<gate> [gate-args...] <resultPath>` per
+ *   artifact — exit 0 sets `verified: true`, non-zero `verified: false`. This
+ *   is the executable-verifier rung of the ladder, live.
+ * - without a gate: `label` = sha256 of the trimmed artifact, so identical
+ *   outputs cluster and the Selector's consensus path works off artifact
+ *   agreement alone (never clean TRUST — that stays gate-only).
+ */
+const loadRoundCandidates = async (
+  fs: NodeFileSystem,
+  cacheRoot: string,
+  round: string,
+  gate: readonly string[] | undefined,
+  stderr: (line: string) => void,
+): Promise<readonly Candidate[] | null> => {
+  const dir = joinPath(cacheRoot, `round-${round}`);
+  const manifest = await fs.read(joinPath(dir, 'manifest.tsv'));
+  if (manifest === null) {
+    stderr(`round-${round} not init (no manifest under ${dir})\n`);
+    return null;
+  }
+  const runner = new NodeCommandRunner();
+  const candidates: Candidate[] = [];
+  for (const raw of manifest.split(/\r?\n/u)) {
+    if (raw.length === 0) continue;
+    const tab = raw.indexOf('\t');
+    if (tab === -1) {
+      // Contract is id<TAB>agent; a no-tab row would otherwise surface the
+      // task id as a trusted pick, so skip it loudly instead.
+      stderr(`route: skipping malformed manifest row (no tab): ${raw}\n`);
+      continue;
+    }
+    const id = raw.slice(0, tab);
+    const agent = raw.slice(tab + 1);
+    const status = (await fs.read(joinPath(dir, `${id}.status`)))?.trim() ?? 'pending';
+    if (status !== 'done') continue;
+    const artifact = await fs.read(joinPath(dir, `${id}.result`));
+    if (artifact === null) continue;
+    if (gate !== undefined) {
+      const [cmd, ...args] = gate;
+      if (cmd === undefined) return null;
+      let code: number;
+      try {
+        const result = await runner.run(cmd, [...args, joinPath(dir, `${id}.result`)], {
+          timeoutMs: 60_000,
+        });
+        code = result.code;
+      } catch (error) {
+        // A gate that cannot run at all is an operator error, not a failed
+        // verification — bail out instead of silently recording verified:false.
+        stderr(`route: --gate failed to run (${String(error)})\n`);
+        return null;
+      }
+      candidates.push({ agent, verified: code === 0 });
+    } else {
+      const label = createHash('sha256').update(artifact.trim()).digest('hex');
+      candidates.push({ agent, label });
+    }
+  }
+  return candidates;
+};
 
 /** Accepts either a bare candidate array or {candidates, category}. */
 const parseInput = (raw: string): RouteInput | string => {
@@ -61,6 +131,10 @@ export class RouteCommand extends Command {
   static override paths = [['route']];
 
   file = Option.String({ required: false });
+  round = Option.String('--round');
+  cache = Option.String('--cache');
+  gate = Option.Array('--gate-arg');
+  gateCmd = Option.String('--gate');
   category = Option.String('--category');
   threshold = Option.String('--threshold');
   trustSingleton = Option.Boolean('--trust-singleton', false);
@@ -68,16 +142,40 @@ export class RouteCommand extends Command {
   task = Option.String('--task');
 
   override async execute(): Promise<number> {
-    const source = this.file ?? '-';
-    const content =
-      source === '-'
-        ? await readStream(this.context.stdin as AsyncIterable<Buffer | string>)
-        : await new NodeFileSystem().read(source);
-    if (content === null) {
-      this.context.stderr.write(`no candidates file ${source}\n`);
+    if (this.round !== undefined && this.file !== undefined) {
+      this.context.stderr.write('route: pass a candidates file OR --round, not both\n');
       return 2;
     }
-    const input = parseInput(content);
+    if ((this.gateCmd !== undefined || this.gate !== undefined) && this.round === undefined) {
+      this.context.stderr.write('route: --gate/--gate-arg require --round\n');
+      return 2;
+    }
+
+    let input: RouteInput | string;
+    if (this.round !== undefined) {
+      const gateArgv =
+        this.gateCmd === undefined ? undefined : [this.gateCmd, ...(this.gate ?? [])];
+      const candidates = await loadRoundCandidates(
+        new NodeFileSystem(),
+        this.cache ?? defaultCacheRoot(import.meta.url),
+        this.round,
+        gateArgv,
+        (line) => this.context.stderr.write(line),
+      );
+      if (candidates === null) return 2;
+      input = { candidates };
+    } else {
+      const source = this.file ?? '-';
+      const content =
+        source === '-'
+          ? await readStream(this.context.stdin as AsyncIterable<Buffer | string>)
+          : await new NodeFileSystem().read(source);
+      if (content === null) {
+        this.context.stderr.write(`no candidates file ${source}\n`);
+        return 2;
+      }
+      input = parseInput(content);
+    }
     if (typeof input === 'string') {
       this.context.stderr.write(`route: ${input}\n`);
       return 2;
