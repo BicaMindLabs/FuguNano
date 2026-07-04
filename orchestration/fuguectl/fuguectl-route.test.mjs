@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { readFileSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 import { createSuite, here, makeTempDir, run } from "./fuguectl-testlib.mjs";
@@ -78,5 +78,70 @@ suite.ok("--task appends a selector-decision line to the TASK audit", () =>
 
 const noTask = run(fuguectl, ["route", gated, "--task", join(tmp, "missing-task.md")]);
 suite.ok("--task with a missing TASK file exits 2", () => noTask.status === 2);
+
+// --round: build candidates straight from a cache fan-out round. Identical
+// artifacts cluster by content hash (consensus); --gate runs an executable
+// verifier per artifact (the real gate rung, live).
+const cacheRoot = join(tmp, "cache");
+const roundDir = join(cacheRoot, "round-7");
+mkdirSync(roundDir, { recursive: true });
+writeFileSync(join(roundDir, "manifest.tsv"),
+  "t1\tmimo\nt2\tdoubao\nt3\tstepfun\nt4\tminimax\n");
+for (const [id, status, body] of [
+  ["t1", "done", "SAME OUTPUT"],
+  ["t2", "done", "SAME OUTPUT"],
+  ["t3", "done", "SAME OUTPUT"],
+  ["t4", "fail", "broken"],
+]) {
+  writeFileSync(join(roundDir, `${id}.status`), `${status}\n`);
+  writeFileSync(join(roundDir, `${id}.result`), body);
+}
+
+const consensus = run(fuguectl, ["route", "--round", "7", "--cache", cacheRoot]);
+suite.ok("--round clusters identical artifacts into TRUST_SPOT_CHECK", () =>
+  consensus.stdout.includes('"outcome":"TRUST_SPOT_CHECK"') && consensus.status === 10,
+);
+
+const gateScript = join(tmp, "gate.mjs");
+writeFileSync(gateScript, [
+  "import { readFileSync } from 'node:fs';",
+  "const body = readFileSync(process.argv[2], 'utf8');",
+  "process.exit(body.includes('GOOD') ? 0 : 1);",
+].join("\n"));
+writeFileSync(join(roundDir, "t2.result"), "GOOD OUTPUT");
+const gated2 = run(fuguectl, [
+  "route", "--round", "7", "--cache", cacheRoot,
+  "--gate", process.execPath, "--gate-arg", gateScript,
+]);
+suite.ok("--gate runs the executable verifier and TRUSTs the passer", () =>
+  gated2.stdout.includes('"outcome":"TRUST"') &&
+  gated2.stdout.includes('"pick":"doubao"') &&
+  gated2.status === 0,
+);
+
+const noRound = run(fuguectl, ["route", "--round", "99", "--cache", cacheRoot]);
+suite.ok("--round with an uninitialized round exits 2", () => noRound.status === 2);
+
+const badGate = run(fuguectl, [
+  "route", "--round", "7", "--cache", cacheRoot,
+  "--gate", join(tmp, "no-such-gate-cmd"),
+]);
+suite.ok("a gate command that cannot run exits 2 (operator error, not verified:false)", () =>
+  badGate.status === 2,
+);
+
+const malformedDir = join(cacheRoot, "round-8");
+mkdirSync(malformedDir, { recursive: true });
+writeFileSync(join(malformedDir, "manifest.tsv"), "no-tab-row\nt1\tmimo\n");
+writeFileSync(join(malformedDir, "t1.status"), "done\n");
+writeFileSync(join(malformedDir, "t1.result"), "only real row");
+const malformed = run(fuguectl, ["route", "--round", "8", "--cache", cacheRoot]);
+suite.ok("no-tab manifest rows are skipped, never surfaced as picks", () =>
+  malformed.stderr.includes("malformed manifest row") &&
+  !malformed.stdout.includes("no-tab-row"),
+);
+
+const both = run(fuguectl, ["route", gated, "--round", "7", "--cache", cacheRoot]);
+suite.ok("file and --round together exit 2", () => both.status === 2);
 
 suite.done();

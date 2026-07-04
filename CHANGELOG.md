@@ -7,6 +7,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/), versioning [SemV
 
 ### Added
 
+- **`route --round <n>` — the Selector reads fan-out rounds directly**: builds candidates straight from a cache round's manifest (done tasks with artifacts; fail/pending excluded). With `--gate <cmd> [--gate-arg x]` each artifact is checked by an executable verifier (exit 0 → `verified`) — the real-gate rung of the verifier ladder, live in the pipeline. Without a gate, artifacts cluster by content hash so identical outputs form the consensus signal (never clean `TRUST` — that stays gate-only). `dispatch → cache barrier → route --round → integrate` is now a fully wired path.
+
 - **`dispatch --skeptic` — the validated trap-awareness playbook goes runtime**: prefixes the dispatch prompt with the category-level challenge rules from `templates/skeptic.md` (override with `--skeptic-file`), the same CONVOLVE-style injection that lifted small-model trap-avoidance 59%→84% on a held-out trap set. Only the rules section is injected; the maintainer header stays out of prompts. Off by default, mirrors the `--task-digest` prefix mechanism.
 - **`route --task <file>` — selector decisions become TASK evidence**: the routing decision is appended to the TASK audit as a `selector-decision:` line, so trust/spot-check/escalate calls are auditable alongside review/incident packets and can feed the evolution loop.
 

@@ -12,7 +12,7 @@
   <img src="https://img.shields.io/badge/Runtime-Node%20%3E%3D18.18-339933?style=for-the-badge&logo=node.js&logoColor=white" alt="Node.js >= 18.18" />
   <img src="https://img.shields.io/badge/Engine-TypeScript-3178c6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript engine" />
   <img src="https://img.shields.io/badge/fuguectl-30%20suites-7c3aed?style=for-the-badge" alt="30 fuguectl test suites" />
-  <img src="https://img.shields.io/badge/assertions-428-brightgreen?style=for-the-badge" alt="428 fuguectl assertions" />
+  <img src="https://img.shields.io/badge/assertions-434-brightgreen?style=for-the-badge" alt="434 fuguectl assertions" />
   <a href="https://github.com/BicaMindLabs/FuguNano/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/BicaMindLabs/FuguNano/ci.yml?branch=main&style=for-the-badge&label=CI" alt="CI status" /></a>
   <img src="https://img.shields.io/badge/license-Apache--2.0-yellowgreen?style=for-the-badge" alt="Apache-2.0 license" />
 </p>
@@ -83,6 +83,7 @@ fuguectl plan "implement feature" --harness lite --models a,b --out /tmp/fugunan
 fuguectl guard prompt /tmp/prompt.md --source-ref TASK.md
 fuguectl dispatch cc-deepseek --template impl --task TASK.md --task-type backend
 fuguectl cache barrier 1
+fuguectl route --round 1 --gate ./run-tests.sh   # exit 0 TRUST / 10 SPOT_CHECK / 20 ESCALATE
 fuguectl integrate --work /path/to/project --agents "cc-deepseek cc-kimi"
 fuguectl review packet /tmp/review.txt --json
 fuguectl incident packet /tmp/failure.log --json
@@ -255,13 +256,13 @@ non-regressing changes. Read the operator guide in
 ## Command Surface
 
 `orchestration/fuguectl/fuguectl` is the production entry point: 29 subcommands,
-30 test suites, and 428 wrapper assertions.
+30 test suites, and 434 wrapper assertions.
 
 | Area               | Commands                                                                                                                                                                                                                                                                                                                     |
 | ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Setup              | `fuguectl doctor`, `fuguectl init --dry-run\|--write`, `fuguectl version`, `fuguectl preflight --harness fugue-cc\|codex\|opencode\|agy\|lite\|all`, `fuguectl smoke`, `fuguectl fleet status\|up\|down`                                                                                                                     |
 | Planning           | `fuguectl task new\|log\|done\|handoff\|digest`, `fuguectl template <name>`, `fuguectl plan "<goal>" [--harness h\|lite] [--models a,b] [--out dir] [--timeout-ms n] [--allow-partial] [--codex-clean] [--harness-arg x] [--codex-arg x] [--opencode-arg x] [--agy-arg x] [--task f]`, `fuguectl goal template\|show\|check` |
-| Routing            | `fuguectl allocate <type>`, `fuguectl route [<file>\|-] [--category c] [--threshold n] [--forced a,b] [--task f]`, `fuguectl workspace list\|show\|model\|context`, `fuguectl agents template\|validate\|list\|resolve`, `fuguectl skills index\|list\|match\|show\|inject\|validate\|forge`                                            |
+| Routing            | `fuguectl allocate <type>`, `fuguectl route [<file>\|-\|--round n [--gate cmd]] [--category c] [--threshold n] [--forced a,b] [--task f]`, `fuguectl workspace list\|show\|model\|context`, `fuguectl agents template\|validate\|list\|resolve`, `fuguectl skills index\|list\|match\|show\|inject\|validate\|forge`                                            |
 | Dispatch           | `fuguectl guard prompt <file\|->`, `fuguectl dispatch <target> [--certificate <file>] [--skeptic]`, `fuguectl cache init\|put\|fail\|barrier\|collect\|resume`                                                                                                                                                                           |
 | Review + repair    | `fuguectl integrate --work <repo>`, `fuguectl review packet <file\|->`, `fuguectl incident packet\|recovery <file\|->`, `fuguectl loop init\|record\|decide\|status`, `fuguectl run set\|round\|status\|next\|clear`, `fuguectl summary <round>`                                                                             |
 | Memory + evolution | `fuguectl experience add\|audit\|eval\|learn\|list\|policy\|promote\|recall\|show`, `fuguectl evolve mine\|validate\|promote\|history`, `fuguectl self-harness template\|run`, `fuguectl runtime check\|adapt`, `fuguectl selftest`                                                                                          |
