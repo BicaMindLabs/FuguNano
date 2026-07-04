@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 import { createSuite, here, makeTempDir, run } from "./fuguectl-testlib.mjs";
@@ -68,5 +68,15 @@ suite.ok("non-string label is rejected, exits 2", () => typed.status === 2);
 
 const help = run(fuguectl, ["help"]).stdout;
 suite.ok("help lists route entrypoint", () => help.includes("fuguectl route"));
+
+const auditTask = join(tmp, "TASK-route.md");
+writeFileSync(auditTask, "# TASK-route: demo\nStatus: IN_PROGRESS\n");
+run(fuguectl, ["route", gated, "--task", auditTask]);
+suite.ok("--task appends a selector-decision line to the TASK audit", () =>
+  readFileSync(auditTask, "utf8").includes('selector-decision: {"outcome":"TRUST"'),
+);
+
+const noTask = run(fuguectl, ["route", gated, "--task", join(tmp, "missing-task.md")]);
+suite.ok("--task with a missing TASK file exits 2", () => noTask.status === 2);
 
 suite.done();

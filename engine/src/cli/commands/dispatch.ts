@@ -359,6 +359,8 @@ export class DispatchCommand extends Command {
   incident = Option.String('--incident');
   taskDigest = Option.Boolean('--task-digest', false);
   taskDigestBudget = Option.String('--task-digest-budget');
+  skeptic = Option.Boolean('--skeptic', false);
+  skepticFile = Option.String('--skeptic-file');
 
   private readonly fs = new NodeFileSystem();
 
@@ -470,7 +472,9 @@ export class DispatchCommand extends Command {
       experienceMaxAgeSeconds,
     );
     if (assembled === null) return 2;
-    const prompt = await this.injectTaskDigest(assembled);
+    const digested = await this.injectTaskDigest(assembled);
+    if (digested === null) return 2;
+    const prompt = await this.injectSkeptic(digested);
     if (prompt === null) return 2;
     if (!(await this.runGuard(prompt))) return 2;
     const timeoutMs = parseTimeoutMs(this.timeoutMs);
@@ -896,6 +900,35 @@ export class DispatchCommand extends Command {
       ...(budgetChars !== undefined ? { budgetChars } : {}),
     });
     return `${renderTaskContextDigest(digest)}\n\n${prompt}`;
+  }
+
+  /**
+   * CONVOLVE-style skeptic pre-pass. With --skeptic the prompt is prefixed with
+   * the category-level challenge rules from templates/skeptic.md (or a
+   * --skeptic-file override) — the playbook that lifted small-model
+   * trap-avoidance 59%→84% on a held-out trap set. Only the rules section
+   * (between the `---` separators) is injected; the template's maintainer
+   * header stays out of prompts. Off by default.
+   */
+  private async injectSkeptic(prompt: string): Promise<string | null> {
+    if (!this.skeptic) return prompt;
+    if (this.skepticFile !== undefined && this.skepticFile.trim().length === 0) {
+      this.context.stderr.write('--skeptic-file requires a path\n');
+      return null;
+    }
+    const file = this.skepticFile ?? joinPath(defaultTemplatesDir(import.meta.url), 'skeptic.md');
+    const content = await this.fs.read(file);
+    if (content === null) {
+      this.context.stderr.write(`--skeptic playbook not found: ${file}\n`);
+      return null;
+    }
+    const parts = content.split('\n---\n');
+    const rules = (parts.length >= 2 ? (parts[1] ?? content) : content).trim();
+    if (rules.length === 0) {
+      this.context.stderr.write(`--skeptic playbook is empty: ${file}\n`);
+      return null;
+    }
+    return `${rules}\n\n---\n\n${prompt}`;
   }
 
   private async runGuard(prompt: string): Promise<boolean> {

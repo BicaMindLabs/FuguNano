@@ -503,4 +503,43 @@ suite.ok(
     ]).status !== 0,
 );
 
+// skeptic pre-pass: --skeptic prefixes the prompt with the category-level
+// challenge rules from templates/skeptic.md (CONVOLVE-style injection). The
+// stub harness records the prompt so we can check the prefix.
+const skepticCalled = join(tmp, "skeptic.called");
+writeExecutable(join(tmp, "skeptic-cc"), [
+  "#!/usr/bin/env node",
+  "const fs = require('node:fs');",
+  `fs.writeFileSync(${JSON.stringify(skepticCalled)}, fs.readFileSync(0, 'utf8'));`,
+]);
+process.env.FUGUE_CC_BIN = join(tmp, "skeptic-cc");
+
+if (existsSync(skepticCalled)) rmSync(skepticCalled);
+run(dispatch, ["cc-x", "--prompt", "base body", "--skeptic"]);
+suite.ok("--skeptic prefixes the playbook rules onto the prompt", () =>
+  existsSync(skepticCalled) &&
+  readFileSync(skepticCalled, "utf8").includes("先用 10 秒检查请求本身") &&
+  readFileSync(skepticCalled, "utf8").trimEnd().endsWith("base body"),
+);
+
+if (existsSync(skepticCalled)) rmSync(skepticCalled);
+run(dispatch, ["cc-x", "--prompt", "base body"]);
+suite.ok("without --skeptic the prompt carries no playbook rules", () =>
+  existsSync(skepticCalled) &&
+  !readFileSync(skepticCalled, "utf8").includes("先用 10 秒检查请求本身"),
+);
+
+suite.ok(
+  "--skeptic-file with a missing path → non-0",
+  () =>
+    run(dispatch, [
+      "cc-x",
+      "--prompt",
+      "base body",
+      "--skeptic",
+      "--skeptic-file",
+      join(tmp, "nope.md"),
+    ]).status !== 0,
+);
+
 suite.done();
