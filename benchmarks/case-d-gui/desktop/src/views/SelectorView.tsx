@@ -1,9 +1,10 @@
 import { useState } from 'react';
 
 import { bridge } from '../bridge';
+import { useT } from '../i18n';
 import { buildRouteRoundCmd } from '../logic/command-builder';
 import type { Candidate, SelectorDecision } from '../logic/selector';
-import { outcomeColor, outcomeExit, reasonLabel, routePreview } from '../logic/selector';
+import { outcomeColor, outcomeExit, routePreview } from '../logic/selector';
 
 type Verified = 'unset' | 'pass' | 'fail';
 interface Row {
@@ -51,6 +52,7 @@ function Ring({ value, color }: { value: number; color: string }): JSX.Element {
 }
 
 export function SelectorView(): JSX.Element {
+  const { t } = useT();
   const [rows, setRows] = useState<Row[]>(defaultRows);
   const [category, setCategory] = useState('');
   const [round, setRound] = useState('');
@@ -98,11 +100,11 @@ export function SelectorView(): JSX.Element {
     <div className="selector">
       <div className="col">
         <section className="panel">
-          <h2>Candidates</h2>
+          <h2>{t('selector.candidates')}</h2>
           <div className="cand-head">
-            <span>agent</span>
-            <span>gate</span>
-            <span>answer label</span>
+            <span>{t('selector.agent')}</span>
+            <span>{t('selector.gate')}</span>
+            <span>{t('selector.answerLabel')}</span>
             <span />
           </div>
           {rows.map((r, i) => (
@@ -136,45 +138,42 @@ export function SelectorView(): JSX.Element {
               className="btn btn-secondary"
               onClick={() => setRows((rs) => [...rs, { agent: '', verified: 'unset', label: '' }])}
             >
-              + candidate
+              {t('selector.addCandidate')}
             </button>
             <input
               className="input sm"
               style={{ maxWidth: 160 }}
-              placeholder="category (e.g. security)"
+              placeholder={t('selector.categoryPlaceholder')}
               value={category}
               onChange={(e) => setCategory(e.target.value)}
             />
           </div>
-          <p className="hint">
-            Set a gate result (✓/✗) to simulate a verifier; leave gates unset and use answer labels to
-            simulate consensus. A live preview mirrors the engine's <span className="mono">route()</span>.
-          </p>
+          <p className="hint">{t('selector.hint')}</p>
         </section>
 
         <section className="panel">
-          <h2>Or route a real fan-out round</h2>
+          <h2>{t('selector.orRoute')}</h2>
           <div className="goal-row">
             <input
               className="input sm"
               style={{ maxWidth: 120 }}
-              placeholder="round n"
+              placeholder={t('selector.roundN')}
               value={round}
               onChange={(e) => setRound(e.target.value)}
             />
             <input
               className="input sm"
-              placeholder="gate cmd (optional, e.g. ./run-tests.sh)"
+              placeholder={t('selector.gateCmd')}
               value={gate}
               onChange={(e) => setGate(e.target.value)}
             />
             <button className="btn btn-primary" disabled={busy || round.trim() === ''} onClick={runRound}>
-              Route
+              {t('selector.route')}
             </button>
           </div>
           {live && (
             <button className="btn btn-secondary" style={{ marginTop: 8 }} onClick={() => setLive(null)}>
-              back to preview
+              {t('selector.backToPreview')}
             </button>
           )}
         </section>
@@ -189,37 +188,37 @@ export function SelectorView(): JSX.Element {
             <Ring value={decision.confidence} color={color} />
             <div className="verdict-meta">
               <div className="meta">
-                <span>reason</span>
+                <span>{t('selector.reason')}</span>
                 <span className="mono">{decision.reason}</span>
               </div>
               <div className="meta">
-                <span>pick</span>
+                <span>{t('selector.pick')}</span>
                 <span className="mono">{decision.pick ?? '—'}</span>
               </div>
               <div className="meta">
-                <span>agreement</span>
+                <span>{t('selector.agreement')}</span>
                 <span className="mono">{decision.agreementShare.toFixed(2)}</span>
               </div>
               <div className="meta">
-                <span>exit code</span>
+                <span>{t('selector.exitCode')}</span>
                 <span className="mono">{outcomeExit(decision.outcome)}</span>
               </div>
             </div>
           </div>
-          <p className="reason-gloss">{reasonLabel(decision.reason)}</p>
-          {live?.decision === null && <p className="hint">route emitted no JSON — showing raw output below.</p>}
+          <p className="reason-gloss">{t(`reason.${decision.reason}`)}</p>
+          {live?.decision === null && <p className="hint">{t('selector.noJson')}</p>}
           {live && <pre className="raw">{live.raw}</pre>}
         </section>
 
         <section className="panel">
-          <h2>Verifier ladder</h2>
+          <h2>{t('selector.verifierLadder')}</h2>
           <ol className="ladder">
-            <li>executable gate — <span className="muted">the only clean TRUST</span></li>
-            <li>synthesized gate — <span className="muted">property tests / static rules</span></li>
-            <li>skeptic pre-pass — <span className="muted">category-level challenge</span></li>
-            <li>model judge</li>
-            <li>consensus — <span className="muted">cheap, fails correlated</span></li>
-            <li>escalate to premium</li>
+            <li>{t('ladder.gate')} — <span className="muted">{t('ladder.gateNote')}</span></li>
+            <li>{t('ladder.synth')} — <span className="muted">{t('ladder.synthNote')}</span></li>
+            <li>{t('ladder.skeptic')} — <span className="muted">{t('ladder.skepticNote')}</span></li>
+            <li>{t('ladder.judge')}</li>
+            <li>{t('ladder.consensus')} — <span className="muted">{t('ladder.consensusNote')}</span></li>
+            <li>{t('ladder.escalate')}</li>
           </ol>
         </section>
       </div>
