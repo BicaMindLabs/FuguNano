@@ -75,3 +75,23 @@ jobs:
       - name: check (typecheck + lint + test)
         run: npm run check
         working-directory: engine
+
+  gui:
+    name: Desktop GUI (renderer)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "20"
+      # --ignore-scripts skips Electron's binary postinstall (~100 MB) — the
+      # renderer typecheck + Vite build never touch the runtime binary.
+      - name: install (no electron binary)
+        run: npm ci --ignore-scripts
+        working-directory: benchmarks/case-d-gui/desktop
+      - name: typecheck
+        run: npm run typecheck
+        working-directory: benchmarks/case-d-gui/desktop
+      - name: build renderer
+        run: npm run build
+        working-directory: benchmarks/case-d-gui/desktop

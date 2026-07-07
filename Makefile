@@ -1,7 +1,9 @@
 .DEFAULT_GOAL := help
 SHELL := /usr/bin/env bash
 
-.PHONY: help install install-cc install-skill verify doctor test test-engine test-engine-ci scan lint check-docs ci ci-clean check
+.PHONY: help install install-cc install-skill verify doctor test test-engine test-engine-ci scan lint check-docs ci ci-clean check gui-install gui gui-build
+
+GUI_DIR := benchmarks/case-d-gui/desktop
 
 help: ## List available targets
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | \
@@ -45,3 +47,12 @@ ci: scan lint check-docs test test-engine ## Full local CI using installed deps
 check: ci ## Alias for ci
 
 ci-clean: scan lint check-docs test test-engine-ci ## Full clean CI with engine npm ci
+
+gui-install: ## Install FuguNano Studio desktop GUI deps
+	cd $(GUI_DIR) && npm install
+
+gui: ## Launch FuguNano Studio (Electron desktop GUI, dev mode)
+	cd $(GUI_DIR) && npm run dev
+
+gui-build: ## Typecheck + build the GUI renderer (what CI runs)
+	cd $(GUI_DIR) && npm run typecheck && npm run build

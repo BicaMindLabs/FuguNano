@@ -267,6 +267,30 @@ non-regressing changes. Read the operator guide in
 | Review + repair    | `fuguectl integrate --work <repo>`, `fuguectl review packet <file\|->`, `fuguectl incident packet\|recovery <file\|->`, `fuguectl loop init\|record\|decide\|status`, `fuguectl run set\|round\|status\|next\|clear`, `fuguectl summary <round>`                                                                             |
 | Memory + evolution | `fuguectl experience add\|audit\|eval\|learn\|list\|policy\|promote\|recall\|show`, `fuguectl evolve mine\|validate\|promote\|history`, `fuguectl self-harness template\|run`, `fuguectl runtime check\|adapt`, `fuguectl selftest`                                                                                          |
 
+## Desktop GUI (FuguNano Studio)
+
+A source-complete Electron + React desktop app that puts a face on the loop —
+watch a fan-out run, see the [verifier-aware routing](#verifier-aware-routing)
+decision as it happens, and read the benchmark evidence. It talks to the engine
+by `execFile`-ing `fuguectl` over an injection-safe IPC bridge — no HTTP, no
+shell.
+
+| View           | What it shows                                                                            |
+| -------------- | --------------------------------------------------------------------------------------- |
+| **Pipeline**   | The operator console: plan → dispatch → integrate → review → loop, with live agent health. |
+| **Rounds**     | Read-only monitor over the on-disk cache rounds — each agent's done / fail / pending.    |
+| **Selector**   | The routing decision, visualized: `TRUST` / `TRUST_SPOT_CHECK` / `ESCALATE` with a confidence ring. A live preview mirrors the engine's `route()`. |
+| **Benchmarks** | The finding, in bars: fan-out matches premium *with* a gate, falls back *without* one.   |
+
+```bash
+make gui-install   # one-time: install the desktop deps
+make gui           # launch FuguNano Studio (Electron, dev mode)
+```
+
+Lives at [`benchmarks/case-d-gui/desktop`](benchmarks/case-d-gui/desktop); see
+[docs/GUI.md](docs/GUI.md) for the view-by-view guide and data sources. CI
+typechecks and builds the renderer on every push.
+
 ## Fugu, OpenFugu, FuguNano
 
 <p align="center">
@@ -291,6 +315,7 @@ whether a learned conductor is worth the cost.
 | Full workflow                   | [docs/WORKFLOW.md](docs/WORKFLOW.md)           |
 | Architecture and ports/adapters | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)   |
 | Self-Harness guide              | [docs/SELF_HARNESS.md](docs/SELF_HARNESS.md)   |
+| Desktop GUI (FuguNano Studio)   | [docs/GUI.md](docs/GUI.md)                     |
 | Parity and references           | [docs/PARITY.md](docs/PARITY.md)               |
 | Integration notes               | [docs/INTEGRATIONS.md](docs/INTEGRATIONS.md)   |
 | Agent-facing contract           | [AGENTS.md](AGENTS.md)                         |

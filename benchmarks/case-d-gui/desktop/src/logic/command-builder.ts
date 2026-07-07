@@ -32,6 +32,24 @@ export const buildReviewCmd = (taskFile: string): string =>
 
 export const buildLoopCmd = (taskFile: string): string => `fuguectl loop status --task ${taskFile}`;
 
+// Route a cache fan-out round through the Selector. Optional executable --gate (with args) runs
+// per artifact; --category triggers the forced-escalate list; --threshold tunes consensus.
+export const buildRouteRoundCmd = (
+  round: string,
+  opts: { gate?: string; category?: string; threshold?: string } = {},
+): string => {
+  let cmd = `fuguectl route --round "${esc(round)}"`;
+  if (opts.gate && opts.gate.trim() !== '') {
+    const parts = opts.gate.trim().split(/\s+/u);
+    const bin = parts[0] ?? '';
+    cmd += ` --gate "${esc(bin)}"`;
+    for (const arg of parts.slice(1)) cmd += ` --gate-arg "${esc(arg)}"`;
+  }
+  if (opts.category && opts.category.trim() !== '') cmd += ` --category "${esc(opts.category.trim())}"`;
+  if (opts.threshold && opts.threshold.trim() !== '') cmd += ` --threshold "${esc(opts.threshold.trim())}"`;
+  return cmd;
+};
+
 // Parse the task file path from `fuguectl task new` stdout (last non-empty line).
 export const parseTaskFile = (stdout: string): string => {
   const lines = stdout

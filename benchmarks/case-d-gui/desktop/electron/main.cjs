@@ -17,6 +17,8 @@ const findRoot = () => {
 };
 const ROOT = findRoot();
 const FUGUE = path.join(ROOT, 'orchestration', 'fuguectl', 'fuguectl');
+// Cache root the engine writes fan-out rounds into (FUGUE_CACHE wins; else <root>/.fuguectl-cache).
+const CACHE_ROOT = process.env.FUGUE_CACHE || path.join(ROOT, '.fuguectl-cache');
 
 // codex: prefer whatever is already on $PATH. On macOS the bundled .app is an OPTIONAL fallback
 // only (added when present and not already on PATH) — never the sole supported location.
@@ -57,12 +59,88 @@ const runFugue = (cmd) =>
     });
   });
 
+const readText = (p) => {
+  try {
+    return fs.readFileSync(p, 'utf8');
+  } catch {
+    return null;
+  }
+};
+
+// --- read-only IPC over the engine's on-disk state (no writes, no shell) ---
+
+// A round id is a single filesystem segment; allow only [A-Za-z0-9._-], and reject the traversal
+// tokens "." / ".." outright so the guarantee holds even if a caller ever used the segment unwrapped.
+const safeSegment = (s) =>
+  typeof s === 'string' && s !== '.' && s !== '..' && /^[A-Za-z0-9._-]+$/u.test(s);
+
+const listRounds = () => {
+  try {
+    return fs
+      .readdirSync(CACHE_ROOT, { withFileTypes: true })
+      .filter((e) => e.isDirectory() && e.name.startsWith('round-'))
+      .map((e) => e.name.slice('round-'.length))
+      .filter((n) => n.length > 0)
+      .sort((a, b) => (Number(a) || 0) - (Number(b) || 0));
+  } catch {
+    return [];
+  }
+};
+
+const readRound = (round) => {
+  if (!safeSegment(round)) return { round, error: 'invalid round id', tasks: [], totals: null };
+  const dir = path.join(CACHE_ROOT, `round-${round}`);
+  const manifest = readText(path.join(dir, 'manifest.tsv'));
+  if (manifest === null) return { round, error: 'round not found', tasks: [], totals: null };
+  const tasks = [];
+  const totals = { total: 0, done: 0, fail: 0, pending: 0 };
+  for (const raw of manifest.split(/\r?\n/u)) {
+    if (raw.length === 0) continue;
+    const tab = raw.indexOf('\t');
+    if (tab === -1) continue;
+    const id = raw.slice(0, tab);
+    const agent = raw.slice(tab + 1);
+    if (!safeSegment(id)) continue;
+    const status = (readText(path.join(dir, `${id}.status`)) ?? '').trim() || 'pending';
+    const at = (readText(path.join(dir, `${id}.at`)) ?? '').trim() || null;
+    const result = readText(path.join(dir, `${id}.result`));
+    const preview = result === null ? null : result.slice(0, 400);
+    tasks.push({ id, agent, status, at, bytes: result === null ? 0 : result.length, preview });
+    totals.total += 1;
+    if (status === 'done') totals.done += 1;
+    else if (status === 'fail') totals.fail += 1;
+    else totals.pending += 1;
+  }
+  return { round, error: null, tasks, totals };
+};
+
+// Real agent/backend health from `doctor --quiet`:
+//   agents=N backends_ready=R/T fugue-cc=0|1 codex=0|1 agy=0|1 opencode=0|1
+const readAgents = async () => {
+  const { stdout, exitCode } = await runFugue('fuguectl doctor --quiet');
+  const line = stdout.split(/\r?\n/u).find((l) => l.includes('backends_ready=')) ?? '';
+  const kv = {};
+  for (const tok of line.trim().split(/\s+/u)) {
+    const eq = tok.indexOf('=');
+    if (eq > 0) kv[tok.slice(0, eq)] = tok.slice(eq + 1);
+  }
+  const harnesses = ['fugue-cc', 'codex', 'agy', 'opencode'];
+  const agents = harnesses
+    .filter((h) => kv[h] !== undefined)
+    .map((h) => ({ name: h, role: 'harness', healthy: kv[h] === '1' }));
+  if (agents.length === 0) {
+    // doctor unavailable — degrade to a single honest "unknown" row rather than a fake stub.
+    return [{ name: 'codex', role: 'harness', healthy: exitCode === 0 }];
+  }
+  return agents;
+};
+
 let win = null;
 const createWindow = () => {
   win = new BrowserWindow({
-    width: 1100,
-    height: 760,
-    title: 'FuguNano',
+    width: 1180,
+    height: 800,
+    title: 'FuguNano Studio',
     backgroundColor: '#ffffff',
     webPreferences: {
       preload: path.join(__dirname, 'preload.cjs'),
@@ -76,9 +154,9 @@ const createWindow = () => {
 };
 
 ipcMain.handle('fugue:run', (_e, cmd) => runFugue(cmd));
-ipcMain.handle('fugue:agents', () => [
-  { name: 'codex (gpt-5.5)', role: 'Implementer / Reviewer', healthy: true },
-]);
+ipcMain.handle('fugue:agents', () => readAgents());
+ipcMain.handle('fugue:listRounds', () => listRounds());
+ipcMain.handle('fugue:round', (_e, round) => readRound(round));
 
 app.whenReady().then(createWindow);
 app.on('window-all-closed', () => process.platform !== 'darwin' && app.quit());

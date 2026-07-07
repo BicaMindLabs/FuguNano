@@ -9,7 +9,8 @@
     "dev:electron": "wait-on tcp:5180 && cross-env VITE_DEV=1 electron .",
     "dev": "concurrently -k -n renderer,electron -c magenta,blue \"npm:dev:renderer\" \"npm:dev:electron\"",
     "build": "vite build",
-    "start": "electron ."
+    "start": "electron .",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
     "react": "^18.3.1",
