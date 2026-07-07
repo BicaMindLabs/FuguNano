@@ -1,0 +1,44 @@
+name: Package Desktop GUI
+
+# Manual/on-demand only — never runs on push/PR (the fast CI stays renderer-only).
+# Builds an UNSIGNED macOS FuguNano Studio.app + .dmg on a macOS runner and uploads
+# them as a downloadable artifact. Free on GitHub-hosted macOS runners for public repos.
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "gui-v*"
+
+permissions:
+  contents: read
+
+jobs:
+  package-mac:
+    name: Package (macOS arm64, unsigned)
+    runs-on: macos-14 # Apple silicon
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "20"
+      # Full install here (unlike the renderer CI): packaging needs the Electron binary.
+      - name: install
+        run: npm ci
+        working-directory: benchmarks/case-d-gui/desktop
+      # npm run package = vite build + `npx electron-builder --mac` (electron-builder is not a
+      # committed dependency, so the renderer CI stays lean; npx fetches it just for this job).
+      - name: build renderer + package app
+        run: npm run package
+        working-directory: benchmarks/case-d-gui/desktop
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: "false" # do not attempt code signing
+      - name: list artifacts
+        run: ls -lh benchmarks/case-d-gui/desktop/release
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fugunano-studio-macos-arm64
+          path: |
+            benchmarks/case-d-gui/desktop/release/*.dmg
+            benchmarks/case-d-gui/desktop/release/*.zip
+          if-no-files-found: error
+          retention-days: 14
