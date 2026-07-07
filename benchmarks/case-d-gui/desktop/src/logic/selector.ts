@@ -1,5 +1,13 @@
-// Selector types — vendored from engine/src/domain/selector.ts so the GUI needs no cross-package
-// import of the built engine. Keep in sync with the engine's exported contract.
+// Selector types + a routePreview() mirror — vendored from engine/src/domain/selector.ts so the
+// GUI needs no cross-package import of the built engine (the engine ships as dist; importing it
+// here would couple the renderer build to an engine build step).
+//
+// DRIFT WARNING: routePreview() below MUST stay behaviourally identical to the engine's route().
+// There is no automated test pinning them together (the desktop app has no test runner), so any
+// change to engine/src/domain/selector.ts::route — precedence (gate → forced-category → smoothed
+// consensus), the (k+1)/(n+2) smoothing, or the trustThreshold/trustSingleton defaults — must be
+// hand-mirrored here. The Selector view is the user-facing claim that these match; if they diverge
+// the GUI will confidently show the wrong routing verdict. Verified equal 2026-07 against route().
 
 export type SelectorOutcome = 'TRUST' | 'TRUST_SPOT_CHECK' | 'ESCALATE';
 

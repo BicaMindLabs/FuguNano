@@ -26,12 +26,12 @@ small, injection-safe IPC surface over `contextBridge`:
 | `fugue:agents`     | `fuguectl doctor --quiet`             | Parse agent / backend health.                  |
 | `fugue:listRounds` | `fs` read of the cache root           | List `round-<n>` directories.                  |
 | `fugue:round`      | `fs` read of `round-<n>/`             | Per-agent status grid for one round.           |
-| `fugue:readJson`   | `fs` read of a `summary.json`         | Structured plan / smoke output.                |
 
 Arguments are tokenized and passed as an `argv` array to `execFile` — never
 concatenated into a shell string. The read-only `fs` channels validate each
-path segment against `^[A-Za-z0-9._-]+$` and confine reads to allow-listed roots
-(the repo and the OS temp dir), so a crafted round name cannot traverse out.
+path segment against `^[A-Za-z0-9._-]+$` (and reject `.` / `..`), and use every
+segment only wrapped (`round-<n>`, `<id>.status`), so a crafted round name
+cannot traverse out of the cache root.
 
 ## The four views
 

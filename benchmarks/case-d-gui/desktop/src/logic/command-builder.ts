@@ -38,7 +38,7 @@ export const buildRouteRoundCmd = (
   round: string,
   opts: { gate?: string; category?: string; threshold?: string } = {},
 ): string => {
-  let cmd = `fuguectl route --round ${esc(round)}`;
+  let cmd = `fuguectl route --round "${esc(round)}"`;
   if (opts.gate && opts.gate.trim() !== '') {
     const parts = opts.gate.trim().split(/\s+/u);
     const bin = parts[0] ?? '';
@@ -46,7 +46,7 @@ export const buildRouteRoundCmd = (
     for (const arg of parts.slice(1)) cmd += ` --gate-arg "${esc(arg)}"`;
   }
   if (opts.category && opts.category.trim() !== '') cmd += ` --category "${esc(opts.category.trim())}"`;
-  if (opts.threshold && opts.threshold.trim() !== '') cmd += ` --threshold ${esc(opts.threshold.trim())}`;
+  if (opts.threshold && opts.threshold.trim() !== '') cmd += ` --threshold "${esc(opts.threshold.trim())}"`;
   return cmd;
 };
 

@@ -6,5 +6,4 @@ contextBridge.exposeInMainWorld('fugue', {
   agents: () => ipcRenderer.invoke('fugue:agents'),
   listRounds: () => ipcRenderer.invoke('fugue:listRounds'),
   round: (round) => ipcRenderer.invoke('fugue:round', round),
-  readJson: (path) => ipcRenderer.invoke('fugue:readJson', path),
 });

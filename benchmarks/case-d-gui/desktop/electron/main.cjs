@@ -2,7 +2,6 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
 const { execFile } = require('node:child_process');
 const fs = require('node:fs');
-const os = require('node:os');
 const path = require('node:path');
 
 // Resolve repo root: FUGUNANO_ROOT env wins; otherwise walk up from this file until we find
@@ -115,22 +114,6 @@ const readRound = (round) => {
   return { round, error: null, tasks, totals };
 };
 
-// Read a JSON artifact (plan/smoke summary.json), but only inside the repo or the OS temp dir.
-const readJson = (p) => {
-  if (typeof p !== 'string' || p.length === 0) return { error: 'no path' };
-  const resolved = path.resolve(p);
-  const allowed = [path.resolve(ROOT), path.resolve(os.tmpdir())];
-  if (!allowed.some((base) => resolved === base || resolved.startsWith(`${base}${path.sep}`)))
-    return { error: 'path outside allowed roots' };
-  const text = readText(resolved);
-  if (text === null) return { error: 'file not found' };
-  try {
-    return { error: null, data: JSON.parse(text) };
-  } catch {
-    return { error: 'invalid JSON' };
-  }
-};
-
 // Real agent/backend health from `doctor --quiet`:
 //   agents=N backends_ready=R/T fugue-cc=0|1 codex=0|1 agy=0|1 opencode=0|1
 const readAgents = async () => {
@@ -174,7 +157,6 @@ ipcMain.handle('fugue:run', (_e, cmd) => runFugue(cmd));
 ipcMain.handle('fugue:agents', () => readAgents());
 ipcMain.handle('fugue:listRounds', () => listRounds());
 ipcMain.handle('fugue:round', (_e, round) => readRound(round));
-ipcMain.handle('fugue:readJson', (_e, p) => readJson(p));
 
 app.whenReady().then(createWindow);
 app.on('window-all-closed', () => process.platform !== 'darwin' && app.quit());
