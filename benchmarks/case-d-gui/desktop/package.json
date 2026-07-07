@@ -10,7 +10,8 @@
     "dev": "concurrently -k -n renderer,electron -c magenta,blue \"npm:dev:renderer\" \"npm:dev:electron\"",
     "build": "vite build",
     "start": "electron .",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
   },
   "dependencies": {
     "react": "^18.3.1",
@@ -25,6 +26,7 @@
     "electron": "^31.0.0",
     "typescript": "^5.5.4",
     "vite": "^5.4.3",
+    "vitest": "^2.1.9",
     "wait-on": "^8.0.0"
   }
 }

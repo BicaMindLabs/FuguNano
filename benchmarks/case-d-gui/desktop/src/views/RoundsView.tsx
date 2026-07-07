@@ -34,7 +34,7 @@ export function RoundsView(): JSX.Element {
       <aside className="round-list">
         <div className="round-list-head">
           <h2>{t('rounds.title')}</h2>
-          <button className="gatebtn" title={t('rounds.refreshList')} onClick={refreshList}>
+          <button className="gatebtn" title={t('rounds.refreshList')} aria-label={t('rounds.refreshList')} onClick={refreshList}>
             ↻
           </button>
         </div>

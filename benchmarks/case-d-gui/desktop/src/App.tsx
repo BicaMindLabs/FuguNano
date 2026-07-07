@@ -38,9 +38,10 @@ export function App(): JSX.Element {
             key={n.id}
             className={`rail-btn ${view === n.id ? 'active' : ''}`}
             title={t(n.labelKey)}
+            aria-current={view === n.id ? 'page' : undefined}
             onClick={() => setView(n.id)}
           >
-            <span className="rail-glyph">{n.glyph}</span>
+            <span className="rail-glyph" aria-hidden="true">{n.glyph}</span>
             <span className="rail-label">{t(n.labelKey)}</span>
           </button>
         ))}
@@ -48,13 +49,19 @@ export function App(): JSX.Element {
         <button
           className="rail-btn compact"
           title={t('app.toggleLang')}
+          aria-label={t('app.toggleLang')}
           onClick={() => setLang(lang === 'en' ? 'zh' : 'en')}
         >
-          <span className="rail-glyph">{lang === 'en' ? 'EN' : '中'}</span>
+          <span className="rail-glyph" aria-hidden="true">{lang === 'en' ? 'EN' : '中'}</span>
           <span className="rail-label">{lang === 'en' ? '中文' : 'English'}</span>
         </button>
-        <button className="rail-btn compact" title={t('app.toggleTheme')} onClick={() => setDark((d) => !d)}>
-          <span className="rail-glyph">{dark ? '☀' : '☾'}</span>
+        <button
+          className="rail-btn compact"
+          title={t('app.toggleTheme')}
+          aria-label={t('app.toggleTheme')}
+          onClick={() => setDark((d) => !d)}
+        >
+          <span className="rail-glyph" aria-hidden="true">{dark ? '☀' : '☾'}</span>
           <span className="rail-label">{dark ? 'Light' : 'Dark'}</span>
         </button>
       </nav>

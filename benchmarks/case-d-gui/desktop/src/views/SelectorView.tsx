@@ -117,7 +117,8 @@ export function SelectorView(): JSX.Element {
               />
               <button
                 className={`gatebtn gate-${r.verified}`}
-                title="unset → pass → fail"
+                title={t('selector.gateToggle')}
+                aria-label={`${t('selector.gateToggle')} — ${r.agent || `#${String(i + 1)}`}`}
                 onClick={() => setRow(i, { verified: cycleVerified(r.verified) })}
               >
                 {r.verified === 'pass' ? '✓' : r.verified === 'fail' ? '✗' : '·'}
@@ -128,7 +129,12 @@ export function SelectorView(): JSX.Element {
                 aria-label={`label-${String(i)}`}
                 onChange={(e) => setRow(i, { label: e.target.value })}
               />
-              <button className="gatebtn" title="remove" onClick={() => setRows((rs) => rs.filter((_, j) => j !== i))}>
+              <button
+                className="gatebtn"
+                title={t('selector.removeCandidate')}
+                aria-label={`${t('selector.removeCandidate')} — ${r.agent || `#${String(i + 1)}`}`}
+                onClick={() => setRows((rs) => rs.filter((_, j) => j !== i))}
+              >
                 −
               </button>
             </div>
