@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 
 import { bridge } from '../bridge';
+import { useT } from '../i18n';
 import type { RoundSnapshot } from '../logic/round';
 import { statusColor } from '../logic/round';
 
 // Read-only monitor over the cache fan-out rounds on disk (round-<n>/).
 export function RoundsView(): JSX.Element {
+  const { t } = useT();
   const [rounds, setRounds] = useState<string[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
   const [snap, setSnap] = useState<RoundSnapshot | null>(null);
@@ -31,13 +33,13 @@ export function RoundsView(): JSX.Element {
     <div className="rounds">
       <aside className="round-list">
         <div className="round-list-head">
-          <h2>Rounds</h2>
-          <button className="gatebtn" title="refresh list" onClick={refreshList}>
+          <h2>{t('rounds.title')}</h2>
+          <button className="gatebtn" title={t('rounds.refreshList')} onClick={refreshList}>
             ↻
           </button>
         </div>
         {rounds.length === 0 ? (
-          <div className="empty">No rounds in cache.</div>
+          <div className="empty">{t('rounds.none')}</div>
         ) : (
           rounds.map((r) => (
             <button
@@ -53,7 +55,7 @@ export function RoundsView(): JSX.Element {
 
       <main className="main">
         {snap === null ? (
-          <div className="empty">Select a round.</div>
+          <div className="empty">{t('rounds.selectRound')}</div>
         ) : snap.error !== null ? (
           <div className="empty">round-{snap.round}: {snap.error}</div>
         ) : (
@@ -62,32 +64,32 @@ export function RoundsView(): JSX.Element {
               <div className="round-head">
                 <h2>round-{snap.round}</h2>
                 <button className="btn btn-secondary" onClick={refreshRound}>
-                  Refresh
+                  {t('rounds.refresh')}
                 </button>
               </div>
               {snap.totals && (
                 <div className="totals">
-                  <span className="tot"><b>{snap.totals.total}</b> total</span>
-                  <span className="tot" style={{ color: 'var(--green-700)' }}><b>{snap.totals.done}</b> done</span>
-                  <span className="tot" style={{ color: 'var(--red-800)' }}><b>{snap.totals.fail}</b> fail</span>
-                  <span className="tot" style={{ color: 'var(--gray-700)' }}><b>{snap.totals.pending}</b> pending</span>
+                  <span className="tot"><b>{snap.totals.total}</b> {t('rounds.total')}</span>
+                  <span className="tot" style={{ color: 'var(--green-700)' }}><b>{snap.totals.done}</b> {t('rounds.done')}</span>
+                  <span className="tot" style={{ color: 'var(--red-800)' }}><b>{snap.totals.fail}</b> {t('rounds.fail')}</span>
+                  <span className="tot" style={{ color: 'var(--gray-700)' }}><b>{snap.totals.pending}</b> {t('rounds.pending')}</span>
                 </div>
               )}
             </section>
 
             <section className="panel grow">
-              <h2>Agents</h2>
+              <h2>{t('rounds.agents')}</h2>
               <div className="grid">
-                {snap.tasks.map((t) => (
-                  <div className="cell" key={t.id}>
+                {snap.tasks.map((task) => (
+                  <div className="cell" key={task.id}>
                     <div className="cell-head">
-                      <span className="dot" style={{ background: statusColor(t.status) }} />
-                      <span className="mono cell-agent">{t.agent}</span>
-                      <span className="muted cell-status">{t.status}</span>
+                      <span className="dot" style={{ background: statusColor(task.status) }} />
+                      <span className="mono cell-agent">{task.agent}</span>
+                      <span className="muted cell-status">{task.status}</span>
                     </div>
-                    <div className="muted cell-id">{t.id} · {t.bytes}B</div>
-                    {t.preview !== null && t.preview.trim() !== '' && (
-                      <pre className="cell-preview">{t.preview}</pre>
+                    <div className="muted cell-id">{task.id} · {task.bytes}B</div>
+                    {task.preview !== null && task.preview.trim() !== '' && (
+                      <pre className="cell-preview">{task.preview}</pre>
                     )}
                   </div>
                 ))}

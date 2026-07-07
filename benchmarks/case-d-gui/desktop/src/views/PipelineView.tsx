@@ -1,6 +1,7 @@
 import { useEffect, useReducer, useState } from 'react';
 
 import { bridge } from '../bridge';
+import { useT } from '../i18n';
 import {
   buildDispatchCmd,
   buildIntegrateCmd,
@@ -16,6 +17,7 @@ import { initialWorkflowState, reducer } from '../logic/workflow-state';
 // Operate console: drive the real fuguectl pipeline plan → dispatch → integrate → review → loop.
 // A step only advances on exitCode 0 (a failed step never moves the phase forward).
 export function PipelineView(): JSX.Element {
+  const { t } = useT();
   const [state, dispatch] = useReducer(reducer, initialWorkflowState());
   const [goal, setGoal] = useState('');
   const [agents, setAgents] = useState<AgentInfo[]>([]);
@@ -78,7 +80,7 @@ export function PipelineView(): JSX.Element {
             <input
               className="input"
               aria-label="goal"
-              placeholder="Describe the task goal…"
+              placeholder={t('pipeline.goalPlaceholder')}
               value={goal}
               onChange={(e) => setGoal(e.target.value)}
               onKeyDown={(e) => {
@@ -86,14 +88,14 @@ export function PipelineView(): JSX.Element {
               }}
             />
             <button className="btn btn-primary" disabled={busy || !goal} onClick={planTask}>
-              Plan Task
+              {t('pipeline.planTask')}
             </button>
           </div>
           <div className="goal-row">
             <input
               className="input"
               aria-label="work-repo"
-              placeholder="Repo work dir (path)…"
+              placeholder={t('pipeline.repoPlaceholder')}
               value={workRepo}
               onChange={(e) => setWorkRepo(e.target.value)}
             />
@@ -109,7 +111,7 @@ export function PipelineView(): JSX.Element {
                 )
               }
             >
-              Dispatch
+              {t('pipeline.dispatch')}
             </button>
             <button
               className="btn btn-secondary"
@@ -122,7 +124,7 @@ export function PipelineView(): JSX.Element {
                 );
               }}
             >
-              Integrate
+              {t('pipeline.integrate')}
             </button>
             <button
               className="btn btn-secondary"
@@ -131,23 +133,23 @@ export function PipelineView(): JSX.Element {
                 tid !== null && run(buildReviewCmd(tid), () => dispatch({ type: 'review-done', accepted: true }))
               }
             >
-              Review
+              {t('pipeline.review')}
             </button>
             <button
               className="btn btn-secondary"
               disabled={!canStep}
               onClick={() => tid !== null && run(buildLoopCmd(tid), () => dispatch({ type: 'loop-done' }))}
             >
-              Loop
+              {t('pipeline.loop')}
             </button>
           </div>
         </section>
 
         <section className="panel grow">
-          <h2>Task Log</h2>
+          <h2>{t('pipeline.taskLog')}</h2>
           <div className="log-wrap">
             {state.taskLog.length === 0 ? (
-              <div className="empty">No commands yet. Describe a goal and run Plan Task.</div>
+              <div className="empty">{t('pipeline.noCommands')}</div>
             ) : (
               <div className="log">
                 {state.taskLog.map((line, i) => (
@@ -163,9 +165,9 @@ export function PipelineView(): JSX.Element {
 
       <aside className="side">
         <section className="panel">
-          <h2>Agents</h2>
+          <h2>{t('pipeline.agents')}</h2>
           {agents.length === 0 ? (
-            <div className="empty">Loading…</div>
+            <div className="empty">{t('pipeline.loading')}</div>
           ) : (
             agents.map((a) => (
               <div className="agent-row" key={a.name}>
@@ -180,18 +182,18 @@ export function PipelineView(): JSX.Element {
         </section>
 
         <section className="panel">
-          <h2>Task</h2>
+          <h2>{t('pipeline.task')}</h2>
           <div className="meta">
-            <span>file</span>
+            <span>{t('pipeline.file')}</span>
             <span title={state.taskId ?? undefined}>{state.taskId ?? '—'}</span>
           </div>
           <div className="meta">
-            <span>phase</span>
+            <span>{t('pipeline.phase')}</span>
             <span>{state.phase}</span>
           </div>
           {state.lastResult !== null && (
             <div className="meta">
-              <span>last exit</span>
+              <span>{t('pipeline.lastExit')}</span>
               <span>{String(state.lastResult.exitCode)}</span>
             </div>
           )}

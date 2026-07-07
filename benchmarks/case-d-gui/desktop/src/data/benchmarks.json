@@ -1,5 +1,6 @@
 {
   "thesis": "Cheap-model fan-out matches a premium single model only when the task has a cheap, reliable verifier. With a gate, best-of-N is free. Without one, agreement fails correlated.",
+  "thesis_zh": "只有当任务有一个便宜、可靠的验证器时,便宜模型 fan-out 才能追平单个高级模型。有验证门,best-of-N 是免费的;没有,共识就会相关性失效。",
   "verifierLadder": [
     "executable gate (unit tests / reference)",
     "synthesized gate (property tests / static rules)",
@@ -12,10 +13,12 @@
     {
       "id": "B1",
       "title": "Algorithms · executable gate",
+      "title_zh": "算法 · 可执行验证门",
       "gate": true,
       "note": "100 graded tasks. Free reference gate — best-of-N is free.",
+      "note_zh": "100 道评分任务。有免费的参考验证门 —— best-of-N 是免费的。",
       "configs": [
-        { "name": "FuguNano fan-out (5 weak)", "kind": "fanout", "score": 100, "total": 100 },
+        { "name": "FuguNano fan-out (5 weak)", "name_zh": "FuguNano fan-out(5 弱模型)", "kind": "fanout", "score": 100, "total": 100 },
         { "name": "Codex 5.5", "kind": "premium", "score": 100, "total": 100 },
         { "name": "Claude 4.8", "kind": "premium", "score": 100, "total": 100 },
         { "name": "GLM-5.2", "kind": "premium", "score": 99, "total": 100 }
@@ -24,39 +27,46 @@
     {
       "id": "B4",
       "title": "Harder code · executable gate · no LLM judge",
+      "title_zh": "更难的代码 · 可执行验证门 · 无 LLM 评审",
       "gate": true,
       "note": "14 harder tasks. Weak models solo pass ~11/14; the gate lifts the ensemble to level with the best premium.",
+      "note_zh": "14 道更难的任务。弱模型单飞约过 11/14;验证门把整体拉到与最强高级模型持平。",
       "configs": [
-        { "name": "FuguNano fan-out (5 weak)", "kind": "fanout", "score": 14, "total": 14 },
+        { "name": "FuguNano fan-out (5 weak)", "name_zh": "FuguNano fan-out(5 弱模型)", "kind": "fanout", "score": 14, "total": 14 },
         { "name": "Claude 4.8", "kind": "premium", "score": 14, "total": 14 },
         { "name": "Codex 5.5", "kind": "premium", "score": 13, "total": 14 },
         { "name": "GLM-5.2", "kind": "premium", "score": 13, "total": 14 },
-        { "name": "weak solo (avg)", "kind": "weak", "score": 11, "total": 14 }
+        { "name": "weak solo (avg)", "name_zh": "弱模型单飞(均值)", "kind": "weak", "score": 11, "total": 14 }
       ]
     },
     {
       "id": "B3",
       "title": "Judgment traps · no gate",
+      "title_zh": "判断陷阱 · 无验证门",
       "gate": false,
       "note": "60 trap questions, strict dual-judge. No verifier — consensus fails correlated on security / impossible / subtle-correctness.",
+      "note_zh": "60 道陷阱题,严格双评审。没有验证器 —— 共识在安全 / 不可能 / 细微正确性上相关性失效。",
       "configs": [
         { "name": "Claude 4.8", "kind": "premium", "score": 59, "total": 60 },
         { "name": "Codex 5.5", "kind": "premium", "score": 55, "total": 60 },
         { "name": "GLM-5.2", "kind": "premium", "score": 51, "total": 60 },
-        { "name": "disagreement router", "kind": "router", "score": 51, "total": 60 },
-        { "name": "weak majority", "kind": "weak", "score": 44, "total": 60 },
-        { "name": "weak solo (avg)", "kind": "weak", "score": 40, "total": 60 }
+        { "name": "disagreement router", "name_zh": "分歧路由器", "kind": "router", "score": 51, "total": 60 },
+        { "name": "weak majority", "name_zh": "弱模型多数", "kind": "weak", "score": 44, "total": 60 },
+        { "name": "weak solo (avg)", "name_zh": "弱模型单飞(均值)", "kind": "weak", "score": 40, "total": 60 }
       ]
     }
   ],
   "skepticHeldOut": {
     "title": "Skeptic playbook · held-out generalization",
+    "title_zh": "怀疑者手册 · 留出集泛化",
     "note": "20 unseen traps (playbook distilled from a different set). Category-level rules generalize.",
+    "note_zh": "20 道未见过的陷阱(手册从另一套题蒸馏而来)。类别级规则可泛化。",
     "baselinePct": 59,
     "skepticPct": 84,
     "deltaPp": 25,
     "regressions": 0,
     "significance": "paired McNemar p ≈ 4e-7"
   },
-  "sources": "megabench B1/B3/B4 + held-out (2026-07); Codex independent audit reproduced the headline numbers."
+  "sources": "megabench B1/B3/B4 + held-out (2026-07); Codex independent audit reproduced the headline numbers.",
+  "sources_zh": "megabench B1/B3/B4 + 留出集(2026-07);Codex 独立复核复现了头条数字。"
 }
