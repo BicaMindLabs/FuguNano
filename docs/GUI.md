@@ -11,6 +11,7 @@ Lives at [`benchmarks/case-d-gui/desktop`](../benchmarks/case-d-gui/desktop).
 make gui-install   # one-time: install the desktop deps (npm install)
 make gui           # launch FuguNano Studio (Electron, dev mode)
 make gui-build     # typecheck + test + build the renderer (what CI runs)
+make gui-package   # build an unsigned local .app + .dmg → desktop/release/
 ```
 
 ## How it talks to the engine
@@ -88,10 +89,43 @@ rendered as bars grouped by kind (fan-out / premium / router / weak):
 The numbers are a committed snapshot, not read from a machine at runtime, so the
 view is reproducible anywhere the repo is checked out.
 
+## Packaging the app
+
+Two ways to get an **unsigned** macOS build (arm64):
+
+**In the cloud (recommended).** The [`Package Desktop GUI`](../.github/workflows/package-gui.yml)
+workflow builds on a GitHub-hosted `macos-14` runner and uploads
+`FuguNano Studio.dmg` + `.zip` as a downloadable artifact — free for this public
+repo, and it never runs on push/PR (the fast CI stays renderer-only). Trigger it
+from the repo's **Actions → Package Desktop GUI → Run workflow**, or push a
+`gui-v*` tag; download the `fugunano-studio-macos-arm64` artifact when it's done.
+
+**Locally.** `make gui-package` builds the renderer and runs electron-builder
+(fetched via `npx`, so it isn't a committed dependency) to produce the same app
+under `benchmarks/case-d-gui/desktop/release/`. First `npx` run is slow while it
+downloads electron-builder.
+
+Either way the app is unsigned — first launch needs a right-click → Open (or
+`xattr -dr com.apple.quarantine "FuguNano Studio.app"`) to clear Gatekeeper.
+
+**One caveat about the packaged app.** Inside the bundle the app can't walk up to
+the repo's `orchestration/fuguectl`, so the two views that shell out to fuguectl
+— **Pipeline** and **Rounds** — only work when you point the app at a checkout:
+
+```bash
+FUGUNANO_ROOT=/path/to/fugue open "release/mac-arm64/FuguNano Studio.app"
+```
+
+Without `FUGUNANO_ROOT`, the app still launches and **Selector** (client-side
+preview) and **Benchmarks** (committed snapshot) are fully functional offline —
+only the live fuguectl-backed views are inert. The packaged output is
+git-ignored; CI never packages (it stays renderer-only).
+
 ## Scope
 
-This is the source-complete app plus a renderer build in CI. It deliberately does
-**not** package installers (`.dmg` / `.exe`) or ship auto-update — run it with
-`make gui`. CI installs with `npm ci --ignore-scripts` (skipping the ~100 MB
-Electron runtime binary, which typecheck / tests / Vite build never touch) and
-runs `npm run typecheck && npm test && npm run build` (`make gui-build`).
+The repo ships the source-complete app, a renderer build in CI, and local
+packaging via `make gui-package`. It deliberately does **not** sign/notarize the
+app or ship auto-update. CI installs with `npm ci --ignore-scripts` (skipping the
+~100 MB Electron runtime binary, which typecheck / tests / Vite build never
+touch) and runs `npm run typecheck && npm test && npm run build`
+(`make gui-build`); packaging is a local-only step.

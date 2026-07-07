@@ -1,7 +1,7 @@
 .DEFAULT_GOAL := help
 SHELL := /usr/bin/env bash
 
-.PHONY: help install install-cc install-skill verify doctor test test-engine test-engine-ci scan lint check-docs ci ci-clean check gui-install gui gui-test gui-build
+.PHONY: help install install-cc install-skill verify doctor test test-engine test-engine-ci scan lint check-docs ci ci-clean check gui-install gui gui-test gui-build gui-package
 
 GUI_DIR := benchmarks/case-d-gui/desktop
 
@@ -59,3 +59,6 @@ gui-test: ## Run GUI unit tests (selector parity / drift guard)
 
 gui-build: ## Typecheck + test + build the GUI renderer (what CI runs)
 	cd $(GUI_DIR) && npm run typecheck && npm test && npm run build
+
+gui-package: ## Package the desktop app locally (unsigned .app + .dmg → release/)
+	cd $(GUI_DIR) && npm run package

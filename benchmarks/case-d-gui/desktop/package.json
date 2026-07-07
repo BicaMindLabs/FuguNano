@@ -2,6 +2,8 @@
   "name": "fugunano-gui-desktop",
   "private": true,
   "version": "0.1.0",
+  "description": "FuguNano Studio — desktop GUI for the FuguNano orchestration loop",
+  "author": "BicaMindLabs",
   "type": "module",
   "main": "electron/main.cjs",
   "scripts": {
@@ -11,7 +13,23 @@
     "build": "vite build",
     "start": "electron .",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "package": "npm run build && npx --yes electron-builder@^25 --mac",
+    "package:dir": "npm run build && npx --yes electron-builder@^25 --mac --dir"
+  },
+  "build": {
+    "appId": "ai.bicamind.fugunano.studio",
+    "productName": "FuguNano Studio",
+    "directories": { "output": "release" },
+    "files": ["dist/**/*", "electron/**/*", "package.json"],
+    "mac": {
+      "target": [
+        { "target": "dmg", "arch": ["arm64"] },
+        { "target": "zip", "arch": ["arm64"] }
+      ],
+      "category": "public.app-category.developer-tools",
+      "identity": null
+    }
   },
   "dependencies": {
     "react": "^18.3.1",
