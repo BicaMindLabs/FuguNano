@@ -21,6 +21,7 @@ const en = {
   'pipeline.goalPlaceholder': 'Describe the task goal…',
   'pipeline.planTask': 'Plan Task',
   'pipeline.repoPlaceholder': 'Repo work dir (path)…',
+  'pipeline.agentsPlaceholder': 'Integrate agents (space-separated, e.g. cc-deepseek cc-kimi)',
   'pipeline.dispatch': 'Dispatch',
   'pipeline.integrate': 'Integrate',
   'pipeline.review': 'Review',
@@ -50,6 +51,8 @@ const en = {
   'selector.gate': 'gate',
   'selector.answerLabel': 'answer label',
   'selector.addCandidate': '+ candidate',
+  'selector.gateToggle': 'Cycle gate: unset → pass → fail',
+  'selector.removeCandidate': 'Remove candidate',
   'selector.categoryPlaceholder': 'category (e.g. security)',
   'selector.hint':
     "Set a gate result (✓/✗) to simulate a verifier; leave gates unset and use answer labels to simulate consensus. A live preview mirrors the engine's route().",
@@ -109,6 +112,7 @@ const zh: Record<MsgKey, string> = {
   'pipeline.goalPlaceholder': '描述任务目标…',
   'pipeline.planTask': '规划任务',
   'pipeline.repoPlaceholder': '仓库工作目录(路径)…',
+  'pipeline.agentsPlaceholder': '整合的 agents(空格分隔,如 cc-deepseek cc-kimi)',
   'pipeline.dispatch': '派发',
   'pipeline.integrate': '整合',
   'pipeline.review': '审查',
@@ -138,6 +142,8 @@ const zh: Record<MsgKey, string> = {
   'selector.gate': '验证',
   'selector.answerLabel': '答案标签',
   'selector.addCandidate': '+ 候选',
+  'selector.gateToggle': '切换验证:未设 → 通过 → 失败',
+  'selector.removeCandidate': '删除候选',
   'selector.categoryPlaceholder': '类别(如 security)',
   'selector.hint':
     '给一行设置验证结果(✓/✗)来模拟验证器;不设验证、用答案标签来模拟共识。实时预览逐行镜像引擎的 route()。',

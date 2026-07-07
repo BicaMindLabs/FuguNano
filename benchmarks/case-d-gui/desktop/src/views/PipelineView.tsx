@@ -22,10 +22,16 @@ export function PipelineView(): JSX.Element {
   const [goal, setGoal] = useState('');
   const [agents, setAgents] = useState<AgentInfo[]>([]);
   const [workRepo, setWorkRepo] = useState('');
+  const [agentList, setAgentList] = useState('');
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    void bridge.agents().then(setAgents);
+    void bridge.agents().then((a) => {
+      setAgents(a);
+      // Prefill the integrate agent list from HEALTHY agents only. These are dispatch/worktree
+      // agent ids the operator can edit — not necessarily the doctor harness names.
+      setAgentList((cur) => (cur === '' ? a.filter((x) => x.healthy).map((x) => x.name).join(' ') : cur));
+    });
   }, []);
 
   const log = (...lines: string[]): void => {
@@ -94,10 +100,19 @@ export function PipelineView(): JSX.Element {
           <div className="goal-row">
             <input
               className="input"
-              aria-label="work-repo"
+              aria-label={t('pipeline.repoPlaceholder')}
               placeholder={t('pipeline.repoPlaceholder')}
               value={workRepo}
               onChange={(e) => setWorkRepo(e.target.value)}
+            />
+          </div>
+          <div className="goal-row">
+            <input
+              className="input"
+              aria-label={t('pipeline.agentsPlaceholder')}
+              placeholder={t('pipeline.agentsPlaceholder')}
+              value={agentList}
+              onChange={(e) => setAgentList(e.target.value)}
             />
           </div>
           <div className="steps">
@@ -115,11 +130,10 @@ export function PipelineView(): JSX.Element {
             </button>
             <button
               className="btn btn-secondary"
-              disabled={!canStep || workRepo === '' || agents.length === 0}
+              disabled={!canStep || workRepo === '' || agentList.trim() === ''}
               onClick={() => {
                 if (tid === null) return;
-                const agentsStr = agents.map((a) => a.name).join(' ');
-                run(buildIntegrateCmd(tid, workRepo, agentsStr), () =>
+                run(buildIntegrateCmd(tid, workRepo, agentList.trim()), () =>
                   dispatch({ type: 'integrate-done' }),
                 );
               }}

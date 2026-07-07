@@ -3,11 +3,12 @@
 // here would couple the renderer build to an engine build step).
 //
 // DRIFT WARNING: routePreview() below MUST stay behaviourally identical to the engine's route().
-// There is no automated test pinning them together (the desktop app has no test runner), so any
-// change to engine/src/domain/selector.ts::route — precedence (gate → forced-category → smoothed
-// consensus), the (k+1)/(n+2) smoothing, or the trustThreshold/trustSingleton defaults — must be
-// hand-mirrored here. The Selector view is the user-facing claim that these match; if they diverge
-// the GUI will confidently show the wrong routing verdict. Verified equal 2026-07 against route().
+// selector.test.ts pins the mirror with golden cases covering all three outcomes and seven reasons,
+// so an accidental edit here fails CI — but the guard is one-directional: if engine
+// src/domain/selector.ts::route changes (precedence gate → forced-category → smoothed consensus,
+// the (k+1)/(n+2) smoothing, or the trustThreshold/trustSingleton defaults), you must hand-mirror
+// the change here AND update selector.test.ts. The Selector view is the user-facing claim that
+// these match; if they diverge the GUI confidently shows the wrong routing verdict.
 
 export type SelectorOutcome = 'TRUST' | 'TRUST_SPOT_CHECK' | 'ESCALATE';
 

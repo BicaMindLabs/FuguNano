@@ -92,6 +92,9 @@ jobs:
       - name: typecheck
         run: npm run typecheck
         working-directory: benchmarks/case-d-gui/desktop
+      - name: test (selector parity / drift guard)
+        run: npm test
+        working-directory: benchmarks/case-d-gui/desktop
       - name: build renderer
         run: npm run build
         working-directory: benchmarks/case-d-gui/desktop

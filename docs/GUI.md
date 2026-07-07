@@ -10,7 +10,7 @@ Lives at [`benchmarks/case-d-gui/desktop`](../benchmarks/case-d-gui/desktop).
 ```bash
 make gui-install   # one-time: install the desktop deps (npm install)
 make gui           # launch FuguNano Studio (Electron, dev mode)
-make gui-build     # typecheck + build the renderer (what CI runs)
+make gui-build     # typecheck + test + build the renderer (what CI runs)
 ```
 
 ## How it talks to the engine
@@ -69,8 +69,10 @@ engine's own `SelectorDecision` JSON.
 
 The preview logic is vendored in
 [`src/logic/selector.ts`](../benchmarks/case-d-gui/desktop/src/logic/selector.ts)
-to avoid a cross-package import of the built engine; it is kept in sync with the
-engine's exported contract in `engine/src/domain/selector.ts`.
+to avoid a cross-package import of the built engine.
+[`selector.test.ts`](../benchmarks/case-d-gui/desktop/src/logic/selector.test.ts)
+pins the mirror to the engine's `route()` semantics with golden cases across all
+three outcomes and seven reasons, so an accidental edit fails CI.
 
 ### Benchmarks — the evidence
 
@@ -91,5 +93,5 @@ view is reproducible anywhere the repo is checked out.
 This is the source-complete app plus a renderer build in CI. It deliberately does
 **not** package installers (`.dmg` / `.exe`) or ship auto-update — run it with
 `make gui`. CI installs with `npm ci --ignore-scripts` (skipping the ~100 MB
-Electron runtime binary, which the typecheck and Vite build never touch) and
-runs `npm run typecheck && npm run build`.
+Electron runtime binary, which typecheck / tests / Vite build never touch) and
+runs `npm run typecheck && npm test && npm run build` (`make gui-build`).

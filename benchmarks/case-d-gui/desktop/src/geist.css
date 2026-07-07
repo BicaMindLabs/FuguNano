@@ -221,3 +221,30 @@ body {
 .sk-num { font: 700 30px 'Geist Sans', sans-serif; }
 .sk-arrow { font-size: 22px; color: var(--gray-700); }
 .sk-facts { margin-left: auto; min-width: 260px; }
+
+/* ── polish: interactive affordances ── */
+.cell { transition: border-color 0.14s ease, background 0.14s ease; }
+.cell:hover { border-color: var(--gray-alpha-500); }
+.round-pill { transition: background 0.14s ease, color 0.14s ease, border-color 0.14s ease; }
+.gatebtn { transition: background 0.14s ease, border-color 0.14s ease, color 0.14s ease; }
+
+/* ── responsive: stack the two-column views on narrow windows ── */
+@media (max-width: 900px) {
+  .pipeline { grid-template-columns: 1fr; height: auto; }
+  .pipeline .side { flex-direction: row; flex-wrap: wrap; }
+  .pipeline .side > .panel { flex: 1 1 240px; }
+}
+@media (max-width: 860px) {
+  .selector { grid-template-columns: 1fr; }
+}
+@media (max-width: 720px) {
+  .rounds { grid-template-columns: 1fr; height: auto; }
+  .round-list { flex-direction: row; flex-wrap: wrap; }
+  .bar-row { grid-template-columns: 110px 1fr 52px; }
+  .bar-label { font-size: 11px; }
+}
+@media (max-width: 560px) {
+  .shell { grid-template-columns: 52px 1fr; }
+  .rail-label { display: none; }
+  .rail-btn { justify-content: center; padding: 0; }
+}
